@@ -378,7 +378,8 @@ export class DragSource {
     _extraAllowableChildTargets: HTMLElement[],
     _componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig),
     _componentState: JsonValue | undefined,
-    _title: string | undefined);
+    _title: string | undefined,
+    _rootContainer?: HTMLElement | undefined);
     // @internal
     destroy(): void;
     }

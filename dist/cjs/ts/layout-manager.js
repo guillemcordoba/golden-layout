@@ -741,7 +741,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      *          removeDragSource() later to get rid of the drag listeners.
      */
     newDragSource(element, componentTypeOrFtn, componentState, title) {
-        const dragSource = new drag_source_1.DragSource(this, element, [], componentTypeOrFtn, componentState, title);
+        const dragSource = new drag_source_1.DragSource(this, element, [], componentTypeOrFtn, componentState, title, this.container);
         this._dragSources.push(dragSource);
         return dragSource;
     }

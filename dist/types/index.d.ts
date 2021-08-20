@@ -403,6 +403,7 @@ export declare class DragSource {
     /* Excluded from this release type: _componentTypeOrFtn */
     /* Excluded from this release type: _componentState */
     /* Excluded from this release type: _title */
+    /* Excluded from this release type: _rootContainer */
     /* Excluded from this release type: _dragListener */
     /* Excluded from this release type: _dummyGroundContainer */
     /* Excluded from this release type: _dummyGroundContentItem */

@@ -712,6 +712,8 @@ export declare class DragSource {
     /** @internal */
     private _title;
     /** @internal */
+    private readonly _rootContainer?;
+    /** @internal */
     private _dragListener;
     /** @internal */
     private _dummyGroundContainer;
@@ -730,7 +732,9 @@ export declare class DragSource {
     /** @internal */
     _componentState: JsonValue | undefined, 
     /** @internal */
-    _title: string | undefined);
+    _title: string | undefined, 
+    /** @internal */
+    _rootContainer?: HTMLElement | undefined);
     /**
      * Disposes of the drag listeners so the drag source is not usable any more.
      * @internal
