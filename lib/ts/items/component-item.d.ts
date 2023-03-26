@@ -56,7 +56,7 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     drag(): void;
     /** @internal */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     /** @internal */
     init(): void;
     /**

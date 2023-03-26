@@ -1,3 +1,5 @@
+import { UnreachableCaseError } from '../errors/internal-error';
+import { StyleConstants } from './style-constants';
 /** @internal */
 export var WidthOrHeightPropertyName;
 (function (WidthOrHeightPropertyName) {
@@ -19,6 +21,12 @@ export var LogicalZIndex;
     LogicalZIndex.drag = 'drag';
     LogicalZIndex.stackMaximised = 'stackMaximised';
 })(LogicalZIndex || (LogicalZIndex = {}));
+/** @public */
+export const LogicalZIndexToDefaultMap = {
+    base: StyleConstants.defaultComponentBaseZIndex,
+    drag: StyleConstants.defaultComponentDragZIndex,
+    stackMaximised: StyleConstants.defaultComponentStackMaximisedZIndex,
+};
 /** @public */
 export var JsonValue;
 (function (JsonValue) {
@@ -48,4 +56,36 @@ export var ResponsiveMode;
     ResponsiveMode.always = 'always';
     ResponsiveMode.onload = 'onload';
 })(ResponsiveMode || (ResponsiveMode = {}));
+/** @public */
+export var SizeUnitEnum;
+(function (SizeUnitEnum) {
+    SizeUnitEnum["Pixel"] = "px";
+    SizeUnitEnum["Percent"] = "%";
+    SizeUnitEnum["Fractional"] = "fr";
+    SizeUnitEnum["Em"] = "em";
+})(SizeUnitEnum || (SizeUnitEnum = {}));
+/** @public */
+(function (SizeUnitEnum) {
+    function tryParse(value) {
+        switch (value) {
+            case SizeUnitEnum.Pixel: return SizeUnitEnum.Pixel;
+            case SizeUnitEnum.Percent: return SizeUnitEnum.Percent;
+            case SizeUnitEnum.Fractional: return SizeUnitEnum.Fractional;
+            case SizeUnitEnum.Em: return SizeUnitEnum.Em;
+            default: return undefined;
+        }
+    }
+    SizeUnitEnum.tryParse = tryParse;
+    function format(value) {
+        switch (value) {
+            case SizeUnitEnum.Pixel: return SizeUnitEnum.Pixel;
+            case SizeUnitEnum.Percent: return SizeUnitEnum.Percent;
+            case SizeUnitEnum.Fractional: return SizeUnitEnum.Fractional;
+            case SizeUnitEnum.Em: return SizeUnitEnum.Em;
+            default:
+                throw new UnreachableCaseError('SUEF44998', value);
+        }
+    }
+    SizeUnitEnum.format = format;
+})(SizeUnitEnum || (SizeUnitEnum = {}));
 //# sourceMappingURL=types.js.map

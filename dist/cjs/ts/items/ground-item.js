@@ -22,7 +22,19 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
         this.isGround = true;
         this._childElementContainer = this.element;
         this._containerElement = containerElement;
-        this._containerElement.appendChild(this.element);
+        // insert before any pre-existing content elements
+        let before = null;
+        while (true) {
+            const prev = before ? before.previousSibling : this._containerElement.lastChild;
+            if (prev instanceof Element
+                && prev.classList.contains("lm_content" /* Content */)) {
+                before = prev;
+            }
+            else {
+                break;
+            }
+        }
+        this._containerElement.insertBefore(this.element, before);
     }
     init() {
         if (this.isInitialised === true)
@@ -70,12 +82,13 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
      */
     addItem(itemConfig, index) {
         this.layoutManager.checkMinimiseMaximisedStack();
-        const resolvedItemConfig = config_1.ItemConfig.resolve(itemConfig);
+        const resolvedItemConfig = config_1.ItemConfig.resolve(itemConfig, false);
         let parent;
         if (this.contentItems.length > 0) {
             parent = this.contentItems[0];
         }
         else {
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
             parent = this;
         }
         if (parent.isComponent) {
@@ -90,7 +103,7 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
     loadComponentAsRoot(itemConfig) {
         // Remove existing root if it exists
         this.clearRoot();
-        const resolvedItemConfig = config_1.ItemConfig.resolve(itemConfig);
+        const resolvedItemConfig = config_1.ItemConfig.resolve(itemConfig, false);
         if (resolvedItemConfig.maximised) {
             throw new Error('Root Component cannot be maximised');
         }
@@ -112,7 +125,7 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
             // contentItem = this.layoutManager._$normalizeContentItem(contentItem, this);
             this._childElementContainer.appendChild(contentItem.element);
             index = super.addChild(contentItem, index);
-            this.updateSize();
+            this.updateSize(false);
             this.emitBaseBubblingEvent('stateChanged');
             return index;
         }
@@ -137,28 +150,28 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
     /** @internal */
     setSize(width, height) {
         if (width === undefined || height === undefined) {
-            this.updateSize(); // For backwards compatibility with v1.x API
+            this.updateSize(false); // For backwards compatibility with v1.x API
         }
         else {
-            utils_1.setElementWidth(this.element, width);
-            utils_1.setElementHeight(this.element, height);
+            (0, utils_1.setElementWidth)(this.element, width);
+            (0, utils_1.setElementHeight)(this.element, height);
             // GroundItem can be empty
             if (this.contentItems.length > 0) {
-                utils_1.setElementWidth(this.contentItems[0].element, width);
-                utils_1.setElementHeight(this.contentItems[0].element, height);
+                (0, utils_1.setElementWidth)(this.contentItems[0].element, width);
+                (0, utils_1.setElementHeight)(this.contentItems[0].element, height);
             }
-            this.updateContentItemsSize();
+            this.updateContentItemsSize(false);
         }
     }
     /**
      * Adds a Root ContentItem.
      * Internal only.  To replace Root ContentItem with API, use {@link (LayoutManager:class).updateRootSize}
      */
-    updateSize() {
+    updateSize(force) {
         this.layoutManager.beginVirtualSizedContainerAdding();
         try {
             this.updateNodeSize();
-            this.updateContentItemsSize();
+            this.updateContentItemsSize(force);
         }
         finally {
             this.layoutManager.endVirtualSizedContainerAdding();
@@ -217,7 +230,6 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
                 contentItem = stack;
             }
             const type = area.side[0] == 'x' ? types_1.ItemType.row : types_1.ItemType.column;
-            const dimension = area.side[0] == 'x' ? 'width' : 'height';
             const insertBefore = area.side[1] == '2';
             const column = this.contentItems[0];
             if (!(column instanceof row_or_column_1.RowOrColumn) || column.type !== type) {
@@ -226,16 +238,18 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
                 this.replaceChild(column, rowOrColumn);
                 rowOrColumn.addChild(contentItem, insertBefore ? 0 : undefined, true);
                 rowOrColumn.addChild(column, insertBefore ? undefined : 0, true);
-                column[dimension] = 50;
-                contentItem[dimension] = 50;
-                rowOrColumn.updateSize();
+                column.size = 50;
+                contentItem.size = 50;
+                contentItem.sizeUnit = types_1.SizeUnitEnum.Percent;
+                rowOrColumn.updateSize(false);
             }
             else {
                 const sibling = column.contentItems[insertBefore ? 0 : column.contentItems.length - 1];
                 column.addChild(contentItem, insertBefore ? 0 : undefined, true);
-                sibling[dimension] *= 0.5;
-                contentItem[dimension] = sibling[dimension];
-                column.updateSize();
+                sibling.size *= 0.5;
+                contentItem.size = sibling.size;
+                contentItem.sizeUnit = types_1.SizeUnitEnum.Percent;
+                column.updateSize(false);
             }
         }
     }
@@ -286,15 +300,15 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
         // only applicable if ComponentItem is root and then it always has focus
     }
     updateNodeSize() {
-        const { width, height } = utils_1.getElementWidthAndHeight(this._containerElement);
-        utils_1.setElementWidth(this.element, width);
-        utils_1.setElementHeight(this.element, height);
+        const { width, height } = (0, utils_1.getElementWidthAndHeight)(this._containerElement);
+        (0, utils_1.setElementWidth)(this.element, width);
+        (0, utils_1.setElementHeight)(this.element, height);
         /*
          * GroundItem can be empty
          */
         if (this.contentItems.length > 0) {
-            utils_1.setElementWidth(this.contentItems[0].element, width);
-            utils_1.setElementHeight(this.contentItems[0].element, height);
+            (0, utils_1.setElementWidth)(this.contentItems[0].element, width);
+            (0, utils_1.setElementHeight)(this.contentItems[0].element, height);
         }
     }
     deepGetAllContentItems(content, result) {

@@ -9,10 +9,13 @@ const utils_1 = require("./utils/utils");
 const virtual_layout_1 = require("./virtual-layout");
 /** @public */
 class GoldenLayout extends virtual_layout_1.VirtualLayout {
-    constructor() {
-        super(...arguments);
+    /** @internal */
+    constructor(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler) {
+        super(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler, true);
         /** @internal */
         this._componentTypesMap = new Map();
+        /** @internal */
+        this._registeredComponentMap = new Map();
         /** @internal */
         this._virtuableComponentMap = new Map();
         /** @internal */
@@ -21,6 +24,10 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
         this._containerVirtualVisibilityChangeRequiredEventListener = (container, visible) => this.handleContainerVirtualVisibilityChangeRequiredEvent(container, visible);
         /** @internal */
         this._containerVirtualZIndexChangeRequiredEventListener = (container, logicalZIndex, defaultZIndex) => this.handleContainerVirtualZIndexChangeRequiredEvent(container, logicalZIndex, defaultZIndex);
+        // we told VirtualLayout to not call init() (skipInit set to true) so that Golden Layout can initialise its properties before init is called
+        if (!this.deprecatedConstructor) {
+            this.init();
+        }
     }
     /**
      * Register a new component type with the layout manager.
@@ -161,7 +168,7 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
             }
             else {
                 // make copy
-                componentState = utils_1.deepExtendValue({}, itemConfig.componentState);
+                componentState = (0, utils_1.deepExtendValue)({}, itemConfig.componentState);
             }
             let component;
             const componentConstructor = instantiator.constructor;
@@ -188,7 +195,7 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
                         throw new external_error_1.BindError(`${i18n_strings_1.i18nStrings[5 /* VirtualComponentDoesNotHaveRootHtmlElement */]}: ${typeName}`);
                     }
                     else {
-                        utils_1.ensureElementPositionAbsolute(componentRootElement);
+                        (0, utils_1.ensureElementPositionAbsolute)(componentRootElement);
                         this.container.appendChild(componentRootElement);
                         this._virtuableComponentMap.set(container, virtuableComponent);
                         container.virtualRectingRequiredEvent = this._containerVirtualRectingRequiredEventListener;
@@ -197,6 +204,7 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
                     }
                 }
             }
+            this._registeredComponentMap.set(container, component);
             result = {
                 virtual: instantiator.virtual,
                 component,
@@ -210,18 +218,21 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
     }
     /** @internal */
     unbindComponent(container, virtual, component) {
-        const virtuableComponent = this._virtuableComponentMap.get(container);
-        if (virtuableComponent === undefined) {
-            super.unbindComponent(container, virtual, component);
+        const registeredComponent = this._registeredComponentMap.get(container);
+        if (registeredComponent === undefined) {
+            super.unbindComponent(container, virtual, component); // was not created from registration so use virtual unbind events
         }
         else {
-            const componentRootElement = virtuableComponent.rootHtmlElement;
-            if (componentRootElement === undefined) {
-                throw new internal_error_1.AssertError('GLUC77743', container.title);
-            }
-            else {
-                this.container.removeChild(componentRootElement);
-                this._virtuableComponentMap.delete(container);
+            const virtuableComponent = this._virtuableComponentMap.get(container);
+            if (virtuableComponent !== undefined) {
+                const componentRootElement = virtuableComponent.rootHtmlElement;
+                if (componentRootElement === undefined) {
+                    throw new internal_error_1.AssertError('GLUC77743', container.title);
+                }
+                else {
+                    this.container.removeChild(componentRootElement);
+                    this._virtuableComponentMap.delete(container);
+                }
             }
         }
     }
@@ -243,11 +254,11 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
             else {
                 const containerBoundingClientRect = container.element.getBoundingClientRect();
                 const left = containerBoundingClientRect.left - this._goldenLayoutBoundingClientRect.left;
-                rootElement.style.left = utils_1.numberToPixels(left);
+                rootElement.style.left = (0, utils_1.numberToPixels)(left);
                 const top = containerBoundingClientRect.top - this._goldenLayoutBoundingClientRect.top;
-                rootElement.style.top = utils_1.numberToPixels(top);
-                utils_1.setElementWidth(rootElement, width);
-                utils_1.setElementHeight(rootElement, height);
+                rootElement.style.top = (0, utils_1.numberToPixels)(top);
+                (0, utils_1.setElementWidth)(rootElement, width);
+                (0, utils_1.setElementHeight)(rootElement, height);
             }
         }
     }
@@ -263,7 +274,7 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
                 throw new external_error_1.BindError(i18n_strings_1.i18nStrings[4 /* ComponentIsNotVirtuable */] + ' ' + container.title);
             }
             else {
-                utils_1.setElementDisplayVisibility(rootElement, visible);
+                (0, utils_1.setElementDisplayVisibility)(rootElement, visible);
             }
         }
     }

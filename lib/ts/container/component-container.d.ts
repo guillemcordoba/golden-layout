@@ -47,6 +47,8 @@ export declare class ComponentContainer extends EventEmitter {
     private _tab;
     /** @internal */
     private _stackMaximised;
+    /** @internal */
+    private _logicalZIndex;
     stateRequestEvent: ComponentContainer.StateRequestEventHandler | undefined;
     virtualRectingRequiredEvent: ComponentContainer.VirtualRectingRequiredEvent | undefined;
     virtualVisibilityChangeRequiredEvent: ComponentContainer.VirtualVisibilityChangeRequiredEvent | undefined;
@@ -158,6 +160,8 @@ export declare class ComponentContainer extends EventEmitter {
     setTab(tab: Tab): void;
     /** @internal */
     setVisibility(value: boolean): void;
+    setBaseLogicalZIndex(): void;
+    setLogicalZIndex(logicalZIndex: LogicalZIndex): void;
     /**
      * Set the container's size, but considered temporary (for dragging)
      * so don't emit any events.
@@ -184,6 +188,8 @@ export declare class ComponentContainer extends EventEmitter {
     setSizeToNodeSize(width: number, height: number, force: boolean): void;
     /** @internal */
     notifyVirtualRectingRequired(): void;
+    /** @internal */
+    private notifyVirtualZIndexChangeRequired;
     /** @internal */
     private updateElementPositionPropertyFromBoundComponent;
     /** @internal */

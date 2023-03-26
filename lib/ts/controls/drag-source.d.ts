@@ -1,5 +1,6 @@
-import { LayoutManager } from '../layout-manager';
-import { JsonValue } from '../utils/types';
+import { ComponentItemConfig as ConfigComponentItemConfig } from "../config/config";
+import { LayoutManager } from "../layout-manager";
+import { JsonValue } from "../utils/types";
 /**
  * Allows for any DOM item to create a component on drag
  * start to be dragged into the Layout
@@ -12,12 +13,14 @@ export declare class DragSource {
     private readonly _element;
     /** @internal */
     private readonly _extraAllowableChildTargets;
-    /** @internal */
+    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
     private _componentTypeOrFtn;
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     private _componentState;
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     private _title;
+    /** @internal @deprecated remove in version 3 */
+    private _id;
     /** @internal */
     private readonly _rootContainer?;
     /** @internal */
@@ -34,12 +37,14 @@ export declare class DragSource {
     _element: HTMLElement, 
     /** @internal */
     _extraAllowableChildTargets: HTMLElement[], 
-    /** @internal */
-    _componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig), 
-    /** @internal */
+    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
+    _componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig | ConfigComponentItemConfig), 
+    /** @internal @deprecated remove in version 3 */
     _componentState: JsonValue | undefined, 
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     _title: string | undefined, 
+    /** @internal @deprecated remove in version 3 */
+    _id: string | undefined, 
     /** @internal */
     _rootContainer?: HTMLElement | undefined);
     /**
@@ -70,10 +75,13 @@ export declare class DragSource {
 }
 /** @public */
 export declare namespace DragSource {
+    /** @deprecated  use Config {@link (ComponentItemConfig:interface)} */
     interface ComponentItemConfig {
         type: JsonValue;
         state?: JsonValue;
         title?: string;
     }
+    /** @deprecated remove in version 3 */
+    function isDragSourceComponentItemConfig(config: DragSource.ComponentItemConfig | ConfigComponentItemConfig): config is DragSource.ComponentItemConfig;
 }
 //# sourceMappingURL=drag-source.d.ts.map

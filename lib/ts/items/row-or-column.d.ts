@@ -64,7 +64,7 @@ export declare class RowOrColumn extends ContentItem {
     /**
      * Called whenever the dimensions of this item or one of its parents change
      */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     /**
      * Invoked recursively by the layout manager. ContentItem.init appends
      * the contentItem's DOM elements to the container, RowOrColumn init adds splitters
@@ -116,7 +116,7 @@ export declare class RowOrColumn extends ContentItem {
      * Adjusts the column widths to respect the dimensions minItemWidth if set.
      * @internal
      */
-    private respectMinItemWidth;
+    private respectMinItemSize;
     /**
      * Instantiates a new Splitter, binds events to it and adds
      * it to the array of splitters at the position specified as the index argument
@@ -138,12 +138,13 @@ export declare class RowOrColumn extends ContentItem {
      * @returns A map of contentItems that the splitter affects
      * @internal
      */
-    private getItemsForSplitter;
+    private getSplitItems;
+    private calculateContentItemMinSize;
     /**
      * Gets the minimum dimensions for the given item configuration array
      * @internal
      */
-    private getMinimumDimensions;
+    private calculateContentItemsTotalMinSize;
     /**
      * Invoked when a splitter's dragListener fires dragStart. Calculates the splitters
      * movement area once (so that it doesn't need calculating on every mousemove event)
@@ -170,6 +171,13 @@ export declare class RowOrColumn extends ContentItem {
 }
 /** @public */
 export declare namespace RowOrColumn {
+    /** @internal */
+    interface AbsoluteSizes {
+        itemSizes: number[];
+        additionalPixel: number;
+        totalSize: number;
+        crossAxisSize: number;
+    }
     /** @internal */
     function getElementDimensionSize(element: HTMLElement, dimension: WidthOrHeightPropertyName): number;
     /** @internal */

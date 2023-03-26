@@ -2,7 +2,7 @@ import { ResolvedItemConfig } from '../config/resolved-config';
 import { BrowserPopout } from '../controls/browser-popout';
 import { LayoutManager } from '../layout-manager';
 import { EventEmitter } from '../utils/event-emitter';
-import { AreaLinkedRect, ItemType } from '../utils/types';
+import { AreaLinkedRect, ItemType, SizeUnitEnum } from '../utils/types';
 import { ComponentItem } from './component-item';
 import { ComponentParentableItem } from './component-parentable-item';
 import { Stack } from './stack';
@@ -36,13 +36,13 @@ export declare abstract class ContentItem extends EventEmitter {
     /** @internal */
     private _isInitialised;
     /** @internal */
-    width: number;
+    size: number;
     /** @internal */
-    minWidth: number;
+    sizeUnit: SizeUnitEnum;
     /** @internal */
-    height: number;
+    minSize: number | undefined;
     /** @internal */
-    minHeight: number;
+    minSizeUnit: SizeUnitEnum;
     isGround: boolean;
     isRow: boolean;
     isColumn: boolean;
@@ -50,6 +50,7 @@ export declare abstract class ContentItem extends EventEmitter {
     isComponent: boolean;
     get type(): ItemType;
     get id(): string;
+    set id(value: string);
     /** @internal */
     get popInParentIds(): string[];
     get parent(): ContentItem | null;
@@ -68,9 +69,13 @@ export declare abstract class ContentItem extends EventEmitter {
     _element: HTMLElement);
     /**
      * Updaters the size of the component and its children, called recursively
+     * @param force - In some cases the size is not updated if it has not changed. In this case, events
+     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
+     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
+     * relevant events need to be fired.
      * @internal
      */
-    abstract updateSize(): void;
+    abstract updateSize(force: boolean): void;
     /**
      * Removes a child node (and its children) from the tree
      * @param contentItem - The child item to remove
@@ -141,7 +146,7 @@ export declare abstract class ContentItem extends EventEmitter {
     /** @internal */
     protected hide(): void;
     /** @internal */
-    protected updateContentItemsSize(): void;
+    protected updateContentItemsSize(force: boolean): void;
     /**
      * creates all content items for this node at initialisation time
      * PLEASE NOTE, please see addChild for adding contentItems at runtime

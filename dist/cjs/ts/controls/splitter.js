@@ -16,16 +16,16 @@ class Splitter {
         const handleExcessSize = this._grabSize - this._size;
         const handleExcessPos = handleExcessSize / 2;
         if (this._isVertical) {
-            dragHandleElement.style.top = utils_1.numberToPixels(-handleExcessPos);
-            dragHandleElement.style.height = utils_1.numberToPixels(this._size + handleExcessSize);
+            dragHandleElement.style.top = (0, utils_1.numberToPixels)(-handleExcessPos);
+            dragHandleElement.style.height = (0, utils_1.numberToPixels)(this._size + handleExcessSize);
             this._element.classList.add("lm_vertical" /* Vertical */);
-            this._element.style.height = utils_1.numberToPixels(this._size);
+            this._element.style.height = (0, utils_1.numberToPixels)(this._size);
         }
         else {
-            dragHandleElement.style.left = utils_1.numberToPixels(-handleExcessPos);
-            dragHandleElement.style.width = utils_1.numberToPixels(this._size + handleExcessSize);
+            dragHandleElement.style.left = (0, utils_1.numberToPixels)(-handleExcessPos);
+            dragHandleElement.style.width = (0, utils_1.numberToPixels)(this._size + handleExcessSize);
             this._element.classList.add("lm_horizontal" /* Horizontal */);
-            this._element.style.width = utils_1.numberToPixels(this._size);
+            this._element.style.width = (0, utils_1.numberToPixels)(this._size);
         }
         this._element.appendChild(dragHandleElement);
         this._dragListener = new drag_listener_1.DragListener(this._element, [dragHandleElement]);

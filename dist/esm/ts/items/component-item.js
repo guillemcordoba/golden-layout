@@ -51,10 +51,10 @@ export class ComponentItem extends ContentItem {
         const result = {
             type: ItemType.component,
             content: [],
-            width: this.width,
-            minWidth: this.minWidth,
-            height: this.height,
-            minHeight: this.minHeight,
+            size: this.size,
+            sizeUnit: this.sizeUnit,
+            minSize: this.minSize,
+            minSizeUnit: this.minSizeUnit,
             id: this.id,
             maximised: false,
             isClosable: this.isClosable,
@@ -99,12 +99,12 @@ export class ComponentItem extends ContentItem {
         this._container.drag();
     }
     /** @internal */
-    updateSize() {
-        this.updateNodeSize();
+    updateSize(force) {
+        this.updateNodeSize(force);
     }
     /** @internal */
     init() {
-        this.updateNodeSize();
+        this.updateNodeSize(false);
         super.init();
         this._container.emit('open');
         this.initContentItems();
@@ -175,11 +175,11 @@ export class ComponentItem extends ContentItem {
         this.applyUpdatableConfig(itemConfig);
     }
     /** @internal */
-    updateNodeSize() {
+    updateNodeSize(force) {
         if (this.element.style.display !== 'none') {
             // Do not update size of hidden components to prevent unwanted reflows
             const { width, height } = getElementWidthAndHeight(this.element);
-            this._container.setSizeToNodeSize(width, height, false);
+            this._container.setSizeToNodeSize(width, height, force);
         }
     }
 }

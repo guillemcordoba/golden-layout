@@ -1,3 +1,4 @@
+import { LayoutConfig } from './config/config';
 import { ResolvedComponentItemConfig } from './config/resolved-config';
 import { ComponentContainer } from './container/component-container';
 import { JsonValue } from './utils/types';
@@ -9,6 +10,8 @@ export declare class GoldenLayout extends VirtualLayout {
     /** @internal */
     private _getComponentConstructorFtn;
     /** @internal */
+    private _registeredComponentMap;
+    /** @internal */
     private _virtuableComponentMap;
     /** @internal */
     private _goldenLayoutBoundingClientRect;
@@ -18,6 +21,17 @@ export declare class GoldenLayout extends VirtualLayout {
     private _containerVirtualVisibilityChangeRequiredEventListener;
     /** @internal */
     private _containerVirtualZIndexChangeRequiredEventListener;
+    /**
+     * @param container - A Dom HTML element. Defaults to body
+     * @param bindComponentEventHandler - Event handler to bind components
+     * @param bindComponentEventHandler - Event handler to unbind components
+     * If bindComponentEventHandler is defined, then constructor will be determinate. It will always call the init()
+     * function and the init() function will always complete. This means that the bindComponentEventHandler will be called
+     * if constructor is for a popout window. Make sure bindComponentEventHandler is ready for events.
+     */
+    constructor(container?: HTMLElement, bindComponentEventHandler?: VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler);
+    /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
+    constructor(config: LayoutConfig, container?: HTMLElement);
     /**
      * Register a new component type with the layout manager.
      *

@@ -4,7 +4,7 @@ export declare class DropTargetIndicator {
     private _element;
     constructor(rootContainer?: HTMLElement);
     destroy(): void;
-    highlightArea(area: AreaLinkedRect): void;
+    highlightArea(area: AreaLinkedRect, margin: number): void;
     hide(): void;
 }
 //# sourceMappingURL=drop-target-indicator.d.ts.map

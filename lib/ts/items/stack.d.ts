@@ -1,5 +1,6 @@
 import { ComponentItemConfig } from '../config/config';
 import { ResolvedStackItemConfig } from '../config/resolved-config';
+import { Header } from '../controls/header';
 import { LayoutManager } from '../layout-manager';
 import { AreaLinkedRect, JsonValue, Side } from '../utils/types';
 import { ComponentItem } from './component-item';
@@ -36,6 +37,7 @@ export declare class Stack extends ComponentParentableItem {
     /** @internal */
     private _minimisedListener;
     get childElementContainer(): HTMLElement;
+    get header(): Header;
     get headerShow(): boolean;
     get headerSide(): Side;
     get headerLeftRightSided(): boolean;
@@ -48,7 +50,7 @@ export declare class Stack extends ComponentParentableItem {
     /** @internal */
     constructor(layoutManager: LayoutManager, config: ResolvedStackItemConfig, parent: ContentItem);
     /** @internal */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     /** @internal */
     init(): void;
     /** @deprecated Use {@link (Stack:class).setActiveComponentItem} */

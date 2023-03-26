@@ -1,18 +1,18 @@
-import { ComponentItemConfig, LayoutConfig, RowOrColumnItemConfig, StackItemConfig } from './config/config';
+import { ComponentItemConfig, LayoutConfig, RowOrColumnItemConfig, StackItemConfig } from "./config/config";
 import { ResolvedComponentItemConfig, ResolvedItemConfig, ResolvedLayoutConfig, ResolvedPopoutLayoutConfig, ResolvedRootItemConfig } from "./config/resolved-config";
-import { ComponentContainer } from './container/component-container';
-import { BrowserPopout } from './controls/browser-popout';
-import { DragSource } from './controls/drag-source';
-import { DropTargetIndicator } from './controls/drop-target-indicator';
-import { TransitionIndicator } from './controls/transition-indicator';
-import { ComponentItem } from './items/component-item';
-import { ContentItem } from './items/content-item';
-import { GroundItem } from './items/ground-item';
-import { Stack } from './items/stack';
-import { DragListener } from './utils/drag-listener';
-import { EventEmitter } from './utils/event-emitter';
-import { EventHub } from './utils/event-hub';
-import { JsonValue } from './utils/types';
+import { ComponentContainer } from "./container/component-container";
+import { BrowserPopout } from "./controls/browser-popout";
+import { DragSource } from "./controls/drag-source";
+import { DropTargetIndicator } from "./controls/drop-target-indicator";
+import { TransitionIndicator } from "./controls/transition-indicator";
+import { ComponentItem } from "./items/component-item";
+import { ContentItem } from "./items/content-item";
+import { GroundItem } from "./items/ground-item";
+import { Stack } from "./items/stack";
+import { DragListener } from "./utils/drag-listener";
+import { EventEmitter } from "./utils/event-emitter";
+import { EventHub } from "./utils/event-hub";
+import { JsonValue } from "./utils/types";
 /** @internal */
 declare global {
     interface Window {
@@ -24,10 +24,20 @@ declare global {
  */
 /** @public */
 export declare abstract class LayoutManager extends EventEmitter {
+    /** Whether the layout will be automatically be resized to container whenever the container's size is changed
+     * Default is true if <body> is the container otherwise false
+     * Default will be changed to true for any container in the future
+     */
+    resizeWithContainerAutomatically: boolean;
+    /** The debounce interval (in milliseconds) used whenever a layout is automatically resized.  0 means next tick */
+    resizeDebounceInterval: number;
+    /** Extend the current debounce delay time period if it is triggered during the delay.
+     * If this is true, the layout will only resize when its container has stopped being resized.
+     * If it is false, the layout will resize at intervals while its container is being resized.
+     */
+    resizeDebounceExtendedWhenPossible: boolean;
     /** @internal */
     private _containerElement;
-    /** @internal */
-    private _isFullPage;
     /** @internal */
     private _isInitialised;
     /** @internal */
@@ -67,9 +77,15 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     private _virtualSizedContainerAddingBeginCount;
     /** @internal */
-    private _windowResizeListener;
+    private _sizeInvalidationBeginCount;
     /** @internal */
-    private _windowUnloadListener;
+    protected _constructorOrSubWindowLayoutConfig: LayoutConfig | undefined;
+    /** @internal */
+    private _resizeObserver;
+    /** @internal @deprecated to be removed in version 3 */
+    private _windowBeforeUnloadListener;
+    /** @internal @deprecated to be removed in version 3 */
+    private _windowBeforeUnloadListening;
     /** @internal */
     private _maximisedStackBeforeDestroyedListener;
     readonly isSubWindow: boolean;
@@ -100,14 +116,20 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     get tabDropPlaceholder(): HTMLElement;
     get maximisedStack(): Stack | undefined;
+    /** @deprecated indicates deprecated constructor use */
+    get deprecatedConstructor(): boolean;
     /**
-    * @param container - A Dom HTML element. Defaults to body
-    * @internal
-    */
+     * @param container - A Dom HTML element. Defaults to body
+     * @internal
+     */
     constructor(parameters: LayoutManager.ConstructorParameters);
     /**
      * Destroys the LayoutManager instance itself as well as every ContentItem
      * within it. After this is called nothing should be left of the LayoutManager.
+     *
+     * This function only needs to be called if an application wishes to destroy the Golden Layout object while
+     * a page remains loaded. When a page is unloaded, all resources claimed by Golden Layout will automatically
+     * be released.
      */
     destroy(): void;
     /**
@@ -193,7 +215,7 @@ export declare abstract class LayoutManager extends EventEmitter {
      * component is successfully added
      * @param itemConfig - ResolvedItemConfig of child to be added.
      * @returns New ContentItem created.
-    */
+     */
     newItem(itemConfig: RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig): ContentItem;
     /**
      * Adds a new child ContentItem under the root ContentItem.  If a root does not exist, then create root ContentItem instead
@@ -220,7 +242,7 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** Loads the specified component ResolvedItemConfig as root.
      * This can be used to display a Component all by itself.  The layout cannot be changed other than having another new layout loaded.
      * Note that, if this layout is saved and reloaded, it will reload with the Component as a child of a Stack.
-    */
+     */
     loadComponentAsRoot(itemConfig: ComponentItemConfig): void;
     /** @deprecated Use {@link (LayoutManager:class).setSize} */
     updateSize(width: number, height: number): void;
@@ -232,11 +254,19 @@ export declare abstract class LayoutManager extends EventEmitter {
      */
     setSize(width: number, height: number): void;
     /** @internal */
+    beginSizeInvalidation(): void;
+    /** @internal */
+    endSizeInvalidation(): void;
+    /** @internal */
     updateSizeFromContainer(): void;
     /**
      * Update the size of the root ContentItem.  This will update the size of all contentItems in the tree
+     * @param force - In some cases the size is not updated if it has not changed. In this case, events
+     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
+     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
+     * relevant events need to be fired.
      */
-    updateRootSize(): void;
+    updateRootSize(force?: boolean): void;
     /** @public */
     createAndInitContentItem(config: ResolvedItemConfig, parent: ContentItem): ContentItem;
     /**
@@ -276,19 +306,27 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     createPopoutFromPopoutLayoutConfig(config: ResolvedPopoutLayoutConfig): BrowserPopout;
     /**
+     * Closes all Open Popouts
+     * Applications can call this method when a page is unloaded to remove its open popouts
+     */
+    closeAllOpenPopouts(): void;
+    /**
      * Attaches DragListener to any given DOM element
      * and turns it into a way of creating new ComponentItems
      * by 'dragging' the DOM element into the layout
      *
-     * @param element -
-     * @param componentTypeOrFtn - Type of component to be created, or a function which will provide both component type and state
-     * @param componentState - Optional initial state of component.  This will be ignored if componentTypeOrFtn is a function
+     * @param element - The HTML element which will be listened to for commencement of drag.
+     * @param componentTypeOrItemConfigCallback - Type of component to be created, or a callback which will provide the ItemConfig
+     * to be used to create the component.
+     * @param componentState - Optional initial state of component.  This will be ignored if componentTypeOrFtn is a function.
      *
      * @returns an opaque object that identifies the DOM element
      *          and the attached itemConfig. This can be used in
      *          removeDragSource() later to get rid of the drag listeners.
      */
-    newDragSource(element: HTMLElement, componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig), componentState?: JsonValue, title?: string): DragSource;
+    newDragSource(element: HTMLElement, itemConfigCallback: () => DragSource.ComponentItemConfig | ComponentItemConfig): DragSource;
+    /** @deprecated will be replaced in version 3 with newDragSource(element: HTMLElement, itemConfig: ComponentItemConfig) */
+    newDragSource(element: HTMLElement, componentType: JsonValue, componentState?: JsonValue, title?: JsonValue, id?: string): DragSource;
     /**
      * Removes a DragListener added by createDragSource() so the corresponding
      * DOM element is not a drag source any more.
@@ -372,15 +410,22 @@ export declare abstract class LayoutManager extends EventEmitter {
      */
     private getAllContentItems;
     /**
-     * Binds to DOM/BOM events on init
+     * Creates Subwindows (if there are any). Throws an error
+     * if popouts are blocked.
      * @internal
      */
-    private bindEvents;
+    private createSubWindows;
+    /**
+     * Debounces resize events
+     * @internal
+     */
+    private handleContainerResize;
     /**
      * Debounces resize events
      * @internal
      */
     private processResizeWithDebounce;
+    private checkClearResizeTimeout;
     /**
      * Determines what element the layout will be created in
      * @internal
@@ -390,8 +435,9 @@ export declare abstract class LayoutManager extends EventEmitter {
      * Called when the window is closed or the user navigates away
      * from the page
      * @internal
+     * @deprecated to be removed in version 3
      */
-    private onUnload;
+    private onBeforeUnload;
     /**
      * Adjusts the number of columns to be lower to fit the screen and still maintain minItemWidth.
      * @internal
@@ -444,7 +490,7 @@ export declare namespace LayoutManager {
     type AfterVirtualRectingEvent = (this: void) => void;
     /** @internal */
     interface ConstructorParameters {
-        layoutConfig: ResolvedLayoutConfig | undefined;
+        constructorOrSubWindowLayoutConfig: LayoutConfig | undefined;
         isSubWindow: boolean;
         containerElement: HTMLElement | undefined;
     }

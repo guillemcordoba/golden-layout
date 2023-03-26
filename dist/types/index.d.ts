@@ -1,4 +1,3 @@
-
 /** @public */
 export declare class ApiError extends ExternalError {
     /* Excluded from this release type: __constructor */
@@ -75,6 +74,7 @@ export declare class ComponentContainer extends EventEmitter {
     /* Excluded from this release type: _isShownWithZeroDimensions */
     /* Excluded from this release type: _tab */
     /* Excluded from this release type: _stackMaximised */
+    /* Excluded from this release type: _logicalZIndex */
     stateRequestEvent: ComponentContainer.StateRequestEventHandler | undefined;
     virtualRectingRequiredEvent: ComponentContainer.VirtualRectingRequiredEvent | undefined;
     virtualVisibilityChangeRequiredEvent: ComponentContainer.VirtualVisibilityChangeRequiredEvent | undefined;
@@ -149,6 +149,8 @@ export declare class ComponentContainer extends EventEmitter {
     setTitle(title: string): void;
     /* Excluded from this release type: setTab */
     /* Excluded from this release type: setVisibility */
+    setBaseLogicalZIndex(): void;
+    setLogicalZIndex(logicalZIndex: LogicalZIndex): void;
     /* Excluded from this release type: enterDragMode */
     /* Excluded from this release type: exitDragMode */
     /* Excluded from this release type: enterStackMaximised */
@@ -156,6 +158,7 @@ export declare class ComponentContainer extends EventEmitter {
     /* Excluded from this release type: drag */
     /* Excluded from this release type: setSizeToNodeSize */
     /* Excluded from this release type: notifyVirtualRectingRequired */
+    /* Excluded from this release type: notifyVirtualZIndexChangeRequired */
     /* Excluded from this release type: updateElementPositionPropertyFromBoundComponent */
     /* Excluded from this release type: addVirtualSizedContainerToLayoutManager */
     /* Excluded from this release type: checkShownFromZeroDimensions */
@@ -250,6 +253,11 @@ export declare interface ComponentItemConfig extends HeaderedItemConfig {
     type: 'component';
     readonly content?: [];
     /**
+     * The title of the item as displayed on its tab and on popout windows
+     * Default: componentType.toString() or ''
+     */
+    title?: string;
+    /**
      * The type of the component.
      * @deprecated use {@link (ComponentItemConfig:interface).componentType} instead
      */
@@ -276,7 +284,8 @@ export declare interface ComponentItemConfig extends HeaderedItemConfig {
 
 /** @public */
 export declare namespace ComponentItemConfig {
-    export function resolve(itemConfig: ComponentItemConfig): ResolvedComponentItemConfig;
+    /* Excluded from this release type: resolve */
+    /* Excluded from this release type: fromResolved */
     export function componentTypeToTitle(componentType: JsonValue): string;
 }
 
@@ -315,10 +324,10 @@ export declare abstract class ContentItem extends EventEmitter {
     /* Excluded from this release type: _pendingEventPropagations */
     /* Excluded from this release type: _throttledEvents */
     /* Excluded from this release type: _isInitialised */
-    /* Excluded from this release type: width */
-    /* Excluded from this release type: minWidth */
-    /* Excluded from this release type: height */
-    /* Excluded from this release type: minHeight */
+    /* Excluded from this release type: size */
+    /* Excluded from this release type: sizeUnit */
+    /* Excluded from this release type: minSize */
+    /* Excluded from this release type: minSizeUnit */
     isGround: boolean;
     isRow: boolean;
     isColumn: boolean;
@@ -326,6 +335,7 @@ export declare abstract class ContentItem extends EventEmitter {
     isComponent: boolean;
     get type(): ItemType;
     get id(): string;
+    set id(value: string);
     /* Excluded from this release type: popInParentIds */
     get parent(): ContentItem | null;
     get contentItems(): ContentItem[];
@@ -403,6 +413,7 @@ export declare class DragSource {
     /* Excluded from this release type: _componentTypeOrFtn */
     /* Excluded from this release type: _componentState */
     /* Excluded from this release type: _title */
+    /* Excluded from this release type: _id */
     /* Excluded from this release type: _rootContainer */
     /* Excluded from this release type: _dragListener */
     /* Excluded from this release type: _dummyGroundContainer */
@@ -417,11 +428,14 @@ export declare class DragSource {
 
 /** @public */
 export declare namespace DragSource {
+    /** @deprecated  use Config {@link (ComponentItemConfig:interface)} */
     export interface ComponentItemConfig {
         type: JsonValue;
         state?: JsonValue;
         title?: string;
     }
+    /** @deprecated remove in version 3 */
+    export function isDragSourceComponentItemConfig(config: DragSource.ComponentItemConfig | ComponentItemConfig): config is DragSource.ComponentItemConfig;
 }
 
 /* Excluded from this release type: DropTargetIndicator */
@@ -612,15 +626,31 @@ export declare abstract class ExternalError extends Error {
     /* Excluded from this release type: __constructor */
 }
 
+/* Excluded from this release type: formatSize */
+
+/* Excluded from this release type: formatUndefinableSize */
+
 /** @public */
 export declare class GoldenLayout extends VirtualLayout {
     /* Excluded from this release type: _componentTypesMap */
     /* Excluded from this release type: _getComponentConstructorFtn */
+    /* Excluded from this release type: _registeredComponentMap */
     /* Excluded from this release type: _virtuableComponentMap */
     /* Excluded from this release type: _goldenLayoutBoundingClientRect */
     /* Excluded from this release type: _containerVirtualRectingRequiredEventListener */
     /* Excluded from this release type: _containerVirtualVisibilityChangeRequiredEventListener */
     /* Excluded from this release type: _containerVirtualZIndexChangeRequiredEventListener */
+    /**
+     * @param container - A Dom HTML element. Defaults to body
+     * @param bindComponentEventHandler - Event handler to bind components
+     * @param bindComponentEventHandler - Event handler to unbind components
+     * If bindComponentEventHandler is defined, then constructor will be determinate. It will always call the init()
+     * function and the init() function will always complete. This means that the bindComponentEventHandler will be called
+     * if constructor is for a popout window. Make sure bindComponentEventHandler is ready for events.
+     */
+    constructor(container?: HTMLElement, bindComponentEventHandler?: VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler);
+    /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
+    constructor(config: LayoutConfig, container?: HTMLElement);
     /**
      * Register a new component type with the layout manager.
      *
@@ -732,23 +762,16 @@ export declare class Header extends EventEmitter {
     /* Excluded from this release type: _popoutButton */
     /* Excluded from this release type: _tabDropdownButton */
     /* Excluded from this release type: _maximiseButton */
-    /* Excluded from this release type: show */
-    /* Excluded from this release type: side */
-    /* Excluded from this release type: leftRightSided */
+    get show(): boolean;
+    get side(): Side;
+    get leftRightSided(): boolean;
     get layoutManager(): LayoutManager;
     get parent(): Stack;
     get tabs(): Tab[];
     get lastVisibleTabIndex(): number;
-    /**
-     * @deprecated use {@link (Stack:class).getActiveComponentItem} */
-    get activeContentItem(): ContentItem | null;
     get element(): HTMLElement;
-    /** @deprecated use {@link (Header:class).tabsContainerElement} */
-    get tabsContainer(): HTMLElement;
     get tabsContainerElement(): HTMLElement;
     get controlsContainerElement(): HTMLElement;
-    /** @deprecated use {@link (Header:class).controlsContainerElement} */
-    get controlsContainer(): HTMLElement;
     /* Excluded from this release type: __constructor */
     /* Excluded from this release type: destroy */
     /* Excluded from this release type: createTab */
@@ -810,10 +833,7 @@ export declare namespace HeaderedItemConfig {
     export namespace Header {
         export function resolve(header: Header | undefined, hasHeaders: boolean | undefined): ResolvedHeaderedItemConfig.Header | undefined;
     }
-    export function resolveIdAndMaximised(config: HeaderedItemConfig): {
-        id: string;
-        maximised: boolean;
-    };
+    /* Excluded from this release type: resolveIdAndMaximised */
 }
 
 /** @public */
@@ -824,7 +844,10 @@ export declare const enum I18nStringId {
     ComponentIsAlreadyRegistered = 3,
     ComponentIsNotVirtuable = 4,
     VirtualComponentDoesNotHaveRootHtmlElement = 5,
-    ItemConfigIsNotTypeComponent = 6
+    ItemConfigIsNotTypeComponent = 6,
+    InvalidNumberPartInSizeString = 7,
+    UnknownUnitInSizeString = 8,
+    UnsupportedUnitInSizeString = 9
 }
 
 /** @public */
@@ -848,22 +871,45 @@ export declare interface ItemConfig {
     content?: ItemConfig[];
     /**
      * The width of this item, relative to the other children of its parent in percent
+     * @deprecated use {@link (ItemConfig:interface).size} instead
      */
     width?: number;
     /**
      * The minimum width of this item in pixels
      * CAUTION - Not tested - do not use
+     * @deprecated use {@link (ItemConfig:interface).minSize} instead
      */
     minWidth?: number;
     /**
      * The height of this item, relative to the other children of its parent in percent
+     * @deprecated use {@link (ItemConfig:interface).size} instead
      */
     height?: number;
     /**
      * The minimum height of this item in pixels
      * CAUTION - Not tested - do not use
+     * @deprecated use {@link (ItemConfig:interface).minSize} instead
      */
     minHeight?: number;
+    /**
+     * The size of this item.
+     * For rows, it specifies height. For columns, it specifies width.
+     * Has format \<number\>\<{@link SizeUnit}\>. Currently only supports units `fr` and `%`.
+     *
+     * Space is first proportionally allocated to items with sizeUnit `%`.
+     * If there is any space left over (less than 100% allocated), then the
+     * remainder is allocated to the items with unit `fr` according to the fractional size.
+     * If more than 100% is allocated, then an extra 50% is allocated to items with unit `fr` and
+     * is allocated to each item according to its fractional size. All item sizes are then adjusted
+     * to bring the total back to 100%
+     */
+    size?: string;
+    /**
+     * The size of this item.
+     * For rows, it specifies height. For columns, it specifies width.
+     * Has format <number><sizeUnit>. Currently only supports units `px`
+     */
+    minSize?: string;
     /**
      * A string that can be used to identify a ContentItem.
      * Do NOT assign an array.  This only exists for legacy purposes.  If an array is assigned, the first element
@@ -879,15 +925,20 @@ export declare interface ItemConfig {
     /**
      * The title of the item as displayed on its tab and on popout windows
      * Default: componentType.toString() or ''
+     * @deprecated only Component has a title
      */
     title?: string;
 }
 
 /** @public */
 export declare namespace ItemConfig {
-    export function resolve(itemConfig: ItemConfig): ResolvedItemConfig;
-    export function resolveContent(content: ItemConfig[] | undefined): ResolvedItemConfig[];
-    export function resolveId(id: string | string[] | undefined): string;
+    /* Excluded from this release type: SizeWidthHeightSpecificationType */
+    /* Excluded from this release type: resolve */
+    /* Excluded from this release type: resolveContent */
+    /* Excluded from this release type: resolveId */
+    /* Excluded from this release type: resolveSize */
+    /* Excluded from this release type: resolveMinSize */
+    /* Excluded from this release type: calculateSizeWidthHeightSpecificationType */
     export function isGround(config: ItemConfig): config is ItemConfig;
     export function isRow(config: ItemConfig): config is ItemConfig;
     export function isColumn(config: ItemConfig): config is ItemConfig;
@@ -926,7 +977,7 @@ export declare type JsonValueArray = Array<JsonValue>;
 
 /** @public */
 export declare interface LayoutConfig {
-    root: RootItemConfig;
+    root: RootItemConfig | undefined;
     /** @deprecated Use {@link (LayoutConfig:interface).root} */
     content?: (RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig)[];
     openPopouts?: PopoutLayoutConfig[];
@@ -977,6 +1028,7 @@ export declare namespace LayoutConfig {
          * strong dependency on their parent and can exist on their own, but can be quite annoying to close by hand. In
          * addition, any changes made to popouts won't be stored after the parent is closed.
          * Default: true
+         * @deprecated Will be removed in version 3.
          */
         closePopoutsOnUnload?: boolean;
         /**
@@ -1035,14 +1087,24 @@ export declare namespace LayoutConfig {
         borderGrabWidth?: number;
         /**
          * The minimum height an item can be resized to (in pixel).
-         * Default: 10
+         * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemHeight} instead
          */
         minItemHeight?: number;
         /**
+         * The minimum height an item can be resized to.
+         * Default: 0
+         */
+        defaultMinItemHeight?: string;
+        /**
          * The minimum width an item can be resized to (in pixel).
-         * Default: 10
+         * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemWidth} instead
          */
         minItemWidth?: number;
+        /**
+         * The minimum width an item can be resized to.
+         * Default: 10px
+         */
+        defaultMinItemWidth?: string;
         /**
          * The height of the header elements in pixel. This can be changed, but your theme's header css needs to be
          * adjusted accordingly.
@@ -1061,7 +1123,10 @@ export declare namespace LayoutConfig {
         dragProxyHeight?: number;
     }
     export namespace Dimensions {
-        export function resolve(dimensions: Dimensions | undefined): ResolvedLayoutConfig.Dimensions;
+        /* Excluded from this release type: resolve */
+        /* Excluded from this release type: fromResolved */
+        /* Excluded from this release type: resolveDefaultMinItemHeight */
+        /* Excluded from this release type: resolveDefaultMinItemWidth */
     }
     export interface Labels {
         /**
@@ -1128,13 +1193,13 @@ export declare namespace LayoutConfig {
         tabDropdown?: false | string;
     }
     export namespace Header {
-        export function resolve(header: Header | undefined, settings: LayoutConfig.Settings | undefined, labels: LayoutConfig.Labels | undefined): ResolvedLayoutConfig.Header;
+        /* Excluded from this release type: resolve */
     }
     export function isPopout(config: LayoutConfig): config is PopoutLayoutConfig;
-    export function resolve(layoutConfig: LayoutConfig): ResolvedLayoutConfig;
+    /* Excluded from this release type: resolve */
     export function fromResolved(config: ResolvedLayoutConfig): LayoutConfig;
     export function isResolved(configOrResolvedConfig: ResolvedLayoutConfig | LayoutConfig): configOrResolvedConfig is ResolvedLayoutConfig;
-    export function resolveOpenPopouts(popoutConfigs: PopoutLayoutConfig[] | undefined): ResolvedPopoutLayoutConfig[];
+    /* Excluded from this release type: resolveOpenPopouts */
 }
 
 /**
@@ -1142,8 +1207,19 @@ export declare namespace LayoutConfig {
  */
 /** @public */
 export declare abstract class LayoutManager extends EventEmitter {
+    /** Whether the layout will be automatically be resized to container whenever the container's size is changed
+     * Default is true if <body> is the container otherwise false
+     * Default will be changed to true for any container in the future
+     */
+    resizeWithContainerAutomatically: boolean;
+    /** The debounce interval (in milliseconds) used whenever a layout is automatically resized.  0 means next tick */
+    resizeDebounceInterval: number;
+    /** Extend the current debounce delay time period if it is triggered during the delay.
+     * If this is true, the layout will only resize when its container has stopped being resized.
+     * If it is false, the layout will resize at intervals while its container is being resized.
+     */
+    resizeDebounceExtendedWhenPossible: boolean;
     /* Excluded from this release type: _containerElement */
-    /* Excluded from this release type: _isFullPage */
     /* Excluded from this release type: _isInitialised */
     /* Excluded from this release type: _groundItem */
     /* Excluded from this release type: _openPopouts */
@@ -1163,8 +1239,11 @@ export declare abstract class LayoutManager extends EventEmitter {
     /* Excluded from this release type: _focusedComponentItem */
     /* Excluded from this release type: _virtualSizedContainers */
     /* Excluded from this release type: _virtualSizedContainerAddingBeginCount */
-    /* Excluded from this release type: _windowResizeListener */
-    /* Excluded from this release type: _windowUnloadListener */
+    /* Excluded from this release type: _sizeInvalidationBeginCount */
+    /* Excluded from this release type: _constructorOrSubWindowLayoutConfig */
+    /* Excluded from this release type: _resizeObserver */
+    /* Excluded from this release type: _windowBeforeUnloadListener */
+    /* Excluded from this release type: _windowBeforeUnloadListening */
     /* Excluded from this release type: _maximisedStackBeforeDestroyedListener */
     readonly isSubWindow: boolean;
     layoutConfig: ResolvedLayoutConfig;
@@ -1189,10 +1268,16 @@ export declare abstract class LayoutManager extends EventEmitter {
     get focusedComponentItem(): ComponentItem | undefined;
     /* Excluded from this release type: tabDropPlaceholder */
     get maximisedStack(): Stack | undefined;
+    /** @deprecated indicates deprecated constructor use */
+    get deprecatedConstructor(): boolean;
     /* Excluded from this release type: __constructor */
     /**
      * Destroys the LayoutManager instance itself as well as every ContentItem
      * within it. After this is called nothing should be left of the LayoutManager.
+     *
+     * This function only needs to be called if an application wishes to destroy the Golden Layout object while
+     * a page remains loaded. When a page is unloaded, all resources claimed by Golden Layout will automatically
+     * be released.
      */
     destroy(): void;
     /**
@@ -1272,7 +1357,7 @@ export declare abstract class LayoutManager extends EventEmitter {
      * component is successfully added
      * @param itemConfig - ResolvedItemConfig of child to be added.
      * @returns New ContentItem created.
-    */
+     */
     newItem(itemConfig: RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig): ContentItem;
     /**
      * Adds a new child ContentItem under the root ContentItem.  If a root does not exist, then create root ContentItem instead
@@ -1299,7 +1384,7 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** Loads the specified component ResolvedItemConfig as root.
      * This can be used to display a Component all by itself.  The layout cannot be changed other than having another new layout loaded.
      * Note that, if this layout is saved and reloaded, it will reload with the Component as a child of a Stack.
-    */
+     */
     loadComponentAsRoot(itemConfig: ComponentItemConfig): void;
     /** @deprecated Use {@link (LayoutManager:class).setSize} */
     updateSize(width: number, height: number): void;
@@ -1310,11 +1395,17 @@ export declare abstract class LayoutManager extends EventEmitter {
      * @param height - Height in pixels
      */
     setSize(width: number, height: number): void;
+    /* Excluded from this release type: beginSizeInvalidation */
+    /* Excluded from this release type: endSizeInvalidation */
     /* Excluded from this release type: updateSizeFromContainer */
     /**
      * Update the size of the root ContentItem.  This will update the size of all contentItems in the tree
+     * @param force - In some cases the size is not updated if it has not changed. In this case, events
+     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
+     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
+     * relevant events need to be fired.
      */
-    updateRootSize(): void;
+    updateRootSize(force?: boolean): void;
     /** @public */
     createAndInitContentItem(config: ResolvedItemConfig, parent: ContentItem): ContentItem;
     /* Excluded from this release type: createContentItem */
@@ -1338,19 +1429,27 @@ export declare abstract class LayoutManager extends EventEmitter {
     /* Excluded from this release type: createPopoutFromItemConfig */
     /* Excluded from this release type: createPopoutFromPopoutLayoutConfig */
     /**
+     * Closes all Open Popouts
+     * Applications can call this method when a page is unloaded to remove its open popouts
+     */
+    closeAllOpenPopouts(): void;
+    /**
      * Attaches DragListener to any given DOM element
      * and turns it into a way of creating new ComponentItems
      * by 'dragging' the DOM element into the layout
      *
-     * @param element -
-     * @param componentTypeOrFtn - Type of component to be created, or a function which will provide both component type and state
-     * @param componentState - Optional initial state of component.  This will be ignored if componentTypeOrFtn is a function
+     * @param element - The HTML element which will be listened to for commencement of drag.
+     * @param componentTypeOrItemConfigCallback - Type of component to be created, or a callback which will provide the ItemConfig
+     * to be used to create the component.
+     * @param componentState - Optional initial state of component.  This will be ignored if componentTypeOrFtn is a function.
      *
      * @returns an opaque object that identifies the DOM element
      *          and the attached itemConfig. This can be used in
      *          removeDragSource() later to get rid of the drag listeners.
      */
-    newDragSource(element: HTMLElement, componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig), componentState?: JsonValue, title?: string): DragSource;
+    newDragSource(element: HTMLElement, itemConfigCallback: () => DragSource.ComponentItemConfig | ComponentItemConfig): DragSource;
+    /** @deprecated will be replaced in version 3 with newDragSource(element: HTMLElement, itemConfig: ComponentItemConfig) */
+    newDragSource(element: HTMLElement, componentType: JsonValue, componentState?: JsonValue, title?: JsonValue, id?: string): DragSource;
     /**
      * Removes a DragListener added by createDragSource() so the corresponding
      * DOM element is not a drag source any more.
@@ -1386,10 +1485,12 @@ export declare abstract class LayoutManager extends EventEmitter {
     /* Excluded from this release type: processMinimiseMaximisedStack */
     /* Excluded from this release type: reconcilePopoutWindows */
     /* Excluded from this release type: getAllContentItems */
-    /* Excluded from this release type: bindEvents */
+    /* Excluded from this release type: createSubWindows */
+    /* Excluded from this release type: handleContainerResize */
     /* Excluded from this release type: processResizeWithDebounce */
+    private checkClearResizeTimeout;
     /* Excluded from this release type: setContainer */
-    /* Excluded from this release type: onUnload */
+    /* Excluded from this release type: onBeforeUnload */
     /* Excluded from this release type: adjustColumnsResponsive */
     /* Excluded from this release type: useResponsiveLayout */
     /* Excluded from this release type: addChildContentItemsToContainer */
@@ -1475,6 +1576,15 @@ export declare namespace LogicalZIndex {
 }
 
 /** @public */
+export declare const LogicalZIndexToDefaultMap: {
+    base: string;
+    drag: string;
+    stackMaximised: string;
+};
+
+/* Excluded from this release type: parseSize */
+
+/** @public */
 export declare class PopoutBlockedError extends ExternalError {
     /* Excluded from this release type: __constructor */
 }
@@ -1482,12 +1592,12 @@ export declare class PopoutBlockedError extends ExternalError {
 /** @public */
 export declare interface PopoutLayoutConfig extends LayoutConfig {
     /** The id of the element the item will be appended to on popIn
-    * If null, append to topmost layout element
-    */
+     * If null, append to topmost layout element
+     */
     parentId: string | null | undefined;
     /** The position of this element within its parent
-    * If null, position is last
-    */
+     * If null, position is last
+     */
     indexInParent: number | null | undefined;
     /** @deprecated use {@link (PopoutLayoutConfig:interface).window} */
     dimensions: PopoutLayoutConfig.Dimensions | undefined;
@@ -1499,13 +1609,13 @@ export declare namespace PopoutLayoutConfig {
     /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface)} */
     export interface Dimensions extends LayoutConfig.Dimensions {
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).width} */
-        width: number | null;
+        width?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).height} */
-        height: number | null;
+        height?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).left} */
-        left: number | null;
+        left?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).top} */
-        top: number | null;
+        top?: number | null;
     }
     export interface Window {
         width?: number;
@@ -1514,9 +1624,12 @@ export declare namespace PopoutLayoutConfig {
         top?: number;
     }
     export namespace Window {
-        export function resolve(window: Window | undefined, dimensions: Dimensions | undefined): ResolvedPopoutLayoutConfig.Window;
+        /* Excluded from this release type: resolve */
+        /* Excluded from this release type: fromResolved */
     }
-    export function resolve(popoutConfig: PopoutLayoutConfig): ResolvedPopoutLayoutConfig;
+    /* Excluded from this release type: resolve */
+    /* Excluded from this release type: fromResolved */
+    /* Excluded from this release type: fromResolvedArray */
 }
 
 /* Excluded from this release type: Rect */
@@ -1571,10 +1684,10 @@ export declare namespace ResolvedHeaderedItemConfig {
 export declare interface ResolvedItemConfig {
     readonly type: ItemType;
     readonly content: readonly ResolvedItemConfig[];
-    readonly width: number;
-    readonly minWidth: number;
-    readonly height: number;
-    readonly minHeight: number;
+    readonly size: number;
+    readonly sizeUnit: SizeUnitEnum;
+    readonly minSize: number | undefined;
+    readonly minSizeUnit: SizeUnitEnum;
     readonly id: string;
     readonly isClosable: boolean;
 }
@@ -1607,6 +1720,7 @@ export declare namespace ResolvedLayoutConfig {
         readonly reorderEnabled: boolean;
         readonly popoutWholeStack: boolean;
         readonly blockedPopoutsThrowError: boolean;
+        /** @deprecated Will be removed in version 3. */
         readonly closePopoutsOnUnload: boolean;
         readonly responsiveMode: ResponsiveMode;
         readonly tabOverlapAllowance: number;
@@ -1621,8 +1735,10 @@ export declare namespace ResolvedLayoutConfig {
     export interface Dimensions {
         readonly borderWidth: number;
         readonly borderGrabWidth: number;
-        readonly minItemHeight: number;
-        readonly minItemWidth: number;
+        readonly defaultMinItemHeight: number;
+        readonly defaultMinItemHeightUnit: SizeUnitEnum;
+        readonly defaultMinItemWidth: number;
+        readonly defaultMinItemWidthUnit: SizeUnitEnum;
         readonly headerHeight: number;
         readonly dragProxyWidth: number;
         readonly dragProxyHeight: number;
@@ -1689,7 +1805,7 @@ export declare namespace ResolvedPopoutLayoutConfig {
  * Note that RootItemConfig can be an ComponentItem itemConfig.  However when the Ground ContentItem's child is created
  * a ComponentItem itemConfig will create a Stack with a child ComponentItem.
  * @public
-*/
+ */
 export declare type ResolvedRootItemConfig = ResolvedRowOrColumnItemConfig | ResolvedStackItemConfig | ResolvedComponentItemConfig;
 
 /** @public */
@@ -1750,7 +1866,8 @@ export declare type RootItemConfig = RowOrColumnItemConfig | StackItemConfig | C
 /** @public */
 export declare namespace RootItemConfig {
     export function isRootItemConfig(itemConfig: ItemConfig): itemConfig is RootItemConfig;
-    export function resolve(itemConfig: RootItemConfig | undefined): ResolvedRootItemConfig | undefined;
+    /* Excluded from this release type: resolve */
+    /* Excluded from this release type: fromResolvedOrUndefined */
 }
 
 /** @public */
@@ -1799,7 +1916,7 @@ export declare class RowOrColumn extends ContentItem {
     /**
      * Called whenever the dimensions of this item or one of its parents change
      */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     /* Excluded from this release type: init */
     toConfig(): ResolvedRowOrColumnItemConfig;
     /* Excluded from this release type: setParent */
@@ -1807,10 +1924,11 @@ export declare class RowOrColumn extends ContentItem {
     /* Excluded from this release type: setAbsoluteSizes */
     /* Excluded from this release type: calculateAbsoluteSizes */
     /* Excluded from this release type: calculateRelativeSizes */
-    /* Excluded from this release type: respectMinItemWidth */
+    /* Excluded from this release type: respectMinItemSize */
     /* Excluded from this release type: createSplitter */
-    /* Excluded from this release type: getItemsForSplitter */
-    /* Excluded from this release type: getMinimumDimensions */
+    /* Excluded from this release type: getSplitItems */
+    private calculateContentItemMinSize;
+    /* Excluded from this release type: calculateContentItemsTotalMinSize */
     /* Excluded from this release type: onSplitterDragStart */
     /* Excluded from this release type: onSplitterDrag */
     /* Excluded from this release type: onSplitterDragStop */
@@ -1818,6 +1936,7 @@ export declare class RowOrColumn extends ContentItem {
 
 /** @public */
 export declare namespace RowOrColumn {
+    /* Excluded from this release type: AbsoluteSizes */
     /* Excluded from this release type: getElementDimensionSize */
     /* Excluded from this release type: setElementDimensionSize */
     /* Excluded from this release type: createElement */
@@ -1833,8 +1952,9 @@ export declare interface RowOrColumnItemConfig extends ItemConfig {
 export declare namespace RowOrColumnItemConfig {
     export type ChildItemConfig = RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig;
     export function isChildItemConfig(itemConfig: ItemConfig): itemConfig is ChildItemConfig;
-    export function resolve(itemConfig: RowOrColumnItemConfig): ResolvedRowOrColumnItemConfig;
-    export function resolveContent(content: ChildItemConfig[] | undefined): ResolvedRowOrColumnItemConfig.ChildItemConfig[];
+    /* Excluded from this release type: resolve */
+    /* Excluded from this release type: fromResolved */
+    /* Excluded from this release type: resolveContent */
 }
 
 /** @public */
@@ -1847,6 +1967,28 @@ export declare namespace Side {
     const right = "right";
     const bottom = "bottom";
 }
+
+/**
+ * Length units which can specify the size of a Component Item
+ * @public
+ */
+export declare type SizeUnit = 'px' | '%' | 'fr' | 'em';
+
+/** @public */
+export declare enum SizeUnitEnum {
+    Pixel = "px",
+    Percent = "%",
+    Fractional = "fr",
+    Em = "em"
+}
+
+/** @public */
+export declare namespace SizeUnitEnum {
+    export function tryParse(value: string): SizeUnitEnum | undefined;
+    export function format(value: SizeUnitEnum): SizeUnitEnum;
+}
+
+/* Excluded from this release type: SizeWithUnit */
 
 /** @public */
 export declare class Stack extends ComponentParentableItem {
@@ -1865,6 +2007,7 @@ export declare class Stack extends ComponentParentableItem {
     /* Excluded from this release type: _maximisedListener */
     /* Excluded from this release type: _minimisedListener */
     get childElementContainer(): HTMLElement;
+    get header(): Header;
     get headerShow(): boolean;
     get headerSide(): Side;
     get headerLeftRightSided(): boolean;
@@ -1938,8 +2081,8 @@ export declare interface StackItemConfig extends HeaderedItemConfig {
 
 /** @public */
 export declare namespace StackItemConfig {
-    export function resolve(itemConfig: StackItemConfig): ResolvedStackItemConfig;
-    export function resolveContent(content: ComponentItemConfig[] | undefined): ResolvedComponentItemConfig[];
+    /* Excluded from this release type: resolve */
+    /* Excluded from this release type: fromResolved */
 }
 
 /** @public */
@@ -2016,10 +2159,10 @@ export declare namespace Tab {
 
 /* Excluded from this release type: TransitionIndicator */
 
+/* Excluded from this release type: UndefinableSizeWithUnit */
+
 /** @public */
 export declare class VirtualLayout extends LayoutManager {
-    /* Excluded from this release type: _subWindowsCreated */
-    /* Excluded from this release type: _creationTimeoutPassed */
     /**
      * @deprecated Use {@link (VirtualLayout:class).bindComponentEvent} and
      * {@link (VirtualLayout:class).unbindComponentEvent} with virtual components
@@ -2032,12 +2175,20 @@ export declare class VirtualLayout extends LayoutManager {
     releaseComponentEvent: VirtualLayout.ReleaseComponentEventHandler | undefined;
     bindComponentEvent: VirtualLayout.BindComponentEventHandler | undefined;
     unbindComponentEvent: VirtualLayout.UnbindComponentEventHandler | undefined;
+    /* Excluded from this release type: _bindComponentEventHanlderPassedInConstructor */
+    /* Excluded from this release type: _creationTimeoutPassed */
     /**
-    * @param container - A Dom HTML element. Defaults to body
-    */
+     * @param container - A Dom HTML element. Defaults to body
+     * @param bindComponentEventHandler - Event handler to bind components
+     * @param bindComponentEventHandler - Event handler to unbind components
+     * If bindComponentEventHandler is defined, then constructor will be determinate. It will always call the init()
+     * function and the init() function will always complete. This means that the bindComponentEventHandler will be called
+     * if constructor is for a popout window. Make sure bindComponentEventHandler is ready for events.
+     */
     constructor(container?: HTMLElement, bindComponentEventHandler?: VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler);
     /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
     constructor(config: LayoutConfig, container?: HTMLElement);
+    /* Excluded from this release type: __constructor */
     destroy(): void;
     /**
      * Creates the actual layout. Must be called after all initial components
@@ -2051,10 +2202,24 @@ export declare class VirtualLayout extends LayoutManager {
      * then init() will be automatically called internally and should not be called externally.
      */
     init(): void;
+    /**
+     * Clears existing HTML and adjusts style to make window suitable to be a popout sub window
+     * Curently is automatically called when window is a subWindow and bindComponentEvent is not passed in the constructor
+     * If bindComponentEvent is not passed in the constructor, the application must either call this function explicitly or
+     * (preferably) make the window suitable as a subwindow.
+     * In the future, it is planned that this function is NOT automatically called in any circumstances.  Applications will
+     * need to determine whether a window is a Golden Layout popout window and either call this function explicitly or
+     * hide HTML not relevant to the popout.
+     * See apitest for an example of how HTML is hidden when popout windows are displayed
+     */
+    clearHtmlAndAdjustStylesForSubWindow(): void;
+    /**
+     * Will add button if not popinOnClose specified in settings
+     * @returns true if added otherwise false
+     */
+    checkAddDefaultPopinButton(): boolean;
     /* Excluded from this release type: bindComponent */
     /* Excluded from this release type: unbindComponent */
-    /* Excluded from this release type: createSubWindows */
-    /* Excluded from this release type: adjustToWindowMode */
 }
 
 /** @public */

@@ -42,7 +42,7 @@ export declare class GroundItem extends ComponentParentableItem {
      * Adds a Root ContentItem.
      * Internal only.  To replace Root ContentItem with API, use {@link (LayoutManager:class).updateRootSize}
      */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     createSideAreas(): GroundItem.Area[];
     highlightDropZone(x: number, y: number, area: AreaLinkedRect): void;
     onDrop(contentItem: ContentItem, area: GroundItem.Area): void;

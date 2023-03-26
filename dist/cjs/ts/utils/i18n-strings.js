@@ -37,6 +37,18 @@ var I18nStrings;
             id: 6 /* ItemConfigIsNotTypeComponent */,
             default: 'ItemConfig is not of type component',
         },
+        InvalidNumberPartInSizeString: {
+            id: 7 /* InvalidNumberPartInSizeString */,
+            default: 'Invalid number part in size string',
+        },
+        UnknownUnitInSizeString: {
+            id: 8 /* UnknownUnitInSizeString */,
+            default: 'Unknown unit in size string',
+        },
+        UnsupportedUnitInSizeString: {
+            id: 9 /* UnsupportedUnitInSizeString */,
+            default: 'Unsupported unit in size string',
+        },
     };
     I18nStrings.idCount = Object.keys(infosObject).length;
     /** @internal */

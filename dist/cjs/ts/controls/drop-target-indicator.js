@@ -21,15 +21,15 @@ class DropTargetIndicator {
     destroy() {
         this._element.remove();
     }
-    highlightArea(area) {
-        this._element.style.left = utils_1.numberToPixels(area.x1);
-        this._element.style.top = utils_1.numberToPixels(area.y1);
-        this._element.style.width = utils_1.numberToPixels(area.x2 - area.x1);
-        this._element.style.height = utils_1.numberToPixels(area.y2 - area.y1);
+    highlightArea(area, margin) {
+        this._element.style.left = (0, utils_1.numberToPixels)(area.x1 + margin);
+        this._element.style.top = (0, utils_1.numberToPixels)(area.y1 + margin);
+        this._element.style.width = (0, utils_1.numberToPixels)(area.x2 - area.x1 - margin);
+        this._element.style.height = (0, utils_1.numberToPixels)(area.y2 - area.y1 - margin);
         this._element.style.display = 'block';
     }
     hide() {
-        utils_1.setElementDisplayVisibility(this._element, false);
+        (0, utils_1.setElementDisplayVisibility)(this._element, false);
     }
 }
 exports.DropTargetIndicator = DropTargetIndicator;

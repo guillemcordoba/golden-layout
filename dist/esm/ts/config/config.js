@@ -1,26 +1,30 @@
 import { ConfigurationError } from '../errors/external-error';
-import { AssertError, UnreachableCaseError } from '../errors/internal-error';
-import { ItemType } from '../utils/types';
-import { ResolvedComponentItemConfig, ResolvedItemConfig, ResolvedLayoutConfig, ResolvedPopoutLayoutConfig, ResolvedRootItemConfig, ResolvedRowOrColumnItemConfig, ResolvedStackItemConfig } from "./resolved-config";
+import { AssertError, UnexpectedUndefinedError, UnreachableCaseError } from '../errors/internal-error';
+import { i18nStrings } from '../utils/i18n-strings';
+import { ItemType, SizeUnitEnum } from '../utils/types';
+import { deepExtendValue, splitStringAtFirstNonNumericChar } from '../utils/utils';
+import { ResolvedComponentItemConfig, ResolvedHeaderedItemConfig, ResolvedItemConfig, ResolvedLayoutConfig, ResolvedPopoutLayoutConfig, ResolvedRootItemConfig, ResolvedRowOrColumnItemConfig, ResolvedStackItemConfig } from "./resolved-config";
 /** @public */
 export var ItemConfig;
 (function (ItemConfig) {
-    function resolve(itemConfig) {
+    /** @internal */
+    function resolve(itemConfig, rowAndColumnChildLegacySizeDefault) {
         switch (itemConfig.type) {
             case ItemType.ground:
                 throw new ConfigurationError('ItemConfig cannot specify type ground', JSON.stringify(itemConfig));
             case ItemType.row:
             case ItemType.column:
-                return RowOrColumnItemConfig.resolve(itemConfig);
+                return RowOrColumnItemConfig.resolve(itemConfig, rowAndColumnChildLegacySizeDefault);
             case ItemType.stack:
-                return StackItemConfig.resolve(itemConfig);
+                return StackItemConfig.resolve(itemConfig, rowAndColumnChildLegacySizeDefault);
             case ItemType.component:
-                return ComponentItemConfig.resolve(itemConfig);
+                return ComponentItemConfig.resolve(itemConfig, rowAndColumnChildLegacySizeDefault);
             default:
                 throw new UnreachableCaseError('UCUICR55499', itemConfig.type);
         }
     }
     ItemConfig.resolve = resolve;
+    /** @internal */
     function resolveContent(content) {
         if (content === undefined) {
             return [];
@@ -29,12 +33,13 @@ export var ItemConfig;
             const count = content.length;
             const result = new Array(count);
             for (let i = 0; i < count; i++) {
-                result[i] = ItemConfig.resolve(content[i]);
+                result[i] = ItemConfig.resolve(content[i], false);
             }
             return result;
         }
     }
     ItemConfig.resolveContent = resolveContent;
+    /** @internal */
     function resolveId(id) {
         if (id === undefined) {
             return ResolvedItemConfig.defaults.id;
@@ -54,6 +59,74 @@ export var ItemConfig;
         }
     }
     ItemConfig.resolveId = resolveId;
+    /** @internal */
+    function resolveSize(size, width, height, rowAndColumnChildLegacySizeDefault) {
+        // Remove support for rowAndColumnChildLegacySizeDefault in a major version release
+        if (size !== undefined) {
+            return parseSize(size, [SizeUnitEnum.Percent, SizeUnitEnum.Fractional]);
+        }
+        else {
+            if (width !== undefined || height !== undefined) {
+                if (width !== undefined) {
+                    return { size: width, sizeUnit: SizeUnitEnum.Percent };
+                }
+                else {
+                    if (height !== undefined) {
+                        return { size: height, sizeUnit: SizeUnitEnum.Percent };
+                    }
+                    else {
+                        throw new UnexpectedUndefinedError('CRS33390');
+                    }
+                }
+            }
+            else {
+                if (rowAndColumnChildLegacySizeDefault) {
+                    return { size: 50, sizeUnit: SizeUnitEnum.Percent };
+                }
+                else {
+                    return { size: ResolvedItemConfig.defaults.size, sizeUnit: ResolvedItemConfig.defaults.sizeUnit };
+                }
+            }
+        }
+    }
+    ItemConfig.resolveSize = resolveSize;
+    /** @internal */
+    function resolveMinSize(minSize, minWidth, minHeight) {
+        if (minSize !== undefined) {
+            return parseSize(minSize, [SizeUnitEnum.Pixel]);
+        }
+        else {
+            const minWidthDefined = minWidth !== undefined;
+            const minHeightDefined = minHeight !== undefined;
+            if (minWidthDefined || minHeightDefined) {
+                if (minWidthDefined) {
+                    return { size: minWidth, sizeUnit: SizeUnitEnum.Pixel };
+                }
+                else {
+                    return { size: minHeight, sizeUnit: SizeUnitEnum.Pixel };
+                }
+            }
+            else {
+                return { size: ResolvedItemConfig.defaults.minSize, sizeUnit: ResolvedItemConfig.defaults.minSizeUnit };
+            }
+        }
+    }
+    ItemConfig.resolveMinSize = resolveMinSize;
+    /** @internal */
+    function calculateSizeWidthHeightSpecificationType(config) {
+        if (config.size !== undefined) {
+            return 1 /* Size */;
+        }
+        else {
+            if (config.width !== undefined || config.height !== undefined) {
+                return 2 /* WidthOrHeight */;
+            }
+            else {
+                return 0 /* None */;
+            }
+        }
+    }
+    ItemConfig.calculateSizeWidthHeightSpecificationType = calculateSizeWidthHeightSpecificationType;
     function isGround(config) {
         return config.type === ItemType.ground;
     }
@@ -100,6 +173,7 @@ export var HeaderedItemConfig;
         }
         Header.resolve = resolve;
     })(Header = HeaderedItemConfig.Header || (HeaderedItemConfig.Header = {}));
+    /** @internal */
     function resolveIdAndMaximised(config) {
         let id;
         // To support legacy configs with Id saved as an array of string, assign config.id to a type which includes string array
@@ -140,25 +214,45 @@ export var HeaderedItemConfig;
 /** @public */
 export var StackItemConfig;
 (function (StackItemConfig) {
-    function resolve(itemConfig) {
-        var _a, _b, _c, _d, _e, _f;
+    /** @internal */
+    function resolve(itemConfig, rowAndColumnChildLegacySizeDefault) {
+        var _a, _b;
         const { id, maximised } = HeaderedItemConfig.resolveIdAndMaximised(itemConfig);
+        const { size, sizeUnit } = ItemConfig.resolveSize(itemConfig.size, itemConfig.width, itemConfig.height, rowAndColumnChildLegacySizeDefault);
+        const { size: minSize, sizeUnit: minSizeUnit } = ItemConfig.resolveMinSize(itemConfig.minSize, itemConfig.minWidth, itemConfig.minHeight);
         const result = {
             type: ItemType.stack,
             content: resolveContent(itemConfig.content),
-            width: (_a = itemConfig.width) !== null && _a !== void 0 ? _a : ResolvedItemConfig.defaults.width,
-            minWidth: (_b = itemConfig.minWidth) !== null && _b !== void 0 ? _b : ResolvedItemConfig.defaults.minWidth,
-            height: (_c = itemConfig.height) !== null && _c !== void 0 ? _c : ResolvedItemConfig.defaults.height,
-            minHeight: (_d = itemConfig.minHeight) !== null && _d !== void 0 ? _d : ResolvedItemConfig.defaults.minHeight,
+            size,
+            sizeUnit,
+            minSize,
+            minSizeUnit,
             id,
             maximised,
-            isClosable: (_e = itemConfig.isClosable) !== null && _e !== void 0 ? _e : ResolvedItemConfig.defaults.isClosable,
-            activeItemIndex: (_f = itemConfig.activeItemIndex) !== null && _f !== void 0 ? _f : ResolvedStackItemConfig.defaultActiveItemIndex,
+            isClosable: (_a = itemConfig.isClosable) !== null && _a !== void 0 ? _a : ResolvedItemConfig.defaults.isClosable,
+            activeItemIndex: (_b = itemConfig.activeItemIndex) !== null && _b !== void 0 ? _b : ResolvedStackItemConfig.defaultActiveItemIndex,
             header: HeaderedItemConfig.Header.resolve(itemConfig.header, itemConfig.hasHeaders),
         };
         return result;
     }
     StackItemConfig.resolve = resolve;
+    /** @internal */
+    function fromResolved(resolvedConfig) {
+        const result = {
+            type: ItemType.stack,
+            content: fromResolvedContent(resolvedConfig.content),
+            size: formatSize(resolvedConfig.size, resolvedConfig.sizeUnit),
+            minSize: formatUndefinableSize(resolvedConfig.minSize, resolvedConfig.minSizeUnit),
+            id: resolvedConfig.id,
+            maximised: resolvedConfig.maximised,
+            isClosable: resolvedConfig.isClosable,
+            activeItemIndex: resolvedConfig.activeItemIndex,
+            header: ResolvedHeaderedItemConfig.Header.createCopy(resolvedConfig.header),
+        };
+        return result;
+    }
+    StackItemConfig.fromResolved = fromResolved;
+    /** @internal */
     function resolveContent(content) {
         if (content === undefined) {
             return [];
@@ -168,7 +262,7 @@ export var StackItemConfig;
             const result = new Array(count);
             for (let i = 0; i < count; i++) {
                 const childItemConfig = content[i];
-                const itemConfig = ItemConfig.resolve(childItemConfig);
+                const itemConfig = ItemConfig.resolve(childItemConfig, false);
                 if (!ResolvedItemConfig.isComponentItem(itemConfig)) {
                     throw new AssertError('UCUSICRC91114', JSON.stringify(itemConfig));
                 }
@@ -179,13 +273,23 @@ export var StackItemConfig;
             return result;
         }
     }
-    StackItemConfig.resolveContent = resolveContent;
+    /** @internal */
+    function fromResolvedContent(resolvedContent) {
+        const count = resolvedContent.length;
+        const result = new Array(count);
+        for (let i = 0; i < count; i++) {
+            const resolvedContentConfig = resolvedContent[i];
+            result[i] = ComponentItemConfig.fromResolved(resolvedContentConfig);
+        }
+        return result;
+    }
 })(StackItemConfig || (StackItemConfig = {}));
 /** @public */
 export var ComponentItemConfig;
 (function (ComponentItemConfig) {
-    function resolve(itemConfig) {
-        var _a, _b, _c, _d, _e, _f, _g;
+    /** @internal */
+    function resolve(itemConfig, rowAndColumnChildLegacySizeDefault) {
+        var _a, _b, _c;
         let componentType = itemConfig.componentType;
         if (componentType === undefined) {
             componentType = itemConfig.componentName;
@@ -202,26 +306,46 @@ export var ComponentItemConfig;
             else {
                 title = itemConfig.title;
             }
+            const { size, sizeUnit } = ItemConfig.resolveSize(itemConfig.size, itemConfig.width, itemConfig.height, rowAndColumnChildLegacySizeDefault);
+            const { size: minSize, sizeUnit: minSizeUnit } = ItemConfig.resolveMinSize(itemConfig.minSize, itemConfig.minWidth, itemConfig.minHeight);
             const result = {
                 type: itemConfig.type,
                 content: [],
-                width: (_a = itemConfig.width) !== null && _a !== void 0 ? _a : ResolvedItemConfig.defaults.width,
-                minWidth: (_b = itemConfig.minWidth) !== null && _b !== void 0 ? _b : ResolvedItemConfig.defaults.minWidth,
-                height: (_c = itemConfig.height) !== null && _c !== void 0 ? _c : ResolvedItemConfig.defaults.height,
-                minHeight: (_d = itemConfig.minHeight) !== null && _d !== void 0 ? _d : ResolvedItemConfig.defaults.minHeight,
+                size,
+                sizeUnit,
+                minSize,
+                minSizeUnit,
                 id,
                 maximised,
-                isClosable: (_e = itemConfig.isClosable) !== null && _e !== void 0 ? _e : ResolvedItemConfig.defaults.isClosable,
-                reorderEnabled: (_f = itemConfig.reorderEnabled) !== null && _f !== void 0 ? _f : ResolvedComponentItemConfig.defaultReorderEnabled,
+                isClosable: (_a = itemConfig.isClosable) !== null && _a !== void 0 ? _a : ResolvedItemConfig.defaults.isClosable,
+                reorderEnabled: (_b = itemConfig.reorderEnabled) !== null && _b !== void 0 ? _b : ResolvedComponentItemConfig.defaultReorderEnabled,
                 title,
                 header: HeaderedItemConfig.Header.resolve(itemConfig.header, itemConfig.hasHeaders),
                 componentType,
-                componentState: (_g = itemConfig.componentState) !== null && _g !== void 0 ? _g : {},
+                componentState: (_c = itemConfig.componentState) !== null && _c !== void 0 ? _c : {},
             };
             return result;
         }
     }
     ComponentItemConfig.resolve = resolve;
+    /** @internal */
+    function fromResolved(resolvedConfig) {
+        const result = {
+            type: ItemType.component,
+            size: formatSize(resolvedConfig.size, resolvedConfig.sizeUnit),
+            minSize: formatUndefinableSize(resolvedConfig.minSize, resolvedConfig.minSizeUnit),
+            id: resolvedConfig.id,
+            maximised: resolvedConfig.maximised,
+            isClosable: resolvedConfig.isClosable,
+            reorderEnabled: resolvedConfig.reorderEnabled,
+            title: resolvedConfig.title,
+            header: ResolvedHeaderedItemConfig.Header.createCopy(resolvedConfig.header),
+            componentType: resolvedConfig.componentType,
+            componentState: deepExtendValue(undefined, resolvedConfig.componentState),
+        };
+        return result;
+    }
+    ComponentItemConfig.fromResolved = fromResolved;
     function componentTypeToTitle(componentType) {
         const componentTypeType = typeof componentType;
         switch (componentTypeType) {
@@ -250,47 +374,124 @@ export var RowOrColumnItemConfig;
         }
     }
     RowOrColumnItemConfig.isChildItemConfig = isChildItemConfig;
-    function resolve(itemConfig) {
-        var _a, _b, _c, _d, _e;
+    /** @internal */
+    function resolve(itemConfig, rowAndColumnChildLegacySizeDefault) {
+        var _a;
+        const { size, sizeUnit } = ItemConfig.resolveSize(itemConfig.size, itemConfig.width, itemConfig.height, rowAndColumnChildLegacySizeDefault);
+        const { size: minSize, sizeUnit: minSizeUnit } = ItemConfig.resolveMinSize(itemConfig.minSize, itemConfig.minWidth, itemConfig.minHeight);
         const result = {
             type: itemConfig.type,
             content: RowOrColumnItemConfig.resolveContent(itemConfig.content),
-            width: (_a = itemConfig.width) !== null && _a !== void 0 ? _a : ResolvedItemConfig.defaults.width,
-            minWidth: (_b = itemConfig.width) !== null && _b !== void 0 ? _b : ResolvedItemConfig.defaults.minWidth,
-            height: (_c = itemConfig.height) !== null && _c !== void 0 ? _c : ResolvedItemConfig.defaults.height,
-            minHeight: (_d = itemConfig.height) !== null && _d !== void 0 ? _d : ResolvedItemConfig.defaults.minHeight,
+            size,
+            sizeUnit,
+            minSize,
+            minSizeUnit,
             id: ItemConfig.resolveId(itemConfig.id),
-            isClosable: (_e = itemConfig.isClosable) !== null && _e !== void 0 ? _e : ResolvedItemConfig.defaults.isClosable,
+            isClosable: (_a = itemConfig.isClosable) !== null && _a !== void 0 ? _a : ResolvedItemConfig.defaults.isClosable,
         };
         return result;
     }
     RowOrColumnItemConfig.resolve = resolve;
+    /** @internal */
+    function fromResolved(resolvedConfig) {
+        const result = {
+            type: resolvedConfig.type,
+            content: fromResolvedContent(resolvedConfig.content),
+            size: formatSize(resolvedConfig.size, resolvedConfig.sizeUnit),
+            minSize: formatUndefinableSize(resolvedConfig.minSize, resolvedConfig.minSizeUnit),
+            id: resolvedConfig.id,
+            isClosable: resolvedConfig.isClosable,
+        };
+        return result;
+    }
+    RowOrColumnItemConfig.fromResolved = fromResolved;
+    /** @internal */
     function resolveContent(content) {
         if (content === undefined) {
             return [];
         }
         else {
             const count = content.length;
-            const result = new Array(count);
+            const childItemConfigs = new Array(count);
+            let widthOrHeightSpecifiedAtLeastOnce = false;
+            let sizeSpecifiedAtLeastOnce = false;
             for (let i = 0; i < count; i++) {
                 const childItemConfig = content[i];
                 if (!RowOrColumnItemConfig.isChildItemConfig(childItemConfig)) {
                     throw new ConfigurationError('ItemConfig is not Row, Column or Stack', childItemConfig);
                 }
                 else {
-                    const resolvedChildItemConfig = ItemConfig.resolve(childItemConfig);
-                    if (!ResolvedRowOrColumnItemConfig.isChildItemConfig(resolvedChildItemConfig)) {
-                        throw new AssertError('UROCOSPIC99512', JSON.stringify(resolvedChildItemConfig));
+                    if (!sizeSpecifiedAtLeastOnce) {
+                        const sizeWidthHeightSpecificationType = ItemConfig.calculateSizeWidthHeightSpecificationType(childItemConfig);
+                        switch (sizeWidthHeightSpecificationType) {
+                            case 0 /* None */:
+                                break;
+                            case 2 /* WidthOrHeight */:
+                                widthOrHeightSpecifiedAtLeastOnce = true;
+                                break;
+                            case 1 /* Size */:
+                                sizeSpecifiedAtLeastOnce = true;
+                                break;
+                            default:
+                                throw new UnreachableCaseError('ROCICRC87556', sizeWidthHeightSpecificationType);
+                        }
                     }
-                    else {
-                        result[i] = resolvedChildItemConfig;
-                    }
+                    childItemConfigs[i] = childItemConfig;
+                }
+            }
+            let legacySizeDefault;
+            if (sizeSpecifiedAtLeastOnce) {
+                legacySizeDefault = false;
+            }
+            else {
+                if (widthOrHeightSpecifiedAtLeastOnce) {
+                    legacySizeDefault = true;
+                }
+                else {
+                    legacySizeDefault = false;
+                }
+            }
+            const result = new Array(count);
+            for (let i = 0; i < count; i++) {
+                const childItemConfig = childItemConfigs[i];
+                const resolvedChildItemConfig = ItemConfig.resolve(childItemConfig, legacySizeDefault);
+                if (!ResolvedRowOrColumnItemConfig.isChildItemConfig(resolvedChildItemConfig)) {
+                    throw new AssertError('UROCOSPIC99512', JSON.stringify(resolvedChildItemConfig));
+                }
+                else {
+                    result[i] = resolvedChildItemConfig;
                 }
             }
             return result;
         }
     }
     RowOrColumnItemConfig.resolveContent = resolveContent;
+    /** @internal */
+    function fromResolvedContent(resolvedContent) {
+        const count = resolvedContent.length;
+        const result = new Array(count);
+        for (let i = 0; i < count; i++) {
+            const resolvedContentConfig = resolvedContent[i];
+            const type = resolvedContentConfig.type;
+            let contentConfig;
+            switch (type) {
+                case ItemType.row:
+                case ItemType.column:
+                    contentConfig = RowOrColumnItemConfig.fromResolved(resolvedContentConfig);
+                    break;
+                case ItemType.stack:
+                    contentConfig = StackItemConfig.fromResolved(resolvedContentConfig);
+                    break;
+                case ItemType.component:
+                    contentConfig = ComponentItemConfig.fromResolved(resolvedContentConfig);
+                    break;
+                default:
+                    throw new UnreachableCaseError('ROCICFRC44797', type);
+            }
+            result[i] = contentConfig;
+        }
+        return result;
+    }
 })(RowOrColumnItemConfig || (RowOrColumnItemConfig = {}));
 /** @public */
 export var RootItemConfig;
@@ -309,12 +510,13 @@ export var RootItemConfig;
         }
     }
     RootItemConfig.isRootItemConfig = isRootItemConfig;
+    /** @internal */
     function resolve(itemConfig) {
         if (itemConfig === undefined) {
             return undefined;
         }
         else {
-            const result = ItemConfig.resolve(itemConfig);
+            const result = ItemConfig.resolve(itemConfig, false);
             if (!ResolvedRootItemConfig.isRootItemConfig(result)) {
                 throw new ConfigurationError('ItemConfig is not Row, Column or Stack', JSON.stringify(itemConfig));
             }
@@ -324,6 +526,27 @@ export var RootItemConfig;
         }
     }
     RootItemConfig.resolve = resolve;
+    /** @internal */
+    function fromResolvedOrUndefined(resolvedItemConfig) {
+        if (resolvedItemConfig === undefined) {
+            return undefined;
+        }
+        else {
+            const type = resolvedItemConfig.type;
+            switch (type) {
+                case ItemType.row:
+                case ItemType.column:
+                    return RowOrColumnItemConfig.fromResolved(resolvedItemConfig);
+                case ItemType.stack:
+                    return StackItemConfig.fromResolved(resolvedItemConfig);
+                case ItemType.component:
+                    return ComponentItemConfig.fromResolved(resolvedItemConfig);
+                default:
+                    throw new UnreachableCaseError('RICFROU89921', type);
+            }
+        }
+    }
+    RootItemConfig.fromResolvedOrUndefined = fromResolvedOrUndefined;
 })(RootItemConfig || (RootItemConfig = {}));
 /** Use to specify LayoutConfig with defaults or deserialise a LayoutConfig.
  * Deserialisation will handle backwards compatibility.
@@ -354,23 +577,65 @@ export var LayoutConfig;
     })(Settings = LayoutConfig.Settings || (LayoutConfig.Settings = {}));
     let Dimensions;
     (function (Dimensions) {
+        /** @internal */
         function resolve(dimensions) {
-            var _a, _b, _c, _d, _e, _f, _g;
+            var _a, _b, _c, _d, _e;
+            const { size: defaultMinItemHeight, sizeUnit: defaultMinItemHeightUnit } = Dimensions.resolveDefaultMinItemHeight(dimensions);
+            const { size: defaultMinItemWidth, sizeUnit: defaultMinItemWidthUnit } = Dimensions.resolveDefaultMinItemWidth(dimensions);
             const result = {
                 borderWidth: (_a = dimensions === null || dimensions === void 0 ? void 0 : dimensions.borderWidth) !== null && _a !== void 0 ? _a : ResolvedLayoutConfig.Dimensions.defaults.borderWidth,
                 borderGrabWidth: (_b = dimensions === null || dimensions === void 0 ? void 0 : dimensions.borderGrabWidth) !== null && _b !== void 0 ? _b : ResolvedLayoutConfig.Dimensions.defaults.borderGrabWidth,
-                minItemHeight: (_c = dimensions === null || dimensions === void 0 ? void 0 : dimensions.minItemHeight) !== null && _c !== void 0 ? _c : ResolvedLayoutConfig.Dimensions.defaults.minItemHeight,
-                minItemWidth: (_d = dimensions === null || dimensions === void 0 ? void 0 : dimensions.minItemWidth) !== null && _d !== void 0 ? _d : ResolvedLayoutConfig.Dimensions.defaults.minItemWidth,
-                headerHeight: (_e = dimensions === null || dimensions === void 0 ? void 0 : dimensions.headerHeight) !== null && _e !== void 0 ? _e : ResolvedLayoutConfig.Dimensions.defaults.headerHeight,
-                dragProxyWidth: (_f = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyWidth) !== null && _f !== void 0 ? _f : ResolvedLayoutConfig.Dimensions.defaults.dragProxyWidth,
-                dragProxyHeight: (_g = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyHeight) !== null && _g !== void 0 ? _g : ResolvedLayoutConfig.Dimensions.defaults.dragProxyHeight,
+                defaultMinItemHeight,
+                defaultMinItemHeightUnit,
+                defaultMinItemWidth,
+                defaultMinItemWidthUnit,
+                headerHeight: (_c = dimensions === null || dimensions === void 0 ? void 0 : dimensions.headerHeight) !== null && _c !== void 0 ? _c : ResolvedLayoutConfig.Dimensions.defaults.headerHeight,
+                dragProxyWidth: (_d = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyWidth) !== null && _d !== void 0 ? _d : ResolvedLayoutConfig.Dimensions.defaults.dragProxyWidth,
+                dragProxyHeight: (_e = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyHeight) !== null && _e !== void 0 ? _e : ResolvedLayoutConfig.Dimensions.defaults.dragProxyHeight,
             };
             return result;
         }
         Dimensions.resolve = resolve;
+        /** @internal */
+        function fromResolved(resolvedDimensions) {
+            const result = {
+                borderWidth: resolvedDimensions.borderWidth,
+                borderGrabWidth: resolvedDimensions.borderGrabWidth,
+                defaultMinItemHeight: formatSize(resolvedDimensions.defaultMinItemHeight, resolvedDimensions.defaultMinItemHeightUnit),
+                defaultMinItemWidth: formatSize(resolvedDimensions.defaultMinItemWidth, resolvedDimensions.defaultMinItemWidthUnit),
+                headerHeight: resolvedDimensions.headerHeight,
+                dragProxyWidth: resolvedDimensions.dragProxyWidth,
+                dragProxyHeight: resolvedDimensions.dragProxyHeight,
+            };
+            return result;
+        }
+        Dimensions.fromResolved = fromResolved;
+        /** @internal */
+        function resolveDefaultMinItemHeight(dimensions) {
+            const height = dimensions === null || dimensions === void 0 ? void 0 : dimensions.defaultMinItemHeight;
+            if (height === undefined) {
+                return { size: ResolvedLayoutConfig.Dimensions.defaults.defaultMinItemHeight, sizeUnit: ResolvedLayoutConfig.Dimensions.defaults.defaultMinItemHeightUnit };
+            }
+            else {
+                return parseSize(height, [SizeUnitEnum.Pixel]);
+            }
+        }
+        Dimensions.resolveDefaultMinItemHeight = resolveDefaultMinItemHeight;
+        /** @internal */
+        function resolveDefaultMinItemWidth(dimensions) {
+            const width = dimensions === null || dimensions === void 0 ? void 0 : dimensions.defaultMinItemWidth;
+            if (width === undefined) {
+                return { size: ResolvedLayoutConfig.Dimensions.defaults.defaultMinItemWidth, sizeUnit: ResolvedLayoutConfig.Dimensions.defaults.defaultMinItemWidthUnit };
+            }
+            else {
+                return parseSize(width, [SizeUnitEnum.Pixel]);
+            }
+        }
+        Dimensions.resolveDefaultMinItemWidth = resolveDefaultMinItemWidth;
     })(Dimensions = LayoutConfig.Dimensions || (LayoutConfig.Dimensions = {}));
     let Header;
     (function (Header) {
+        /** @internal */
         function resolve(header, settings, labels) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
             let show;
@@ -402,6 +667,7 @@ export var LayoutConfig;
         return 'parentId' in config || 'indexInParent' in config || 'window' in config;
     }
     LayoutConfig.isPopout = isPopout;
+    /** @internal */
     function resolve(layoutConfig) {
         if (isPopout(layoutConfig)) {
             return PopoutLayoutConfig.resolve(layoutConfig);
@@ -432,13 +698,12 @@ export var LayoutConfig;
     }
     LayoutConfig.resolve = resolve;
     function fromResolved(config) {
-        const copiedConfig = ResolvedLayoutConfig.createCopy(config);
         const result = {
-            root: copiedConfig.root,
-            openPopouts: copiedConfig.openPopouts,
-            dimensions: copiedConfig.dimensions,
-            settings: copiedConfig.settings,
-            header: copiedConfig.header,
+            root: RootItemConfig.fromResolvedOrUndefined(config.root),
+            openPopouts: PopoutLayoutConfig.fromResolvedArray(config.openPopouts),
+            settings: ResolvedLayoutConfig.Settings.createCopy(config.settings),
+            dimensions: LayoutConfig.Dimensions.fromResolved(config.dimensions),
+            header: ResolvedLayoutConfig.Header.createCopy(config.header),
         };
         return result;
     }
@@ -448,6 +713,7 @@ export var LayoutConfig;
         return config.resolved !== undefined && (config.resolved === true);
     }
     LayoutConfig.isResolved = isResolved;
+    /** @internal */
     function resolveOpenPopouts(popoutConfigs) {
         if (popoutConfigs === undefined) {
             return [];
@@ -468,6 +734,7 @@ export var PopoutLayoutConfig;
 (function (PopoutLayoutConfig) {
     let Window;
     (function (Window) {
+        /** @internal */
         function resolve(window, dimensions) {
             var _a, _b, _c, _d, _e, _f, _g, _h;
             let result;
@@ -491,7 +758,19 @@ export var PopoutLayoutConfig;
             return result;
         }
         Window.resolve = resolve;
+        /** @internal */
+        function fromResolved(resolvedWindow) {
+            const result = {
+                width: resolvedWindow.width === null ? undefined : resolvedWindow.width,
+                height: resolvedWindow.height === null ? undefined : resolvedWindow.height,
+                left: resolvedWindow.left === null ? undefined : resolvedWindow.left,
+                top: resolvedWindow.top === null ? undefined : resolvedWindow.top,
+            };
+            return result;
+        }
+        Window.fromResolved = fromResolved;
     })(Window = PopoutLayoutConfig.Window || (PopoutLayoutConfig.Window = {}));
+    /** @internal */
     function resolve(popoutConfig) {
         var _a, _b;
         let root;
@@ -509,8 +788,8 @@ export var PopoutLayoutConfig;
         const config = {
             root: RootItemConfig.resolve(root),
             openPopouts: LayoutConfig.resolveOpenPopouts(popoutConfig.openPopouts),
-            settings: LayoutConfig.Settings.resolve(popoutConfig.settings),
             dimensions: LayoutConfig.Dimensions.resolve(popoutConfig.dimensions),
+            settings: LayoutConfig.Settings.resolve(popoutConfig.settings),
             header: LayoutConfig.Header.resolve(popoutConfig.header, popoutConfig.settings, popoutConfig.labels),
             parentId: (_a = popoutConfig.parentId) !== null && _a !== void 0 ? _a : null,
             indexInParent: (_b = popoutConfig.indexInParent) !== null && _b !== void 0 ? _b : null,
@@ -520,5 +799,66 @@ export var PopoutLayoutConfig;
         return config;
     }
     PopoutLayoutConfig.resolve = resolve;
+    /** @internal */
+    function fromResolved(resolvedConfig) {
+        const result = {
+            root: RootItemConfig.fromResolvedOrUndefined(resolvedConfig.root),
+            openPopouts: fromResolvedArray(resolvedConfig.openPopouts),
+            dimensions: LayoutConfig.Dimensions.fromResolved(resolvedConfig.dimensions),
+            settings: ResolvedLayoutConfig.Settings.createCopy(resolvedConfig.settings),
+            header: ResolvedLayoutConfig.Header.createCopy(resolvedConfig.header),
+            parentId: resolvedConfig.parentId,
+            indexInParent: resolvedConfig.indexInParent,
+            window: PopoutLayoutConfig.Window.fromResolved(resolvedConfig.window),
+        };
+        return result;
+    }
+    PopoutLayoutConfig.fromResolved = fromResolved;
+    /** @internal */
+    function fromResolvedArray(resolvedArray) {
+        const resolvedOpenPopoutCount = resolvedArray.length;
+        const result = new Array(resolvedOpenPopoutCount);
+        for (let i = 0; i < resolvedOpenPopoutCount; i++) {
+            const resolvedOpenPopout = resolvedArray[i];
+            result[i] = PopoutLayoutConfig.fromResolved(resolvedOpenPopout);
+        }
+        return result;
+    }
+    PopoutLayoutConfig.fromResolvedArray = fromResolvedArray;
 })(PopoutLayoutConfig || (PopoutLayoutConfig = {}));
+/** @internal */
+export function parseSize(sizeString, allowableSizeUnits) {
+    const { numericPart: digitsPart, firstNonNumericCharPart: firstNonDigitPart } = splitStringAtFirstNonNumericChar(sizeString);
+    const size = Number.parseInt(digitsPart, 10);
+    if (isNaN(size)) {
+        throw new ConfigurationError(`${i18nStrings[7 /* InvalidNumberPartInSizeString */]}: ${sizeString}`);
+    }
+    else {
+        const sizeUnit = SizeUnitEnum.tryParse(firstNonDigitPart);
+        if (sizeUnit === undefined) {
+            throw new ConfigurationError(`${i18nStrings[8 /* UnknownUnitInSizeString */]}: ${sizeString}`);
+        }
+        else {
+            if (!allowableSizeUnits.includes(sizeUnit)) {
+                throw new ConfigurationError(`${i18nStrings[9 /* UnsupportedUnitInSizeString */]}: ${sizeString}`);
+            }
+            else {
+                return { size, sizeUnit };
+            }
+        }
+    }
+}
+/** @internal */
+export function formatSize(size, sizeUnit) {
+    return size.toString(10) + SizeUnitEnum.format(sizeUnit);
+}
+/** @internal */
+export function formatUndefinableSize(size, sizeUnit) {
+    if (size === undefined) {
+        return undefined;
+    }
+    else {
+        return size.toString(10) + SizeUnitEnum.format(sizeUnit);
+    }
+}
 //# sourceMappingURL=config.js.map

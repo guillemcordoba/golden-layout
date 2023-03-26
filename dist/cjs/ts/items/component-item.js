@@ -54,10 +54,10 @@ class ComponentItem extends content_item_1.ContentItem {
         const result = {
             type: types_1.ItemType.component,
             content: [],
-            width: this.width,
-            minWidth: this.minWidth,
-            height: this.height,
-            minHeight: this.minHeight,
+            size: this.size,
+            sizeUnit: this.sizeUnit,
+            minSize: this.minSize,
+            minSizeUnit: this.minSizeUnit,
             id: this.id,
             maximised: false,
             isClosable: this.isClosable,
@@ -80,8 +80,8 @@ class ComponentItem extends content_item_1.ContentItem {
     // Used by Drag Proxy
     /** @internal */
     enterDragMode(width, height) {
-        utils_1.setElementWidth(this.element, width);
-        utils_1.setElementHeight(this.element, height);
+        (0, utils_1.setElementWidth)(this.element, width);
+        (0, utils_1.setElementHeight)(this.element, height);
         this._container.enterDragMode(width, height);
     }
     /** @internal */
@@ -102,12 +102,12 @@ class ComponentItem extends content_item_1.ContentItem {
         this._container.drag();
     }
     /** @internal */
-    updateSize() {
-        this.updateNodeSize();
+    updateSize(force) {
+        this.updateNodeSize(force);
     }
     /** @internal */
     init() {
-        this.updateNodeSize();
+        this.updateNodeSize(false);
         super.init();
         this._container.emit('open');
         this.initContentItems();
@@ -178,11 +178,11 @@ class ComponentItem extends content_item_1.ContentItem {
         this.applyUpdatableConfig(itemConfig);
     }
     /** @internal */
-    updateNodeSize() {
+    updateNodeSize(force) {
         if (this.element.style.display !== 'none') {
             // Do not update size of hidden components to prevent unwanted reflows
-            const { width, height } = utils_1.getElementWidthAndHeight(this.element);
-            this._container.setSizeToNodeSize(width, height, false);
+            const { width, height } = (0, utils_1.getElementWidthAndHeight)(this.element);
+            this._container.setSizeToNodeSize(width, height, force);
         }
     }
 }

@@ -6,10 +6,13 @@ import { deepExtendValue, ensureElementPositionAbsolute, numberToPixels, setElem
 import { VirtualLayout } from './virtual-layout';
 /** @public */
 export class GoldenLayout extends VirtualLayout {
-    constructor() {
-        super(...arguments);
+    /** @internal */
+    constructor(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler) {
+        super(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler, true);
         /** @internal */
         this._componentTypesMap = new Map();
+        /** @internal */
+        this._registeredComponentMap = new Map();
         /** @internal */
         this._virtuableComponentMap = new Map();
         /** @internal */
@@ -18,6 +21,10 @@ export class GoldenLayout extends VirtualLayout {
         this._containerVirtualVisibilityChangeRequiredEventListener = (container, visible) => this.handleContainerVirtualVisibilityChangeRequiredEvent(container, visible);
         /** @internal */
         this._containerVirtualZIndexChangeRequiredEventListener = (container, logicalZIndex, defaultZIndex) => this.handleContainerVirtualZIndexChangeRequiredEvent(container, logicalZIndex, defaultZIndex);
+        // we told VirtualLayout to not call init() (skipInit set to true) so that Golden Layout can initialise its properties before init is called
+        if (!this.deprecatedConstructor) {
+            this.init();
+        }
     }
     /**
      * Register a new component type with the layout manager.
@@ -194,6 +201,7 @@ export class GoldenLayout extends VirtualLayout {
                     }
                 }
             }
+            this._registeredComponentMap.set(container, component);
             result = {
                 virtual: instantiator.virtual,
                 component,
@@ -207,18 +215,21 @@ export class GoldenLayout extends VirtualLayout {
     }
     /** @internal */
     unbindComponent(container, virtual, component) {
-        const virtuableComponent = this._virtuableComponentMap.get(container);
-        if (virtuableComponent === undefined) {
-            super.unbindComponent(container, virtual, component);
+        const registeredComponent = this._registeredComponentMap.get(container);
+        if (registeredComponent === undefined) {
+            super.unbindComponent(container, virtual, component); // was not created from registration so use virtual unbind events
         }
         else {
-            const componentRootElement = virtuableComponent.rootHtmlElement;
-            if (componentRootElement === undefined) {
-                throw new AssertError('GLUC77743', container.title);
-            }
-            else {
-                this.container.removeChild(componentRootElement);
-                this._virtuableComponentMap.delete(container);
+            const virtuableComponent = this._virtuableComponentMap.get(container);
+            if (virtuableComponent !== undefined) {
+                const componentRootElement = virtuableComponent.rootHtmlElement;
+                if (componentRootElement === undefined) {
+                    throw new AssertError('GLUC77743', container.title);
+                }
+                else {
+                    this.container.removeChild(componentRootElement);
+                    this._virtuableComponentMap.delete(container);
+                }
             }
         }
     }

@@ -6,7 +6,10 @@ export declare const enum I18nStringId {
     ComponentIsAlreadyRegistered = 3,
     ComponentIsNotVirtuable = 4,
     VirtualComponentDoesNotHaveRootHtmlElement = 5,
-    ItemConfigIsNotTypeComponent = 6
+    ItemConfigIsNotTypeComponent = 6,
+    InvalidNumberPartInSizeString = 7,
+    UnknownUnitInSizeString = 8,
+    UnsupportedUnitInSizeString = 9
 }
 /** @public */
 export declare namespace I18nStrings {

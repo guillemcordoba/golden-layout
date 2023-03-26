@@ -4,7 +4,6 @@ exports.ComponentContainer = void 0;
 const config_1 = require("../config/config");
 const internal_error_1 = require("../errors/internal-error");
 const event_emitter_1 = require("../utils/event-emitter");
-const style_constants_1 = require("../utils/style-constants");
 const types_1 = require("../utils/types");
 const utils_1 = require("../utils/utils");
 /** @public */
@@ -144,18 +143,19 @@ class ComponentContainer extends event_emitter_1.EventEmitter {
                 }
                 else {
                     const newSize = direction === 'height' ? height : width;
-                    const totalPixel = currentSize * (1 / (ancestorChildItem[direction] / 100));
+                    const totalPixel = currentSize * (1 / (ancestorChildItem.size / 100));
                     const percentage = (newSize / totalPixel) * 100;
-                    const delta = (ancestorChildItem[direction] - percentage) / (ancestorItem.contentItems.length - 1);
+                    const delta = (ancestorChildItem.size - percentage) / (ancestorItem.contentItems.length - 1);
                     for (let i = 0; i < ancestorItem.contentItems.length; i++) {
-                        if (ancestorItem.contentItems[i] === ancestorChildItem) {
-                            ancestorItem.contentItems[i][direction] = percentage;
+                        const ancestorItemContentItem = ancestorItem.contentItems[i];
+                        if (ancestorItemContentItem === ancestorChildItem) {
+                            ancestorItemContentItem.size = percentage;
                         }
                         else {
-                            ancestorItem.contentItems[i][direction] += delta;
+                            ancestorItemContentItem.size += delta;
                         }
                     }
-                    ancestorItem.updateSize();
+                    ancestorItem.updateSize(false);
                     return true;
                 }
             }
@@ -179,13 +179,28 @@ class ComponentContainer extends event_emitter_1.EventEmitter {
             throw new Error('ReplaceComponent not passed a component ItemConfig');
         }
         else {
-            const config = config_1.ComponentItemConfig.resolve(itemConfig);
+            const config = config_1.ComponentItemConfig.resolve(itemConfig, false);
             this._initialState = config.componentState;
             this._state = this._initialState;
             this._componentType = config.componentType;
             this._updateItemConfigEvent(config);
             this._boundComponent = this.layoutManager.bindComponent(this, config);
             this.updateElementPositionPropertyFromBoundComponent();
+            if (this._boundComponent.virtual) {
+                if (this.virtualVisibilityChangeRequiredEvent !== undefined) {
+                    this.virtualVisibilityChangeRequiredEvent(this, this._visible);
+                }
+                if (this.virtualRectingRequiredEvent !== undefined) {
+                    this._layoutManager.fireBeforeVirtualRectingEvent(1);
+                    try {
+                        this.virtualRectingRequiredEvent(this, this._width, this._height);
+                    }
+                    finally {
+                        this._layoutManager.fireAfterVirtualRectingEvent();
+                    }
+                }
+                this.setBaseLogicalZIndex();
+            }
             this.emit('stateChanged');
         }
     }
@@ -202,7 +217,7 @@ class ComponentContainer extends event_emitter_1.EventEmitter {
      * @deprecated Use {@link (ComponentContainer:class).stateRequestEvent}
      */
     extendState(state) {
-        const extendedState = utils_1.deepExtend(this._state, state);
+        const extendedState = (0, utils_1.deepExtend)(this._state, state);
         this.setState(extendedState);
     }
     /**
@@ -259,6 +274,15 @@ class ComponentContainer extends event_emitter_1.EventEmitter {
             }
         }
     }
+    setBaseLogicalZIndex() {
+        this.setLogicalZIndex(types_1.LogicalZIndex.base);
+    }
+    setLogicalZIndex(logicalZIndex) {
+        if (logicalZIndex !== this._logicalZIndex) {
+            this._logicalZIndex = logicalZIndex;
+            this.notifyVirtualZIndexChangeRequired();
+        }
+    }
     /**
      * Set the container's size, but considered temporary (for dragging)
      * so don't emit any events.
@@ -267,31 +291,23 @@ class ComponentContainer extends event_emitter_1.EventEmitter {
     enterDragMode(width, height) {
         this._width = width;
         this._height = height;
-        utils_1.setElementWidth(this._element, width);
-        utils_1.setElementHeight(this._element, height);
-        if (this.virtualZIndexChangeRequiredEvent !== undefined) {
-            this.virtualZIndexChangeRequiredEvent(this, types_1.LogicalZIndex.drag, style_constants_1.StyleConstants.defaultComponentDragZIndex);
-        }
+        (0, utils_1.setElementWidth)(this._element, width);
+        (0, utils_1.setElementHeight)(this._element, height);
+        this.setLogicalZIndex(types_1.LogicalZIndex.drag);
         this.drag();
     }
     /** @internal */
     exitDragMode() {
-        if (this.virtualZIndexChangeRequiredEvent !== undefined) {
-            this.virtualZIndexChangeRequiredEvent(this, types_1.LogicalZIndex.base, style_constants_1.StyleConstants.defaultComponentBaseZIndex);
-        }
+        this.setBaseLogicalZIndex();
     }
     /** @internal */
     enterStackMaximised() {
         this._stackMaximised = true;
-        if (this.virtualZIndexChangeRequiredEvent !== undefined) {
-            this.virtualZIndexChangeRequiredEvent(this, types_1.LogicalZIndex.stackMaximised, style_constants_1.StyleConstants.defaultComponentStackMaximisedZIndex);
-        }
+        this.setLogicalZIndex(types_1.LogicalZIndex.stackMaximised);
     }
     /** @internal */
     exitStackMaximised() {
-        if (this.virtualZIndexChangeRequiredEvent !== undefined) {
-            this.virtualZIndexChangeRequiredEvent(this, types_1.LogicalZIndex.base, style_constants_1.StyleConstants.defaultComponentBaseZIndex);
-        }
+        this.setBaseLogicalZIndex();
         this._stackMaximised = false;
     }
     /** @internal */
@@ -321,8 +337,8 @@ class ComponentContainer extends event_emitter_1.EventEmitter {
         if (width !== this._width || height !== this._height || force) {
             this._width = width;
             this._height = height;
-            utils_1.setElementWidth(this._element, width);
-            utils_1.setElementHeight(this._element, height);
+            (0, utils_1.setElementWidth)(this._element, width);
+            (0, utils_1.setElementHeight)(this._element, height);
             if (this._boundComponent.virtual) {
                 this.addVirtualSizedContainerToLayoutManager();
             }
@@ -338,6 +354,14 @@ class ComponentContainer extends event_emitter_1.EventEmitter {
             this.virtualRectingRequiredEvent(this, this._width, this._height);
             this.emit('resize');
             this.checkShownFromZeroDimensions();
+        }
+    }
+    /** @internal */
+    notifyVirtualZIndexChangeRequired() {
+        if (this.virtualZIndexChangeRequiredEvent !== undefined) {
+            const logicalZIndex = this._logicalZIndex;
+            const defaultZIndex = types_1.LogicalZIndexToDefaultMap[logicalZIndex];
+            this.virtualZIndexChangeRequiredEvent(this, logicalZIndex, defaultZIndex);
         }
     }
     /** @internal */

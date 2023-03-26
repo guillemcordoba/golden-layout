@@ -1,4 +1,3 @@
-
 /** @public */
 export declare class ApiError extends ExternalError {
     /** @internal */
@@ -155,6 +154,8 @@ export declare class ComponentContainer extends EventEmitter {
     private _tab;
     /** @internal */
     private _stackMaximised;
+    /** @internal */
+    private _logicalZIndex;
     stateRequestEvent: ComponentContainer.StateRequestEventHandler | undefined;
     virtualRectingRequiredEvent: ComponentContainer.VirtualRectingRequiredEvent | undefined;
     virtualVisibilityChangeRequiredEvent: ComponentContainer.VirtualVisibilityChangeRequiredEvent | undefined;
@@ -266,6 +267,8 @@ export declare class ComponentContainer extends EventEmitter {
     setTab(tab: Tab): void;
     /** @internal */
     setVisibility(value: boolean): void;
+    setBaseLogicalZIndex(): void;
+    setLogicalZIndex(logicalZIndex: LogicalZIndex): void;
     /**
      * Set the container's size, but considered temporary (for dragging)
      * so don't emit any events.
@@ -292,6 +295,8 @@ export declare class ComponentContainer extends EventEmitter {
     setSizeToNodeSize(width: number, height: number, force: boolean): void;
     /** @internal */
     notifyVirtualRectingRequired(): void;
+    /** @internal */
+    private notifyVirtualZIndexChangeRequired;
     /** @internal */
     private updateElementPositionPropertyFromBoundComponent;
     /** @internal */
@@ -380,7 +385,7 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     drag(): void;
     /** @internal */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     /** @internal */
     init(): void;
     /**
@@ -425,6 +430,11 @@ export declare interface ComponentItemConfig extends HeaderedItemConfig {
     type: 'component';
     readonly content?: [];
     /**
+     * The title of the item as displayed on its tab and on popout windows
+     * Default: componentType.toString() or ''
+     */
+    title?: string;
+    /**
      * The type of the component.
      * @deprecated use {@link (ComponentItemConfig:interface).componentType} instead
      */
@@ -451,7 +461,10 @@ export declare interface ComponentItemConfig extends HeaderedItemConfig {
 
 /** @public */
 export declare namespace ComponentItemConfig {
-    export function resolve(itemConfig: ComponentItemConfig): ResolvedComponentItemConfig;
+    /** @internal */
+    export function resolve(itemConfig: ComponentItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedComponentItemConfig;
+    /** @internal */
+    export function fromResolved(resolvedConfig: ResolvedComponentItemConfig): ComponentItemConfig;
     export function componentTypeToTitle(componentType: JsonValue): string;
 }
 
@@ -504,13 +517,13 @@ export declare abstract class ContentItem extends EventEmitter {
     /** @internal */
     private _isInitialised;
     /** @internal */
-    width: number;
+    size: number;
     /** @internal */
-    minWidth: number;
+    sizeUnit: SizeUnitEnum;
     /** @internal */
-    height: number;
+    minSize: number | undefined;
     /** @internal */
-    minHeight: number;
+    minSizeUnit: SizeUnitEnum;
     isGround: boolean;
     isRow: boolean;
     isColumn: boolean;
@@ -518,6 +531,7 @@ export declare abstract class ContentItem extends EventEmitter {
     isComponent: boolean;
     get type(): ItemType;
     get id(): string;
+    set id(value: string);
     /** @internal */
     get popInParentIds(): string[];
     get parent(): ContentItem | null;
@@ -536,9 +550,13 @@ export declare abstract class ContentItem extends EventEmitter {
     _element: HTMLElement);
     /**
      * Updaters the size of the component and its children, called recursively
+     * @param force - In some cases the size is not updated if it has not changed. In this case, events
+     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
+     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
+     * relevant events need to be fired.
      * @internal
      */
-    abstract updateSize(): void;
+    abstract updateSize(force: boolean): void;
     /**
      * Removes a child node (and its children) from the tree
      * @param contentItem - The child item to remove
@@ -609,7 +627,7 @@ export declare abstract class ContentItem extends EventEmitter {
     /** @internal */
     protected hide(): void;
     /** @internal */
-    protected updateContentItemsSize(): void;
+    protected updateContentItemsSize(force: boolean): void;
     /**
      * creates all content items for this node at initialisation time
      * PLEASE NOTE, please see addChild for adding contentItems at runtime
@@ -705,12 +723,14 @@ export declare class DragSource {
     private readonly _element;
     /** @internal */
     private readonly _extraAllowableChildTargets;
-    /** @internal */
+    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
     private _componentTypeOrFtn;
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     private _componentState;
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     private _title;
+    /** @internal @deprecated remove in version 3 */
+    private _id;
     /** @internal */
     private readonly _rootContainer?;
     /** @internal */
@@ -727,12 +747,14 @@ export declare class DragSource {
     _element: HTMLElement, 
     /** @internal */
     _extraAllowableChildTargets: HTMLElement[], 
-    /** @internal */
-    _componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig), 
-    /** @internal */
+    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
+    _componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig | ComponentItemConfig), 
+    /** @internal @deprecated remove in version 3 */
     _componentState: JsonValue | undefined, 
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     _title: string | undefined, 
+    /** @internal @deprecated remove in version 3 */
+    _id: string | undefined, 
     /** @internal */
     _rootContainer?: HTMLElement | undefined);
     /**
@@ -764,11 +786,14 @@ export declare class DragSource {
 
 /** @public */
 export declare namespace DragSource {
+    /** @deprecated  use Config {@link (ComponentItemConfig:interface)} */
     export interface ComponentItemConfig {
         type: JsonValue;
         state?: JsonValue;
         title?: string;
     }
+    /** @deprecated remove in version 3 */
+    export function isDragSourceComponentItemConfig(config: DragSource.ComponentItemConfig | ComponentItemConfig): config is DragSource.ComponentItemConfig;
 }
 
 /** @internal */
@@ -776,7 +801,7 @@ declare class DropTargetIndicator {
     private _element;
     constructor(rootContainer?: HTMLElement);
     destroy(): void;
-    highlightArea(area: AreaLinkedRect): void;
+    highlightArea(area: AreaLinkedRect, margin: number): void;
     hide(): void;
 }
 
@@ -1029,12 +1054,20 @@ export declare abstract class ExternalError extends Error {
     constructor(type: string, message: string);
 }
 
+/** @internal */
+export declare function formatSize(size: number, sizeUnit: SizeUnitEnum): string;
+
+/** @internal */
+export declare function formatUndefinableSize(size: number | undefined, sizeUnit: SizeUnitEnum): string | undefined;
+
 /** @public */
 export declare class GoldenLayout extends VirtualLayout {
     /** @internal */
     private _componentTypesMap;
     /** @internal */
     private _getComponentConstructorFtn;
+    /** @internal */
+    private _registeredComponentMap;
     /** @internal */
     private _virtuableComponentMap;
     /** @internal */
@@ -1045,6 +1078,17 @@ export declare class GoldenLayout extends VirtualLayout {
     private _containerVirtualVisibilityChangeRequiredEventListener;
     /** @internal */
     private _containerVirtualZIndexChangeRequiredEventListener;
+    /**
+     * @param container - A Dom HTML element. Defaults to body
+     * @param bindComponentEventHandler - Event handler to bind components
+     * @param bindComponentEventHandler - Event handler to unbind components
+     * If bindComponentEventHandler is defined, then constructor will be determinate. It will always call the init()
+     * function and the init() function will always complete. This means that the bindComponentEventHandler will be called
+     * if constructor is for a popout window. Make sure bindComponentEventHandler is ready for events.
+     */
+    constructor(container?: HTMLElement, bindComponentEventHandler?: VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler);
+    /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
+    constructor(config: LayoutConfig, container?: HTMLElement);
     /**
      * Register a new component type with the layout manager.
      *
@@ -1154,7 +1198,7 @@ declare class GroundItem extends ComponentParentableItem {
      * Adds a Root ContentItem.
      * Internal only.  To replace Root ContentItem with API, use {@link (LayoutManager:class).updateRootSize}
      */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     createSideAreas(): GroundItem.Area[];
     highlightDropZone(x: number, y: number, area: AreaLinkedRect): void;
     onDrop(contentItem: ContentItem, area: GroundItem.Area): void;
@@ -1269,26 +1313,16 @@ export declare class Header extends EventEmitter {
     private readonly _tabDropdownButton;
     /** @internal */
     private readonly _maximiseButton;
-    /** @internal */
     get show(): boolean;
-    /** @internal */
     get side(): Side;
-    /** @internal */
     get leftRightSided(): boolean;
     get layoutManager(): LayoutManager;
     get parent(): Stack;
     get tabs(): Tab[];
     get lastVisibleTabIndex(): number;
-    /**
-     * @deprecated use {@link (Stack:class).getActiveComponentItem} */
-    get activeContentItem(): ContentItem | null;
     get element(): HTMLElement;
-    /** @deprecated use {@link (Header:class).tabsContainerElement} */
-    get tabsContainer(): HTMLElement;
     get tabsContainerElement(): HTMLElement;
     get controlsContainerElement(): HTMLElement;
-    /** @deprecated use {@link (Header:class).controlsContainerElement} */
-    get controlsContainer(): HTMLElement;
     /** @internal */
     constructor(
     /** @internal */
@@ -1448,6 +1482,7 @@ export declare namespace HeaderedItemConfig {
     export namespace Header {
         export function resolve(header: Header | undefined, hasHeaders: boolean | undefined): ResolvedHeaderedItemConfig.Header | undefined;
     }
+    /** @internal */
     export function resolveIdAndMaximised(config: HeaderedItemConfig): {
         id: string;
         maximised: boolean;
@@ -1462,7 +1497,10 @@ export declare const enum I18nStringId {
     ComponentIsAlreadyRegistered = 3,
     ComponentIsNotVirtuable = 4,
     VirtualComponentDoesNotHaveRootHtmlElement = 5,
-    ItemConfigIsNotTypeComponent = 6
+    ItemConfigIsNotTypeComponent = 6,
+    InvalidNumberPartInSizeString = 7,
+    UnknownUnitInSizeString = 8,
+    UnsupportedUnitInSizeString = 9
 }
 
 /** @public */
@@ -1486,22 +1524,45 @@ export declare interface ItemConfig {
     content?: ItemConfig[];
     /**
      * The width of this item, relative to the other children of its parent in percent
+     * @deprecated use {@link (ItemConfig:interface).size} instead
      */
     width?: number;
     /**
      * The minimum width of this item in pixels
      * CAUTION - Not tested - do not use
+     * @deprecated use {@link (ItemConfig:interface).minSize} instead
      */
     minWidth?: number;
     /**
      * The height of this item, relative to the other children of its parent in percent
+     * @deprecated use {@link (ItemConfig:interface).size} instead
      */
     height?: number;
     /**
      * The minimum height of this item in pixels
      * CAUTION - Not tested - do not use
+     * @deprecated use {@link (ItemConfig:interface).minSize} instead
      */
     minHeight?: number;
+    /**
+     * The size of this item.
+     * For rows, it specifies height. For columns, it specifies width.
+     * Has format \<number\>\<{@link SizeUnit}\>. Currently only supports units `fr` and `%`.
+     *
+     * Space is first proportionally allocated to items with sizeUnit `%`.
+     * If there is any space left over (less than 100% allocated), then the
+     * remainder is allocated to the items with unit `fr` according to the fractional size.
+     * If more than 100% is allocated, then an extra 50% is allocated to items with unit `fr` and
+     * is allocated to each item according to its fractional size. All item sizes are then adjusted
+     * to bring the total back to 100%
+     */
+    size?: string;
+    /**
+     * The size of this item.
+     * For rows, it specifies height. For columns, it specifies width.
+     * Has format <number><sizeUnit>. Currently only supports units `px`
+     */
+    minSize?: string;
     /**
      * A string that can be used to identify a ContentItem.
      * Do NOT assign an array.  This only exists for legacy purposes.  If an array is assigned, the first element
@@ -1517,15 +1578,31 @@ export declare interface ItemConfig {
     /**
      * The title of the item as displayed on its tab and on popout windows
      * Default: componentType.toString() or ''
+     * @deprecated only Component has a title
      */
     title?: string;
 }
 
 /** @public */
 export declare namespace ItemConfig {
-    export function resolve(itemConfig: ItemConfig): ResolvedItemConfig;
+    /** @internal */
+    export const enum SizeWidthHeightSpecificationType {
+        None = 0,
+        Size = 1,
+        WidthOrHeight = 2
+    }
+    /** @internal */
+    export function resolve(itemConfig: ItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedItemConfig;
+    /** @internal */
     export function resolveContent(content: ItemConfig[] | undefined): ResolvedItemConfig[];
+    /** @internal */
     export function resolveId(id: string | string[] | undefined): string;
+    /** @internal */
+    export function resolveSize(size: string | undefined, width: number | undefined, height: number | undefined, rowAndColumnChildLegacySizeDefault: boolean): SizeWithUnit;
+    /** @internal */
+    export function resolveMinSize(minSize: string | undefined, minWidth: number | undefined, minHeight: number | undefined): UndefinableSizeWithUnit;
+    /** @internal */
+    export function calculateSizeWidthHeightSpecificationType(config: ItemConfig): SizeWidthHeightSpecificationType;
     export function isGround(config: ItemConfig): config is ItemConfig;
     export function isRow(config: ItemConfig): config is ItemConfig;
     export function isColumn(config: ItemConfig): config is ItemConfig;
@@ -1564,7 +1641,7 @@ export declare type JsonValueArray = Array<JsonValue>;
 
 /** @public */
 export declare interface LayoutConfig {
-    root: RootItemConfig;
+    root: RootItemConfig | undefined;
     /** @deprecated Use {@link (LayoutConfig:interface).root} */
     content?: (RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig)[];
     openPopouts?: PopoutLayoutConfig[];
@@ -1615,6 +1692,7 @@ export declare namespace LayoutConfig {
          * strong dependency on their parent and can exist on their own, but can be quite annoying to close by hand. In
          * addition, any changes made to popouts won't be stored after the parent is closed.
          * Default: true
+         * @deprecated Will be removed in version 3.
          */
         closePopoutsOnUnload?: boolean;
         /**
@@ -1673,14 +1751,24 @@ export declare namespace LayoutConfig {
         borderGrabWidth?: number;
         /**
          * The minimum height an item can be resized to (in pixel).
-         * Default: 10
+         * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemHeight} instead
          */
         minItemHeight?: number;
         /**
+         * The minimum height an item can be resized to.
+         * Default: 0
+         */
+        defaultMinItemHeight?: string;
+        /**
          * The minimum width an item can be resized to (in pixel).
-         * Default: 10
+         * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemWidth} instead
          */
         minItemWidth?: number;
+        /**
+         * The minimum width an item can be resized to.
+         * Default: 10px
+         */
+        defaultMinItemWidth?: string;
         /**
          * The height of the header elements in pixel. This can be changed, but your theme's header css needs to be
          * adjusted accordingly.
@@ -1699,7 +1787,14 @@ export declare namespace LayoutConfig {
         dragProxyHeight?: number;
     }
     export namespace Dimensions {
+        /** @internal */
         export function resolve(dimensions: Dimensions | undefined): ResolvedLayoutConfig.Dimensions;
+        /** @internal */
+        export function fromResolved(resolvedDimensions: ResolvedLayoutConfig.Dimensions): Dimensions;
+        /** @internal */
+        export function resolveDefaultMinItemHeight(dimensions: Dimensions | undefined): SizeWithUnit;
+        /** @internal */
+        export function resolveDefaultMinItemWidth(dimensions: Dimensions | undefined): SizeWithUnit;
     }
     export interface Labels {
         /**
@@ -1766,12 +1861,15 @@ export declare namespace LayoutConfig {
         tabDropdown?: false | string;
     }
     export namespace Header {
+        /** @internal */
         export function resolve(header: Header | undefined, settings: LayoutConfig.Settings | undefined, labels: LayoutConfig.Labels | undefined): ResolvedLayoutConfig.Header;
     }
     export function isPopout(config: LayoutConfig): config is PopoutLayoutConfig;
+    /** @internal */
     export function resolve(layoutConfig: LayoutConfig): ResolvedLayoutConfig;
     export function fromResolved(config: ResolvedLayoutConfig): LayoutConfig;
     export function isResolved(configOrResolvedConfig: ResolvedLayoutConfig | LayoutConfig): configOrResolvedConfig is ResolvedLayoutConfig;
+    /** @internal */
     export function resolveOpenPopouts(popoutConfigs: PopoutLayoutConfig[] | undefined): ResolvedPopoutLayoutConfig[];
 }
 
@@ -1780,10 +1878,20 @@ export declare namespace LayoutConfig {
  */
 /** @public */
 export declare abstract class LayoutManager extends EventEmitter {
+    /** Whether the layout will be automatically be resized to container whenever the container's size is changed
+     * Default is true if <body> is the container otherwise false
+     * Default will be changed to true for any container in the future
+     */
+    resizeWithContainerAutomatically: boolean;
+    /** The debounce interval (in milliseconds) used whenever a layout is automatically resized.  0 means next tick */
+    resizeDebounceInterval: number;
+    /** Extend the current debounce delay time period if it is triggered during the delay.
+     * If this is true, the layout will only resize when its container has stopped being resized.
+     * If it is false, the layout will resize at intervals while its container is being resized.
+     */
+    resizeDebounceExtendedWhenPossible: boolean;
     /** @internal */
     private _containerElement;
-    /** @internal */
-    private _isFullPage;
     /** @internal */
     private _isInitialised;
     /** @internal */
@@ -1823,9 +1931,15 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     private _virtualSizedContainerAddingBeginCount;
     /** @internal */
-    private _windowResizeListener;
+    private _sizeInvalidationBeginCount;
     /** @internal */
-    private _windowUnloadListener;
+    protected _constructorOrSubWindowLayoutConfig: LayoutConfig | undefined;
+    /** @internal */
+    private _resizeObserver;
+    /** @internal @deprecated to be removed in version 3 */
+    private _windowBeforeUnloadListener;
+    /** @internal @deprecated to be removed in version 3 */
+    private _windowBeforeUnloadListening;
     /** @internal */
     private _maximisedStackBeforeDestroyedListener;
     readonly isSubWindow: boolean;
@@ -1856,14 +1970,20 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     get tabDropPlaceholder(): HTMLElement;
     get maximisedStack(): Stack | undefined;
+    /** @deprecated indicates deprecated constructor use */
+    get deprecatedConstructor(): boolean;
     /**
-    * @param container - A Dom HTML element. Defaults to body
-    * @internal
-    */
+     * @param container - A Dom HTML element. Defaults to body
+     * @internal
+     */
     constructor(parameters: LayoutManager.ConstructorParameters);
     /**
      * Destroys the LayoutManager instance itself as well as every ContentItem
      * within it. After this is called nothing should be left of the LayoutManager.
+     *
+     * This function only needs to be called if an application wishes to destroy the Golden Layout object while
+     * a page remains loaded. When a page is unloaded, all resources claimed by Golden Layout will automatically
+     * be released.
      */
     destroy(): void;
     /**
@@ -1949,7 +2069,7 @@ export declare abstract class LayoutManager extends EventEmitter {
      * component is successfully added
      * @param itemConfig - ResolvedItemConfig of child to be added.
      * @returns New ContentItem created.
-    */
+     */
     newItem(itemConfig: RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig): ContentItem;
     /**
      * Adds a new child ContentItem under the root ContentItem.  If a root does not exist, then create root ContentItem instead
@@ -1976,7 +2096,7 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** Loads the specified component ResolvedItemConfig as root.
      * This can be used to display a Component all by itself.  The layout cannot be changed other than having another new layout loaded.
      * Note that, if this layout is saved and reloaded, it will reload with the Component as a child of a Stack.
-    */
+     */
     loadComponentAsRoot(itemConfig: ComponentItemConfig): void;
     /** @deprecated Use {@link (LayoutManager:class).setSize} */
     updateSize(width: number, height: number): void;
@@ -1988,11 +2108,19 @@ export declare abstract class LayoutManager extends EventEmitter {
      */
     setSize(width: number, height: number): void;
     /** @internal */
+    beginSizeInvalidation(): void;
+    /** @internal */
+    endSizeInvalidation(): void;
+    /** @internal */
     updateSizeFromContainer(): void;
     /**
      * Update the size of the root ContentItem.  This will update the size of all contentItems in the tree
+     * @param force - In some cases the size is not updated if it has not changed. In this case, events
+     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
+     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
+     * relevant events need to be fired.
      */
-    updateRootSize(): void;
+    updateRootSize(force?: boolean): void;
     /** @public */
     createAndInitContentItem(config: ResolvedItemConfig, parent: ContentItem): ContentItem;
     /**
@@ -2032,19 +2160,27 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     createPopoutFromPopoutLayoutConfig(config: ResolvedPopoutLayoutConfig): BrowserPopout;
     /**
+     * Closes all Open Popouts
+     * Applications can call this method when a page is unloaded to remove its open popouts
+     */
+    closeAllOpenPopouts(): void;
+    /**
      * Attaches DragListener to any given DOM element
      * and turns it into a way of creating new ComponentItems
      * by 'dragging' the DOM element into the layout
      *
-     * @param element -
-     * @param componentTypeOrFtn - Type of component to be created, or a function which will provide both component type and state
-     * @param componentState - Optional initial state of component.  This will be ignored if componentTypeOrFtn is a function
+     * @param element - The HTML element which will be listened to for commencement of drag.
+     * @param componentTypeOrItemConfigCallback - Type of component to be created, or a callback which will provide the ItemConfig
+     * to be used to create the component.
+     * @param componentState - Optional initial state of component.  This will be ignored if componentTypeOrFtn is a function.
      *
      * @returns an opaque object that identifies the DOM element
      *          and the attached itemConfig. This can be used in
      *          removeDragSource() later to get rid of the drag listeners.
      */
-    newDragSource(element: HTMLElement, componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig), componentState?: JsonValue, title?: string): DragSource;
+    newDragSource(element: HTMLElement, itemConfigCallback: () => DragSource.ComponentItemConfig | ComponentItemConfig): DragSource;
+    /** @deprecated will be replaced in version 3 with newDragSource(element: HTMLElement, itemConfig: ComponentItemConfig) */
+    newDragSource(element: HTMLElement, componentType: JsonValue, componentState?: JsonValue, title?: JsonValue, id?: string): DragSource;
     /**
      * Removes a DragListener added by createDragSource() so the corresponding
      * DOM element is not a drag source any more.
@@ -2128,15 +2264,22 @@ export declare abstract class LayoutManager extends EventEmitter {
      */
     private getAllContentItems;
     /**
-     * Binds to DOM/BOM events on init
+     * Creates Subwindows (if there are any). Throws an error
+     * if popouts are blocked.
      * @internal
      */
-    private bindEvents;
+    private createSubWindows;
+    /**
+     * Debounces resize events
+     * @internal
+     */
+    private handleContainerResize;
     /**
      * Debounces resize events
      * @internal
      */
     private processResizeWithDebounce;
+    private checkClearResizeTimeout;
     /**
      * Determines what element the layout will be created in
      * @internal
@@ -2146,8 +2289,9 @@ export declare abstract class LayoutManager extends EventEmitter {
      * Called when the window is closed or the user navigates away
      * from the page
      * @internal
+     * @deprecated to be removed in version 3
      */
-    private onUnload;
+    private onBeforeUnload;
     /**
      * Adjusts the number of columns to be lower to fit the screen and still maintain minItemWidth.
      * @internal
@@ -2201,7 +2345,7 @@ export declare namespace LayoutManager {
     export type AfterVirtualRectingEvent = (this: void) => void;
     /** @internal */
     export interface ConstructorParameters {
-        layoutConfig: ResolvedLayoutConfig | undefined;
+        constructorOrSubWindowLayoutConfig: LayoutConfig | undefined;
         isSubWindow: boolean;
         containerElement: HTMLElement | undefined;
     }
@@ -2278,6 +2422,16 @@ export declare namespace LogicalZIndex {
 }
 
 /** @public */
+export declare const LogicalZIndexToDefaultMap: {
+    base: string;
+    drag: string;
+    stackMaximised: string;
+};
+
+/** @internal */
+export declare function parseSize(sizeString: string, allowableSizeUnits: readonly SizeUnitEnum[]): SizeWithUnit;
+
+/** @public */
 export declare class PopoutBlockedError extends ExternalError {
     /** @internal */
     constructor(message: string);
@@ -2286,12 +2440,12 @@ export declare class PopoutBlockedError extends ExternalError {
 /** @public */
 export declare interface PopoutLayoutConfig extends LayoutConfig {
     /** The id of the element the item will be appended to on popIn
-    * If null, append to topmost layout element
-    */
+     * If null, append to topmost layout element
+     */
     parentId: string | null | undefined;
     /** The position of this element within its parent
-    * If null, position is last
-    */
+     * If null, position is last
+     */
     indexInParent: number | null | undefined;
     /** @deprecated use {@link (PopoutLayoutConfig:interface).window} */
     dimensions: PopoutLayoutConfig.Dimensions | undefined;
@@ -2303,13 +2457,13 @@ export declare namespace PopoutLayoutConfig {
     /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface)} */
     export interface Dimensions extends LayoutConfig.Dimensions {
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).width} */
-        width: number | null;
+        width?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).height} */
-        height: number | null;
+        height?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).left} */
-        left: number | null;
+        left?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).top} */
-        top: number | null;
+        top?: number | null;
     }
     export interface Window {
         width?: number;
@@ -2318,9 +2472,17 @@ export declare namespace PopoutLayoutConfig {
         top?: number;
     }
     export namespace Window {
+        /** @internal */
         export function resolve(window: Window | undefined, dimensions: Dimensions | undefined): ResolvedPopoutLayoutConfig.Window;
+        /** @internal */
+        export function fromResolved(resolvedWindow: ResolvedPopoutLayoutConfig.Window): Window;
     }
+    /** @internal */
     export function resolve(popoutConfig: PopoutLayoutConfig): ResolvedPopoutLayoutConfig;
+    /** @internal */
+    export function fromResolved(resolvedConfig: ResolvedPopoutLayoutConfig): PopoutLayoutConfig;
+    /** @internal */
+    export function fromResolvedArray(resolvedArray: ResolvedPopoutLayoutConfig[]): PopoutLayoutConfig[];
 }
 
 /** @internal */
@@ -2356,10 +2518,10 @@ export declare namespace ResolvedComponentItemConfig {
 /** @internal */
 export declare interface ResolvedGroundItemConfig extends ResolvedItemConfig {
     readonly type: 'ground';
-    readonly width: 100;
-    readonly minWidth: 0;
-    readonly height: 100;
-    readonly minHeight: 0;
+    readonly size: 100;
+    readonly sizeUnit: SizeUnitEnum.Percent;
+    readonly minSize: 0;
+    readonly minSizeUnit: SizeUnitEnum.Pixel;
     readonly id: '';
     readonly isClosable: false;
     readonly title: '';
@@ -2397,10 +2559,10 @@ export declare namespace ResolvedHeaderedItemConfig {
 export declare interface ResolvedItemConfig {
     readonly type: ItemType;
     readonly content: readonly ResolvedItemConfig[];
-    readonly width: number;
-    readonly minWidth: number;
-    readonly height: number;
-    readonly minHeight: number;
+    readonly size: number;
+    readonly sizeUnit: SizeUnitEnum;
+    readonly minSize: number | undefined;
+    readonly minSizeUnit: SizeUnitEnum;
     readonly id: string;
     readonly isClosable: boolean;
 }
@@ -2434,6 +2596,7 @@ export declare namespace ResolvedLayoutConfig {
         readonly reorderEnabled: boolean;
         readonly popoutWholeStack: boolean;
         readonly blockedPopoutsThrowError: boolean;
+        /** @deprecated Will be removed in version 3. */
         readonly closePopoutsOnUnload: boolean;
         readonly responsiveMode: ResponsiveMode;
         readonly tabOverlapAllowance: number;
@@ -2448,8 +2611,10 @@ export declare namespace ResolvedLayoutConfig {
     export interface Dimensions {
         readonly borderWidth: number;
         readonly borderGrabWidth: number;
-        readonly minItemHeight: number;
-        readonly minItemWidth: number;
+        readonly defaultMinItemHeight: number;
+        readonly defaultMinItemHeightUnit: SizeUnitEnum;
+        readonly defaultMinItemWidth: number;
+        readonly defaultMinItemWidthUnit: SizeUnitEnum;
         readonly headerHeight: number;
         readonly dragProxyWidth: number;
         readonly dragProxyHeight: number;
@@ -2516,7 +2681,7 @@ export declare namespace ResolvedPopoutLayoutConfig {
  * Note that RootItemConfig can be an ComponentItem itemConfig.  However when the Ground ContentItem's child is created
  * a ComponentItem itemConfig will create a Stack with a child ComponentItem.
  * @public
-*/
+ */
 export declare type ResolvedRootItemConfig = ResolvedRowOrColumnItemConfig | ResolvedStackItemConfig | ResolvedComponentItemConfig;
 
 /** @public */
@@ -2577,7 +2742,10 @@ export declare type RootItemConfig = RowOrColumnItemConfig | StackItemConfig | C
 /** @public */
 export declare namespace RootItemConfig {
     export function isRootItemConfig(itemConfig: ItemConfig): itemConfig is RootItemConfig;
+    /** @internal */
     export function resolve(itemConfig: RootItemConfig | undefined): ResolvedRootItemConfig | undefined;
+    /** @internal */
+    export function fromResolvedOrUndefined(resolvedItemConfig: ResolvedRootItemConfig | undefined): RootItemConfig | undefined;
 }
 
 /** @public */
@@ -2640,7 +2808,7 @@ export declare class RowOrColumn extends ContentItem {
     /**
      * Called whenever the dimensions of this item or one of its parents change
      */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     /**
      * Invoked recursively by the layout manager. ContentItem.init appends
      * the contentItem's DOM elements to the container, RowOrColumn init adds splitters
@@ -2692,7 +2860,7 @@ export declare class RowOrColumn extends ContentItem {
      * Adjusts the column widths to respect the dimensions minItemWidth if set.
      * @internal
      */
-    private respectMinItemWidth;
+    private respectMinItemSize;
     /**
      * Instantiates a new Splitter, binds events to it and adds
      * it to the array of splitters at the position specified as the index argument
@@ -2714,12 +2882,13 @@ export declare class RowOrColumn extends ContentItem {
      * @returns A map of contentItems that the splitter affects
      * @internal
      */
-    private getItemsForSplitter;
+    private getSplitItems;
+    private calculateContentItemMinSize;
     /**
      * Gets the minimum dimensions for the given item configuration array
      * @internal
      */
-    private getMinimumDimensions;
+    private calculateContentItemsTotalMinSize;
     /**
      * Invoked when a splitter's dragListener fires dragStart. Calculates the splitters
      * movement area once (so that it doesn't need calculating on every mousemove event)
@@ -2748,6 +2917,13 @@ export declare class RowOrColumn extends ContentItem {
 /** @public */
 export declare namespace RowOrColumn {
     /** @internal */
+    export interface AbsoluteSizes {
+        itemSizes: number[];
+        additionalPixel: number;
+        totalSize: number;
+        crossAxisSize: number;
+    }
+    /** @internal */
     export function getElementDimensionSize(element: HTMLElement, dimension: WidthOrHeightPropertyName): number;
     /** @internal */
     export function setElementDimensionSize(element: HTMLElement, dimension: WidthOrHeightPropertyName, value: number): void;
@@ -2765,7 +2941,11 @@ export declare interface RowOrColumnItemConfig extends ItemConfig {
 export declare namespace RowOrColumnItemConfig {
     export type ChildItemConfig = RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig;
     export function isChildItemConfig(itemConfig: ItemConfig): itemConfig is ChildItemConfig;
-    export function resolve(itemConfig: RowOrColumnItemConfig): ResolvedRowOrColumnItemConfig;
+    /** @internal */
+    export function resolve(itemConfig: RowOrColumnItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedRowOrColumnItemConfig;
+    /** @internal */
+    export function fromResolved(resolvedConfig: ResolvedRowOrColumnItemConfig): RowOrColumnItemConfig;
+    /** @internal */
     export function resolveContent(content: ChildItemConfig[] | undefined): ResolvedRowOrColumnItemConfig.ChildItemConfig[];
 }
 
@@ -2778,6 +2958,32 @@ export declare namespace Side {
     const left = "left";
     const right = "right";
     const bottom = "bottom";
+}
+
+/**
+ * Length units which can specify the size of a Component Item
+ * @public
+ */
+export declare type SizeUnit = 'px' | '%' | 'fr' | 'em';
+
+/** @public */
+export declare enum SizeUnitEnum {
+    Pixel = "px",
+    Percent = "%",
+    Fractional = "fr",
+    Em = "em"
+}
+
+/** @public */
+export declare namespace SizeUnitEnum {
+    export function tryParse(value: string): SizeUnitEnum | undefined;
+    export function format(value: SizeUnitEnum): SizeUnitEnum;
+}
+
+/** @internal */
+export declare interface SizeWithUnit {
+    size: number;
+    sizeUnit: SizeUnitEnum;
 }
 
 /** @public */
@@ -2811,6 +3017,7 @@ export declare class Stack extends ComponentParentableItem {
     /** @internal */
     private _minimisedListener;
     get childElementContainer(): HTMLElement;
+    get header(): Header;
     get headerShow(): boolean;
     get headerSide(): Side;
     get headerLeftRightSided(): boolean;
@@ -2823,7 +3030,7 @@ export declare class Stack extends ComponentParentableItem {
     /** @internal */
     constructor(layoutManager: LayoutManager, config: ResolvedStackItemConfig, parent: ContentItem);
     /** @internal */
-    updateSize(): void;
+    updateSize(force: boolean): void;
     /** @internal */
     init(): void;
     /** @deprecated Use {@link (Stack:class).setActiveComponentItem} */
@@ -2961,8 +3168,10 @@ export declare interface StackItemConfig extends HeaderedItemConfig {
 
 /** @public */
 export declare namespace StackItemConfig {
-    export function resolve(itemConfig: StackItemConfig): ResolvedStackItemConfig;
-    export function resolveContent(content: ComponentItemConfig[] | undefined): ResolvedComponentItemConfig[];
+    /** @internal */
+    export function resolve(itemConfig: StackItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedStackItemConfig;
+    /** @internal */
+    export function fromResolved(resolvedConfig: ResolvedStackItemConfig): StackItemConfig;
 }
 
 /** @public */
@@ -3114,12 +3323,14 @@ declare class TransitionIndicator {
     private measure;
 }
 
+/** @internal */
+export declare interface UndefinableSizeWithUnit {
+    size: number | undefined;
+    sizeUnit: SizeUnitEnum;
+}
+
 /** @public */
 export declare class VirtualLayout extends LayoutManager {
-    /** @internal */
-    private _subWindowsCreated;
-    /** @internal */
-    private _creationTimeoutPassed;
     /**
      * @deprecated Use {@link (VirtualLayout:class).bindComponentEvent} and
      * {@link (VirtualLayout:class).unbindComponentEvent} with virtual components
@@ -3132,12 +3343,23 @@ export declare class VirtualLayout extends LayoutManager {
     releaseComponentEvent: VirtualLayout.ReleaseComponentEventHandler | undefined;
     bindComponentEvent: VirtualLayout.BindComponentEventHandler | undefined;
     unbindComponentEvent: VirtualLayout.UnbindComponentEventHandler | undefined;
+    /** @internal @deprecated use while constructor is not determinate */
+    private _bindComponentEventHanlderPassedInConstructor;
+    /** @internal  @deprecated use while constructor is not determinate */
+    private _creationTimeoutPassed;
     /**
-    * @param container - A Dom HTML element. Defaults to body
-    */
+     * @param container - A Dom HTML element. Defaults to body
+     * @param bindComponentEventHandler - Event handler to bind components
+     * @param bindComponentEventHandler - Event handler to unbind components
+     * If bindComponentEventHandler is defined, then constructor will be determinate. It will always call the init()
+     * function and the init() function will always complete. This means that the bindComponentEventHandler will be called
+     * if constructor is for a popout window. Make sure bindComponentEventHandler is ready for events.
+     */
     constructor(container?: HTMLElement, bindComponentEventHandler?: VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler);
     /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
     constructor(config: LayoutConfig, container?: HTMLElement);
+    /** @internal */
+    constructor(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler: HTMLElement | VirtualLayout.BindComponentEventHandler | undefined, unbindComponentEventHandler: VirtualLayout.UnbindComponentEventHandler | undefined, skipInit: true);
     destroy(): void;
     /**
      * Creates the actual layout. Must be called after all initial components
@@ -3151,22 +3373,26 @@ export declare class VirtualLayout extends LayoutManager {
      * then init() will be automatically called internally and should not be called externally.
      */
     init(): void;
+    /**
+     * Clears existing HTML and adjusts style to make window suitable to be a popout sub window
+     * Curently is automatically called when window is a subWindow and bindComponentEvent is not passed in the constructor
+     * If bindComponentEvent is not passed in the constructor, the application must either call this function explicitly or
+     * (preferably) make the window suitable as a subwindow.
+     * In the future, it is planned that this function is NOT automatically called in any circumstances.  Applications will
+     * need to determine whether a window is a Golden Layout popout window and either call this function explicitly or
+     * hide HTML not relevant to the popout.
+     * See apitest for an example of how HTML is hidden when popout windows are displayed
+     */
+    clearHtmlAndAdjustStylesForSubWindow(): void;
+    /**
+     * Will add button if not popinOnClose specified in settings
+     * @returns true if added otherwise false
+     */
+    checkAddDefaultPopinButton(): boolean;
     /** @internal */
     bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.BindableComponent;
     /** @internal */
     unbindComponent(container: ComponentContainer, virtual: boolean, component: ComponentContainer.Component | undefined): void;
-    /**
-     * Creates Subwindows (if there are any). Throws an error
-     * if popouts are blocked.
-     * @internal
-     */
-    private createSubWindows;
-    /**
-     * This is executed when GoldenLayout detects that it is run
-     * within a previously opened popout window.
-     * @internal
-     */
-    private adjustToWindowMode;
 }
 
 /** @public */

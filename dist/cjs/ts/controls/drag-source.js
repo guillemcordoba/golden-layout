@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DragSource = void 0;
-const config_1 = require("../config/config");
+const config_1 = require("../config/config"); // remove alias in version 3
+const resolved_config_1 = require("../config/resolved-config");
 const internal_error_1 = require("../errors/internal-error");
 const component_item_1 = require("../items/component-item");
 const ground_item_1 = require("../items/ground-item");
 const drag_listener_1 = require("../utils/drag-listener");
 const drag_proxy_1 = require("./drag-proxy");
-const resolved_config_1 = require("../config/resolved-config");
 /**
  * Allows for any DOM item to create a component on drag
  * start to be dragged into the Layout
@@ -22,12 +22,14 @@ class DragSource {
     _element, 
     /** @internal */
     _extraAllowableChildTargets, 
-    /** @internal */
+    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
     _componentTypeOrFtn, 
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     _componentState, 
-    /** @internal */
+    /** @internal @deprecated remove in version 3 */
     _title, 
+    /** @internal @deprecated remove in version 3 */
+    _id, 
     /** @internal */
     _rootContainer) {
         this._layoutManager = _layoutManager;
@@ -36,10 +38,11 @@ class DragSource {
         this._componentTypeOrFtn = _componentTypeOrFtn;
         this._componentState = _componentState;
         this._title = _title;
+        this._id = _id;
         this._rootContainer = _rootContainer;
         this._dragListener = null;
-        this._dummyGroundContainer = document.createElement('div');
-        const dummyRootItemConfig = resolved_config_1.ResolvedRowOrColumnItemConfig.createDefault('row');
+        this._dummyGroundContainer = document.createElement("div");
+        const dummyRootItemConfig = resolved_config_1.ResolvedRowOrColumnItemConfig.createDefault("row");
         this._dummyGroundContentItem = new ground_item_1.GroundItem(this._layoutManager, dummyRootItemConfig, this._dummyGroundContainer);
         this.createDragListener();
     }
@@ -57,8 +60,8 @@ class DragSource {
     createDragListener() {
         this.removeDragListener();
         this._dragListener = new drag_listener_1.DragListener(this._element, this._extraAllowableChildTargets);
-        this._dragListener.on('dragStart', (x, y) => this.onDragStart(x, y));
-        this._dragListener.on('dragStop', () => this.onDragStop());
+        this._dragListener.on("dragStart", (x, y) => this.onDragStart(x, y));
+        this._dragListener.on("dragStop", () => this.onDragStop());
     }
     /**
      * Callback for the DragListener's dragStart event
@@ -68,41 +71,48 @@ class DragSource {
      * @internal
      */
     onDragStart(x, y) {
-        let componentType;
-        let componentState;
-        let title;
+        var _a;
+        const type = "component";
+        let dragSourceItemConfig;
         if (typeof this._componentTypeOrFtn === "function") {
-            const dragSourceItemConfig = this._componentTypeOrFtn();
-            componentType = dragSourceItemConfig.type;
-            componentState = dragSourceItemConfig.state;
-            title = dragSourceItemConfig.title;
+            const ftnDragSourceItemConfig = this._componentTypeOrFtn();
+            // If the componentType property exists, then it is already a ComponentItemConfig so nothing to do
+            if (DragSource.isDragSourceComponentItemConfig(ftnDragSourceItemConfig)) {
+                dragSourceItemConfig = {
+                    type,
+                    componentState: ftnDragSourceItemConfig.state,
+                    componentType: ftnDragSourceItemConfig.type,
+                    title: (_a = ftnDragSourceItemConfig.title) !== null && _a !== void 0 ? _a : this._title,
+                };
+            }
+            else {
+                dragSourceItemConfig = ftnDragSourceItemConfig;
+            }
         }
         else {
-            componentType = this._componentTypeOrFtn;
-            componentState = this._componentState;
-            title = this._title;
+            dragSourceItemConfig = {
+                type,
+                componentState: this._componentState,
+                componentType: this._componentTypeOrFtn,
+                title: this._title,
+                id: this._id,
+            };
         }
         // Create a dummy ContentItem only for drag purposes
         // All ContentItems (except for GroundItem) need a parent.  When dragging, the parent is not used.
         // Instead of allowing null parents (as Javascript version did), use a temporary dummy GroundItem parent and add ContentItem to that
         // If this does not work, need to create alternative GroundItem class
-        const itemConfig = {
-            type: 'component',
-            componentType,
-            componentState,
-            title,
-        };
-        const resolvedItemConfig = config_1.ComponentItemConfig.resolve(itemConfig);
+        const resolvedItemConfig = config_1.ComponentItemConfig.resolve(dragSourceItemConfig, false);
         const componentItem = new component_item_1.ComponentItem(this._layoutManager, resolvedItemConfig, this._dummyGroundContentItem);
         this._dummyGroundContentItem.contentItems.push(componentItem);
         if (this._dragListener === null) {
-            throw new internal_error_1.UnexpectedNullError('DSODSD66746');
+            throw new internal_error_1.UnexpectedNullError("DSODSD66746");
         }
         else {
             const dragProxy = new drag_proxy_1.DragProxy(x, y, this._dragListener, this._layoutManager, componentItem, this._dummyGroundContentItem, this._rootContainer);
             const transitionIndicator = this._layoutManager.transitionIndicator;
             if (transitionIndicator === null) {
-                throw new internal_error_1.UnexpectedNullError('DSODST66746');
+                throw new internal_error_1.UnexpectedNullError("DSODST66746");
             }
             else {
                 transitionIndicator.transitionElements(this._element, dragProxy.element);
@@ -131,4 +141,12 @@ class DragSource {
     }
 }
 exports.DragSource = DragSource;
+/** @public */
+(function (DragSource) {
+    /** @deprecated remove in version 3 */
+    function isDragSourceComponentItemConfig(config) {
+        return !("componentType" in config);
+    }
+    DragSource.isDragSourceComponentItemConfig = isDragSourceComponentItemConfig;
+})(DragSource = exports.DragSource || (exports.DragSource = {}));
 //# sourceMappingURL=drag-source.js.map

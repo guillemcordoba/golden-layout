@@ -7,30 +7,45 @@ const external_error_1 = require("./errors/external-error");
 const internal_error_1 = require("./errors/internal-error");
 const layout_manager_1 = require("./layout-manager");
 const i18n_strings_1 = require("./utils/i18n-strings");
-const utils_1 = require("./utils/utils");
 /** @public */
 class VirtualLayout extends layout_manager_1.LayoutManager {
     /** @internal */
-    constructor(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler) {
+    constructor(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler, skipInit) {
         super(VirtualLayout.createLayoutManagerConstructorParameters(configOrOptionalContainer, containerOrBindComponentEventHandler));
-        /** @internal */
-        this._subWindowsCreated = false;
-        /** @internal */
-        this._creationTimeoutPassed = false;
-        // More work needed to get popouts working with virtual.
+        /** @internal @deprecated use while constructor is not determinate */
+        this._bindComponentEventHanlderPassedInConstructor = false; // remove when constructor is determinate
+        /** @internal  @deprecated use while constructor is not determinate */
+        this._creationTimeoutPassed = false; // remove when constructor is determinate
         if (containerOrBindComponentEventHandler !== undefined) {
             if (typeof containerOrBindComponentEventHandler === 'function') {
                 this.bindComponentEvent = containerOrBindComponentEventHandler;
+                this._bindComponentEventHanlderPassedInConstructor = true;
                 if (unbindComponentEventHandler !== undefined) {
                     this.unbindComponentEvent = unbindComponentEventHandler;
                 }
             }
         }
-        if (this.isSubWindow) {
-            document.body.style.visibility = 'hidden';
+        if (!this._bindComponentEventHanlderPassedInConstructor) {
+            // backward compatibility
+            if (this.isSubWindow) {
+                // document.body.style.visibility = 'hidden';
+                // Set up layoutConfig since constructor is not determinate and may exit early. Other functions may need
+                // this.layoutConfig. this.layoutConfig is again calculated in the same way when init() completes.
+                // Remove this when constructor is determinate.
+                if (this._constructorOrSubWindowLayoutConfig === undefined) {
+                    throw new internal_error_1.UnexpectedUndefinedError('VLC98823');
+                }
+                else {
+                    const resolvedLayoutConfig = config_1.LayoutConfig.resolve(this._constructorOrSubWindowLayoutConfig);
+                    // remove root from layoutConfig
+                    this.layoutConfig = Object.assign(Object.assign({}, resolvedLayoutConfig), { root: undefined });
+                }
+            }
         }
-        if (this.layoutConfig.root === undefined || this.isSubWindow) {
-            this.init();
+        if (skipInit !== true) {
+            if (!this.deprecatedConstructor) {
+                this.init();
+            }
         }
     }
     destroy() {
@@ -51,18 +66,9 @@ class VirtualLayout extends layout_manager_1.LayoutManager {
      */
     init() {
         /**
-         * Create the popout windows straight away. If popouts are blocked
-         * an error is thrown on the same 'thread' rather than a timeout and can
-         * be caught. This also prevents any further initilisation from taking place.
-         */
-        if (this._subWindowsCreated === false) {
-            this.createSubWindows();
-            this._subWindowsCreated = true;
-        }
-        /**
          * If the document isn't ready yet, wait for it.
          */
-        if (document.readyState === 'loading' || document.body === null) {
+        if (!this._bindComponentEventHanlderPassedInConstructor && (document.readyState === 'loading' || document.body === null)) {
             document.addEventListener('DOMContentLoaded', () => this.init(), { passive: true });
             return;
         }
@@ -71,15 +77,77 @@ class VirtualLayout extends layout_manager_1.LayoutManager {
          * page's js calls to be executed, then replace the bodies content
          * with GoldenLayout
          */
-        if (this.isSubWindow === true && this._creationTimeoutPassed === false) {
+        if (!this._bindComponentEventHanlderPassedInConstructor && this.isSubWindow === true && !this._creationTimeoutPassed) {
             setTimeout(() => this.init(), 7);
             this._creationTimeoutPassed = true;
             return;
         }
         if (this.isSubWindow === true) {
-            this.adjustToWindowMode();
+            if (!this._bindComponentEventHanlderPassedInConstructor) {
+                this.clearHtmlAndAdjustStylesForSubWindow();
+            }
+            // Expose this instance on the window object to allow the opening window to interact with it
+            window.__glInstance = this;
         }
         super.init();
+    }
+    /**
+     * Clears existing HTML and adjusts style to make window suitable to be a popout sub window
+     * Curently is automatically called when window is a subWindow and bindComponentEvent is not passed in the constructor
+     * If bindComponentEvent is not passed in the constructor, the application must either call this function explicitly or
+     * (preferably) make the window suitable as a subwindow.
+     * In the future, it is planned that this function is NOT automatically called in any circumstances.  Applications will
+     * need to determine whether a window is a Golden Layout popout window and either call this function explicitly or
+     * hide HTML not relevant to the popout.
+     * See apitest for an example of how HTML is hidden when popout windows are displayed
+     */
+    clearHtmlAndAdjustStylesForSubWindow() {
+        const headElement = document.head;
+        const appendNodeLists = new Array(4);
+        appendNodeLists[0] = document.querySelectorAll('body link');
+        appendNodeLists[1] = document.querySelectorAll('body style');
+        appendNodeLists[2] = document.querySelectorAll('template');
+        appendNodeLists[3] = document.querySelectorAll('.gl_keep');
+        for (let listIdx = 0; listIdx < appendNodeLists.length; listIdx++) {
+            const appendNodeList = appendNodeLists[listIdx];
+            for (let nodeIdx = 0; nodeIdx < appendNodeList.length; nodeIdx++) {
+                const node = appendNodeList[nodeIdx];
+                headElement.appendChild(node);
+            }
+        }
+        const bodyElement = document.body;
+        bodyElement.innerHTML = '';
+        bodyElement.style.visibility = 'visible';
+        this.checkAddDefaultPopinButton();
+        /*
+        * This seems a bit pointless, but actually causes a reflow/re-evaluation getting around
+        * slickgrid's "Cannot find stylesheet." bug in chrome
+        */
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const x = document.body.offsetHeight;
+    }
+    /**
+     * Will add button if not popinOnClose specified in settings
+     * @returns true if added otherwise false
+     */
+    checkAddDefaultPopinButton() {
+        if (this.layoutConfig.settings.popInOnClose) {
+            return false;
+        }
+        else {
+            const popInButtonElement = document.createElement('div');
+            popInButtonElement.classList.add("lm_popin" /* Popin */);
+            popInButtonElement.setAttribute('title', this.layoutConfig.header.dock);
+            const iconElement = document.createElement('div');
+            iconElement.classList.add("lm_icon" /* Icon */);
+            const bgElement = document.createElement('div');
+            bgElement.classList.add("lm_bg" /* Bg */);
+            popInButtonElement.appendChild(iconElement);
+            popInButtonElement.appendChild(bgElement);
+            popInButtonElement.addEventListener('click', () => this.emit('popIn'));
+            document.body.appendChild(popInButtonElement);
+            return true;
+        }
     }
     /** @internal */
     bindComponent(container, itemConfig) {
@@ -105,13 +173,11 @@ class VirtualLayout extends layout_manager_1.LayoutManager {
     }
     /** @internal */
     unbindComponent(container, virtual, component) {
-        if (virtual) {
-            if (this.unbindComponentEvent !== undefined) {
-                this.unbindComponentEvent(container);
-            }
+        if (this.unbindComponentEvent !== undefined) {
+            this.unbindComponentEvent(container);
         }
         else {
-            if (this.releaseComponentEvent !== undefined) {
+            if (!virtual && this.releaseComponentEvent !== undefined) {
                 if (component === undefined) {
                     throw new internal_error_1.UnexpectedUndefinedError('VCUCRCU333998');
                 }
@@ -120,65 +186,6 @@ class VirtualLayout extends layout_manager_1.LayoutManager {
                 }
             }
         }
-    }
-    /**
-     * Creates Subwindows (if there are any). Throws an error
-     * if popouts are blocked.
-     * @internal
-     */
-    createSubWindows() {
-        for (let i = 0; i < this.layoutConfig.openPopouts.length; i++) {
-            const popoutConfig = this.layoutConfig.openPopouts[i];
-            this.createPopoutFromPopoutLayoutConfig(popoutConfig);
-        }
-    }
-    /**
-     * This is executed when GoldenLayout detects that it is run
-     * within a previously opened popout window.
-     * @internal
-     */
-    adjustToWindowMode() {
-        const headElement = document.head;
-        const appendNodeLists = new Array(4);
-        appendNodeLists[0] = document.querySelectorAll('body link');
-        appendNodeLists[1] = document.querySelectorAll('body style');
-        appendNodeLists[2] = document.querySelectorAll('template');
-        appendNodeLists[3] = document.querySelectorAll('.gl_keep');
-        for (let listIdx = 0; listIdx < appendNodeLists.length; listIdx++) {
-            const appendNodeList = appendNodeLists[listIdx];
-            for (let nodeIdx = 0; nodeIdx < appendNodeList.length; nodeIdx++) {
-                const node = appendNodeList[nodeIdx];
-                headElement.appendChild(node);
-            }
-        }
-        const bodyElement = document.body;
-        bodyElement.innerHTML = '';
-        bodyElement.style.visibility = 'visible';
-        if (!this.layoutConfig.settings.popInOnClose) {
-            const popInButtonElement = document.createElement('div');
-            popInButtonElement.classList.add("lm_popin" /* Popin */);
-            popInButtonElement.setAttribute('title', this.layoutConfig.header.dock);
-            const iconElement = document.createElement('div');
-            iconElement.classList.add("lm_icon" /* Icon */);
-            const bgElement = document.createElement('div');
-            bgElement.classList.add("lm_bg" /* Bg */);
-            popInButtonElement.appendChild(iconElement);
-            popInButtonElement.appendChild(bgElement);
-            popInButtonElement.addEventListener('click', () => this.emit('popIn'));
-            bodyElement.appendChild(popInButtonElement);
-        }
-        /*
-        * This seems a bit pointless, but actually causes a reflow/re-evaluation getting around
-        * slickgrid's "Cannot find stylesheet." bug in chrome
-        */
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const x = document.body.offsetHeight;
-        /*
-        * Expose this instance on the window object
-        * to allow the opening window to interact with
-        * it
-        */
-        window.__glInstance = this;
     }
 }
 exports.VirtualLayout = VirtualLayout;
@@ -191,7 +198,7 @@ exports.VirtualLayout = VirtualLayout;
     let subWindowChecked = false;
     /** @internal */
     function createLayoutManagerConstructorParameters(configOrOptionalContainer, containerOrBindComponentEventHandler) {
-        const windowConfigKey = subWindowChecked ? null : utils_1.getQueryStringParam('gl-window');
+        const windowConfigKey = subWindowChecked ? null : new URL(document.location.href).searchParams.get('gl-window');
         subWindowChecked = true;
         const isSubWindow = windowConfigKey !== null;
         let containerElement;
@@ -203,7 +210,11 @@ exports.VirtualLayout = VirtualLayout;
             }
             localStorage.removeItem(windowConfigKey);
             const minifiedWindowConfig = JSON.parse(windowConfigStr);
-            config = resolved_config_1.ResolvedLayoutConfig.unminifyConfig(minifiedWindowConfig);
+            const resolvedConfig = resolved_config_1.ResolvedLayoutConfig.unminifyConfig(minifiedWindowConfig);
+            config = config_1.LayoutConfig.fromResolved(resolvedConfig);
+            if (configOrOptionalContainer instanceof HTMLElement) {
+                containerElement = configOrOptionalContainer;
+            }
         }
         else {
             if (configOrOptionalContainer === undefined) {
@@ -215,12 +226,8 @@ exports.VirtualLayout = VirtualLayout;
                     containerElement = configOrOptionalContainer;
                 }
                 else {
-                    if (config_1.LayoutConfig.isResolved(configOrOptionalContainer)) {
-                        config = configOrOptionalContainer;
-                    }
-                    else {
-                        config = config_1.LayoutConfig.resolve(configOrOptionalContainer);
-                    }
+                    // backwards compatibility
+                    config = configOrOptionalContainer;
                 }
             }
             if (containerElement === undefined) {
@@ -230,7 +237,7 @@ exports.VirtualLayout = VirtualLayout;
             }
         }
         return {
-            layoutConfig: config,
+            constructorOrSubWindowLayoutConfig: config,
             isSubWindow,
             containerElement,
         };

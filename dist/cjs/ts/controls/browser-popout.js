@@ -124,7 +124,7 @@ class BrowserPopout extends event_emitter_1.EventEmitter {
         * The callee (server [not server application]) is not available and disappeared
         */
         const glInstanceLayoutConfig = this.getGlInstance().saveLayout();
-        const copiedGlInstanceLayoutConfig = utils_1.deepExtend({}, glInstanceLayoutConfig);
+        const copiedGlInstanceLayoutConfig = (0, utils_1.deepExtend)({}, glInstanceLayoutConfig);
         const copiedRoot = copiedGlInstanceLayoutConfig.root;
         if (copiedRoot === undefined) {
             throw new internal_error_1.UnexpectedUndefinedError('BPPIR19998');
@@ -250,23 +250,17 @@ class BrowserPopout extends event_emitter_1.EventEmitter {
      * @internal
      */
     createUrl() {
-        const storageKey = 'gl-window-config-' + utils_1.getUniqueId();
+        const storageKey = 'gl-window-config-' + (0, utils_1.getUniqueId)();
         const config = resolved_config_1.ResolvedLayoutConfig.minifyConfig(this._config);
         try {
             localStorage.setItem(storageKey, JSON.stringify(config));
         }
         catch (e) {
-            throw new Error('Error while writing to localStorage ' + e.toString());
+            throw new Error('Error while writing to localStorage ' + (0, utils_1.getErrorMessage)(e));
         }
-        const urlParts = document.location.href.split('?');
-        // URL doesn't contain GET-parameters
-        if (urlParts.length === 1) {
-            return urlParts[0] + '?gl-window=' + storageKey;
-            // URL contains GET-parameters
-        }
-        else {
-            return document.location.href + '&gl-window=' + storageKey;
-        }
+        const url = new URL(location.href);
+        url.searchParams.set('gl-window', storageKey);
+        return url.toString();
     }
     /**
      * Move the newly created window roughly to

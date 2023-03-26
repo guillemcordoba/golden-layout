@@ -2,7 +2,7 @@ import { ResolvedLayoutConfig } from '../config/resolved-config';
 import { PopoutBlockedError } from '../errors/external-error';
 import { UnexpectedNullError, UnexpectedUndefinedError } from '../errors/internal-error';
 import { EventEmitter } from '../utils/event-emitter';
-import { deepExtend, getUniqueId } from '../utils/utils';
+import { deepExtend, getErrorMessage, getUniqueId } from '../utils/utils';
 /**
  * Pops a content item out into a new browser window.
  * This is achieved by
@@ -253,17 +253,11 @@ export class BrowserPopout extends EventEmitter {
             localStorage.setItem(storageKey, JSON.stringify(config));
         }
         catch (e) {
-            throw new Error('Error while writing to localStorage ' + e.toString());
+            throw new Error('Error while writing to localStorage ' + getErrorMessage(e));
         }
-        const urlParts = document.location.href.split('?');
-        // URL doesn't contain GET-parameters
-        if (urlParts.length === 1) {
-            return urlParts[0] + '?gl-window=' + storageKey;
-            // URL contains GET-parameters
-        }
-        else {
-            return document.location.href + '&gl-window=' + storageKey;
-        }
+        const url = new URL(location.href);
+        url.searchParams.set('gl-window', storageKey);
+        return url.toString();
     }
     /**
      * Move the newly created window roughly to

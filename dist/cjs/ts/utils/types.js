@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResponsiveMode = exports.ItemType = exports.JsonValue = exports.LogicalZIndex = exports.Side = exports.WidthOrHeightPropertyName = void 0;
+exports.SizeUnitEnum = exports.ResponsiveMode = exports.ItemType = exports.JsonValue = exports.LogicalZIndexToDefaultMap = exports.LogicalZIndex = exports.Side = exports.WidthOrHeightPropertyName = void 0;
+const internal_error_1 = require("../errors/internal-error");
+const style_constants_1 = require("./style-constants");
 /** @internal */
 var WidthOrHeightPropertyName;
 (function (WidthOrHeightPropertyName) {
@@ -22,6 +24,12 @@ var LogicalZIndex;
     LogicalZIndex.drag = 'drag';
     LogicalZIndex.stackMaximised = 'stackMaximised';
 })(LogicalZIndex = exports.LogicalZIndex || (exports.LogicalZIndex = {}));
+/** @public */
+exports.LogicalZIndexToDefaultMap = {
+    base: style_constants_1.StyleConstants.defaultComponentBaseZIndex,
+    drag: style_constants_1.StyleConstants.defaultComponentDragZIndex,
+    stackMaximised: style_constants_1.StyleConstants.defaultComponentStackMaximisedZIndex,
+};
 /** @public */
 var JsonValue;
 (function (JsonValue) {
@@ -51,4 +59,36 @@ var ResponsiveMode;
     ResponsiveMode.always = 'always';
     ResponsiveMode.onload = 'onload';
 })(ResponsiveMode = exports.ResponsiveMode || (exports.ResponsiveMode = {}));
+/** @public */
+var SizeUnitEnum;
+(function (SizeUnitEnum) {
+    SizeUnitEnum["Pixel"] = "px";
+    SizeUnitEnum["Percent"] = "%";
+    SizeUnitEnum["Fractional"] = "fr";
+    SizeUnitEnum["Em"] = "em";
+})(SizeUnitEnum = exports.SizeUnitEnum || (exports.SizeUnitEnum = {}));
+/** @public */
+(function (SizeUnitEnum) {
+    function tryParse(value) {
+        switch (value) {
+            case SizeUnitEnum.Pixel: return SizeUnitEnum.Pixel;
+            case SizeUnitEnum.Percent: return SizeUnitEnum.Percent;
+            case SizeUnitEnum.Fractional: return SizeUnitEnum.Fractional;
+            case SizeUnitEnum.Em: return SizeUnitEnum.Em;
+            default: return undefined;
+        }
+    }
+    SizeUnitEnum.tryParse = tryParse;
+    function format(value) {
+        switch (value) {
+            case SizeUnitEnum.Pixel: return SizeUnitEnum.Pixel;
+            case SizeUnitEnum.Percent: return SizeUnitEnum.Percent;
+            case SizeUnitEnum.Fractional: return SizeUnitEnum.Fractional;
+            case SizeUnitEnum.Em: return SizeUnitEnum.Em;
+            default:
+                throw new internal_error_1.UnreachableCaseError('SUEF44998', value);
+        }
+    }
+    SizeUnitEnum.format = format;
+})(SizeUnitEnum = exports.SizeUnitEnum || (exports.SizeUnitEnum = {}));
 //# sourceMappingURL=types.js.map

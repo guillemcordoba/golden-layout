@@ -1,4 +1,4 @@
-import { ItemType, JsonValue, ResponsiveMode, Side } from '../utils/types';
+import { ItemType, JsonValue, ResponsiveMode, Side, SizeUnitEnum } from '../utils/types';
 import { ResolvedComponentItemConfig, ResolvedHeaderedItemConfig, ResolvedItemConfig, ResolvedLayoutConfig, ResolvedPopoutLayoutConfig, ResolvedRootItemConfig, ResolvedRowOrColumnItemConfig, ResolvedStackItemConfig } from "./resolved-config";
 /** @public */
 export interface ItemConfig {
@@ -12,22 +12,45 @@ export interface ItemConfig {
     content?: ItemConfig[];
     /**
      * The width of this item, relative to the other children of its parent in percent
+     * @deprecated use {@link (ItemConfig:interface).size} instead
      */
     width?: number;
     /**
      * The minimum width of this item in pixels
      * CAUTION - Not tested - do not use
+     * @deprecated use {@link (ItemConfig:interface).minSize} instead
      */
     minWidth?: number;
     /**
      * The height of this item, relative to the other children of its parent in percent
+     * @deprecated use {@link (ItemConfig:interface).size} instead
      */
     height?: number;
     /**
      * The minimum height of this item in pixels
      * CAUTION - Not tested - do not use
+     * @deprecated use {@link (ItemConfig:interface).minSize} instead
      */
     minHeight?: number;
+    /**
+     * The size of this item.
+     * For rows, it specifies height. For columns, it specifies width.
+     * Has format \<number\>\<{@link SizeUnit}\>. Currently only supports units `fr` and `%`.
+     *
+     * Space is first proportionally allocated to items with sizeUnit `%`.
+     * If there is any space left over (less than 100% allocated), then the
+     * remainder is allocated to the items with unit `fr` according to the fractional size.
+     * If more than 100% is allocated, then an extra 50% is allocated to items with unit `fr` and
+     * is allocated to each item according to its fractional size. All item sizes are then adjusted
+     * to bring the total back to 100%
+     */
+    size?: string;
+    /**
+     * The size of this item.
+     * For rows, it specifies height. For columns, it specifies width.
+     * Has format <number><sizeUnit>. Currently only supports units `px`
+     */
+    minSize?: string;
     /**
      * A string that can be used to identify a ContentItem.
      * Do NOT assign an array.  This only exists for legacy purposes.  If an array is assigned, the first element
@@ -43,14 +66,30 @@ export interface ItemConfig {
     /**
      * The title of the item as displayed on its tab and on popout windows
      * Default: componentType.toString() or ''
+     * @deprecated only Component has a title
      */
     title?: string;
 }
 /** @public */
 export declare namespace ItemConfig {
-    function resolve(itemConfig: ItemConfig): ResolvedItemConfig;
+    /** @internal */
+    const enum SizeWidthHeightSpecificationType {
+        None = 0,
+        Size = 1,
+        WidthOrHeight = 2
+    }
+    /** @internal */
+    function resolve(itemConfig: ItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedItemConfig;
+    /** @internal */
     function resolveContent(content: ItemConfig[] | undefined): ResolvedItemConfig[];
+    /** @internal */
     function resolveId(id: string | string[] | undefined): string;
+    /** @internal */
+    function resolveSize(size: string | undefined, width: number | undefined, height: number | undefined, rowAndColumnChildLegacySizeDefault: boolean): SizeWithUnit;
+    /** @internal */
+    function resolveMinSize(minSize: string | undefined, minWidth: number | undefined, minHeight: number | undefined): UndefinableSizeWithUnit;
+    /** @internal */
+    function calculateSizeWidthHeightSpecificationType(config: ItemConfig): SizeWidthHeightSpecificationType;
     function isGround(config: ItemConfig): config is ItemConfig;
     function isRow(config: ItemConfig): config is ItemConfig;
     function isColumn(config: ItemConfig): config is ItemConfig;
@@ -78,6 +117,7 @@ export declare namespace HeaderedItemConfig {
     namespace Header {
         function resolve(header: Header | undefined, hasHeaders: boolean | undefined): ResolvedHeaderedItemConfig.Header | undefined;
     }
+    /** @internal */
     function resolveIdAndMaximised(config: HeaderedItemConfig): {
         id: string;
         maximised: boolean;
@@ -92,13 +132,20 @@ export interface StackItemConfig extends HeaderedItemConfig {
 }
 /** @public */
 export declare namespace StackItemConfig {
-    function resolve(itemConfig: StackItemConfig): ResolvedStackItemConfig;
-    function resolveContent(content: ComponentItemConfig[] | undefined): ResolvedComponentItemConfig[];
+    /** @internal */
+    function resolve(itemConfig: StackItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedStackItemConfig;
+    /** @internal */
+    function fromResolved(resolvedConfig: ResolvedStackItemConfig): StackItemConfig;
 }
 /** @public */
 export interface ComponentItemConfig extends HeaderedItemConfig {
     type: 'component';
     readonly content?: [];
+    /**
+     * The title of the item as displayed on its tab and on popout windows
+     * Default: componentType.toString() or ''
+     */
+    title?: string;
     /**
      * The type of the component.
      * @deprecated use {@link (ComponentItemConfig:interface).componentType} instead
@@ -125,7 +172,10 @@ export interface ComponentItemConfig extends HeaderedItemConfig {
 }
 /** @public */
 export declare namespace ComponentItemConfig {
-    function resolve(itemConfig: ComponentItemConfig): ResolvedComponentItemConfig;
+    /** @internal */
+    function resolve(itemConfig: ComponentItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedComponentItemConfig;
+    /** @internal */
+    function fromResolved(resolvedConfig: ResolvedComponentItemConfig): ComponentItemConfig;
     function componentTypeToTitle(componentType: JsonValue): string;
 }
 /** @public */
@@ -137,7 +187,11 @@ export interface RowOrColumnItemConfig extends ItemConfig {
 export declare namespace RowOrColumnItemConfig {
     type ChildItemConfig = RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig;
     function isChildItemConfig(itemConfig: ItemConfig): itemConfig is ChildItemConfig;
-    function resolve(itemConfig: RowOrColumnItemConfig): ResolvedRowOrColumnItemConfig;
+    /** @internal */
+    function resolve(itemConfig: RowOrColumnItemConfig, rowAndColumnChildLegacySizeDefault: boolean): ResolvedRowOrColumnItemConfig;
+    /** @internal */
+    function fromResolved(resolvedConfig: ResolvedRowOrColumnItemConfig): RowOrColumnItemConfig;
+    /** @internal */
     function resolveContent(content: ChildItemConfig[] | undefined): ResolvedRowOrColumnItemConfig.ChildItemConfig[];
 }
 /** @public */
@@ -145,11 +199,14 @@ export declare type RootItemConfig = RowOrColumnItemConfig | StackItemConfig | C
 /** @public */
 export declare namespace RootItemConfig {
     function isRootItemConfig(itemConfig: ItemConfig): itemConfig is RootItemConfig;
+    /** @internal */
     function resolve(itemConfig: RootItemConfig | undefined): ResolvedRootItemConfig | undefined;
+    /** @internal */
+    function fromResolvedOrUndefined(resolvedItemConfig: ResolvedRootItemConfig | undefined): RootItemConfig | undefined;
 }
 /** @public */
 export interface LayoutConfig {
-    root: RootItemConfig;
+    root: RootItemConfig | undefined;
     /** @deprecated Use {@link (LayoutConfig:interface).root} */
     content?: (RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig)[];
     openPopouts?: PopoutLayoutConfig[];
@@ -199,6 +256,7 @@ export declare namespace LayoutConfig {
          * strong dependency on their parent and can exist on their own, but can be quite annoying to close by hand. In
          * addition, any changes made to popouts won't be stored after the parent is closed.
          * Default: true
+         * @deprecated Will be removed in version 3.
          */
         closePopoutsOnUnload?: boolean;
         /**
@@ -257,14 +315,24 @@ export declare namespace LayoutConfig {
         borderGrabWidth?: number;
         /**
          * The minimum height an item can be resized to (in pixel).
-         * Default: 10
+         * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemHeight} instead
          */
         minItemHeight?: number;
         /**
+         * The minimum height an item can be resized to.
+         * Default: 0
+         */
+        defaultMinItemHeight?: string;
+        /**
          * The minimum width an item can be resized to (in pixel).
-         * Default: 10
+         * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemWidth} instead
          */
         minItemWidth?: number;
+        /**
+         * The minimum width an item can be resized to.
+         * Default: 10px
+         */
+        defaultMinItemWidth?: string;
         /**
          * The height of the header elements in pixel. This can be changed, but your theme's header css needs to be
          * adjusted accordingly.
@@ -283,7 +351,14 @@ export declare namespace LayoutConfig {
         dragProxyHeight?: number;
     }
     namespace Dimensions {
+        /** @internal */
         function resolve(dimensions: Dimensions | undefined): ResolvedLayoutConfig.Dimensions;
+        /** @internal */
+        function fromResolved(resolvedDimensions: ResolvedLayoutConfig.Dimensions): Dimensions;
+        /** @internal */
+        function resolveDefaultMinItemHeight(dimensions: Dimensions | undefined): SizeWithUnit;
+        /** @internal */
+        function resolveDefaultMinItemWidth(dimensions: Dimensions | undefined): SizeWithUnit;
     }
     interface Labels {
         /**
@@ -350,12 +425,15 @@ export declare namespace LayoutConfig {
         tabDropdown?: false | string;
     }
     namespace Header {
+        /** @internal */
         function resolve(header: Header | undefined, settings: LayoutConfig.Settings | undefined, labels: LayoutConfig.Labels | undefined): ResolvedLayoutConfig.Header;
     }
     function isPopout(config: LayoutConfig): config is PopoutLayoutConfig;
+    /** @internal */
     function resolve(layoutConfig: LayoutConfig): ResolvedLayoutConfig;
     function fromResolved(config: ResolvedLayoutConfig): LayoutConfig;
     function isResolved(configOrResolvedConfig: ResolvedLayoutConfig | LayoutConfig): configOrResolvedConfig is ResolvedLayoutConfig;
+    /** @internal */
     function resolveOpenPopouts(popoutConfigs: PopoutLayoutConfig[] | undefined): ResolvedPopoutLayoutConfig[];
 }
 /** @public */
@@ -377,13 +455,13 @@ export declare namespace PopoutLayoutConfig {
     /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface)} */
     interface Dimensions extends LayoutConfig.Dimensions {
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).width} */
-        width: number | null;
+        width?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).height} */
-        height: number | null;
+        height?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).left} */
-        left: number | null;
+        left?: number | null;
         /** @deprecated use {@link (PopoutLayoutConfig:namespace).(Window:interface).top} */
-        top: number | null;
+        top?: number | null;
     }
     interface Window {
         width?: number;
@@ -392,10 +470,34 @@ export declare namespace PopoutLayoutConfig {
         top?: number;
     }
     namespace Window {
+        /** @internal */
         function resolve(window: Window | undefined, dimensions: Dimensions | undefined): ResolvedPopoutLayoutConfig.Window;
+        /** @internal */
+        function fromResolved(resolvedWindow: ResolvedPopoutLayoutConfig.Window): Window;
     }
+    /** @internal */
     function resolve(popoutConfig: PopoutLayoutConfig): ResolvedPopoutLayoutConfig;
+    /** @internal */
+    function fromResolved(resolvedConfig: ResolvedPopoutLayoutConfig): PopoutLayoutConfig;
+    /** @internal */
+    function fromResolvedArray(resolvedArray: ResolvedPopoutLayoutConfig[]): PopoutLayoutConfig[];
 }
+/** @internal */
+export interface SizeWithUnit {
+    size: number;
+    sizeUnit: SizeUnitEnum;
+}
+/** @internal */
+export interface UndefinableSizeWithUnit {
+    size: number | undefined;
+    sizeUnit: SizeUnitEnum;
+}
+/** @internal */
+export declare function parseSize(sizeString: string, allowableSizeUnits: readonly SizeUnitEnum[]): SizeWithUnit;
+/** @internal */
+export declare function formatSize(size: number, sizeUnit: SizeUnitEnum): string;
+/** @internal */
+export declare function formatUndefinableSize(size: number | undefined, sizeUnit: SizeUnitEnum): string | undefined;
 /** @public @deprecated - use {@link (LayoutConfig:interface)} */
 export declare type Config = LayoutConfig;
 //# sourceMappingURL=config.d.ts.map

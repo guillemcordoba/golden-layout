@@ -46,21 +46,15 @@ class TabsContainer {
             }
         }
         const tab = new tab_1.Tab(this._layoutManager, componentItem, (item) => this.handleTabCloseEvent(item), (item) => this.handleTabFocusEvent(item), (x, y, dragListener, item) => this.handleTabDragStartEvent(x, y, dragListener, item));
-        if (this._tabs.length === 0) {
-            this._tabs.push(tab);
-            this._element.appendChild(tab.element);
+        if (index === undefined) {
+            index = this._tabs.length;
+        }
+        this._tabs.splice(index, 0, tab);
+        if (index < this._element.childNodes.length) {
+            this._element.insertBefore(tab.element, this._element.childNodes[index]);
         }
         else {
-            if (index === undefined) {
-                index = this._tabs.length;
-            }
-            if (index > 0) {
-                this._tabs[index - 1].element.insertAdjacentElement('afterend', tab.element);
-            }
-            else {
-                this._tabs[0].element.insertAdjacentElement('beforebegin', tab.element);
-            }
-            this._tabs.splice(index, 0, tab);
+            this._element.appendChild(tab.element);
         }
     }
     removeTab(componentItem) {
@@ -138,7 +132,7 @@ class TabsContainer {
                     this._element.appendChild(tabElement);
                 }
                 const tabMarginRightPixels = getComputedStyle(activeTab.element).marginRight;
-                const tabMarginRight = utils_1.pixelsToNumber(tabMarginRightPixels);
+                const tabMarginRight = (0, utils_1.pixelsToNumber)(tabMarginRightPixels);
                 const tabWidth = tabElement.offsetWidth + tabMarginRight;
                 cumulativeTabWidth += tabWidth;
                 //Include the active tab's width if it isn't already
@@ -149,7 +143,7 @@ class TabsContainer {
                 }
                 else {
                     const activeTabMarginRightPixels = getComputedStyle(activeTab.element).marginRight;
-                    const activeTabMarginRight = utils_1.pixelsToNumber(activeTabMarginRightPixels);
+                    const activeTabMarginRight = (0, utils_1.pixelsToNumber)(activeTabMarginRightPixels);
                     visibleTabWidth = cumulativeTabWidth + activeTab.element.offsetWidth + activeTabMarginRight;
                 }
                 // If the tabs won't fit, check the overlap allowance.
@@ -168,8 +162,8 @@ class TabsContainer {
                         //Check overlap against allowance.
                         if (overlap < tabOverlapAllowance) {
                             for (let j = 0; j <= i; j++) {
-                                const marginLeft = (j !== activeIndex && j !== 0) ? '-' + utils_1.numberToPixels(overlap) : '';
-                                this._tabs[j].element.style.zIndex = utils_1.numberToPixels(i - j);
+                                const marginLeft = (j !== activeIndex && j !== 0) ? '-' + (0, utils_1.numberToPixels)(overlap) : '';
+                                this._tabs[j].element.style.zIndex = (0, utils_1.numberToPixels)(i - j);
                                 this._tabs[j].element.style.marginLeft = marginLeft;
                             }
                             this._lastVisibleTabIndex = i;

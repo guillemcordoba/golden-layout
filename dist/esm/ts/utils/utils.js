@@ -1,9 +1,4 @@
 /** @internal */
-export function getQueryStringParam(key) {
-    const matches = location.search.match(new RegExp(key + '=([^&]*)'));
-    return matches ? matches[1] : null;
-}
-/** @internal */
 export function numberToPixels(value) {
     return value.toString(10) + 'px';
 }
@@ -11,6 +6,43 @@ export function numberToPixels(value) {
 export function pixelsToNumber(value) {
     const numberStr = value.replace("px", "");
     return parseFloat(numberStr);
+}
+/** @internal */
+export function splitStringAtFirstNonNumericChar(value) {
+    value = value.trimStart();
+    const length = value.length;
+    if (length === 0) {
+        return { numericPart: '', firstNonNumericCharPart: '' };
+    }
+    else {
+        let firstNonDigitPartIndex = length;
+        let gotDecimalPoint = false;
+        for (let i = 0; i < length; i++) {
+            const char = value[i];
+            if (!isDigit(char)) {
+                if (char !== '.') {
+                    firstNonDigitPartIndex = i;
+                    break;
+                }
+                else {
+                    if (gotDecimalPoint) {
+                        firstNonDigitPartIndex = i;
+                        break;
+                    }
+                    else {
+                        gotDecimalPoint = true;
+                    }
+                }
+            }
+        }
+        const digitsPart = value.substring(0, firstNonDigitPartIndex);
+        const firstNonDigitPart = value.substring(firstNonDigitPartIndex).trim();
+        return { numericPart: digitsPart, firstNonNumericCharPart: firstNonDigitPart };
+    }
+}
+/** @internal */
+export function isDigit(char) {
+    return char >= '0' && char <= '9';
 }
 /** @internal */
 export function getElementWidth(element) {
@@ -141,5 +173,19 @@ export function getUniqueId() {
     return (Math.random() * 1000000000000000)
         .toString(36)
         .replace('.', '');
+}
+/** @internal */
+export function getErrorMessage(e) {
+    if (e instanceof Error) {
+        return e.message;
+    }
+    else {
+        if (typeof e === 'string') {
+            return e;
+        }
+        else {
+            return 'Unknown Error';
+        }
+    }
 }
 //# sourceMappingURL=utils.js.map

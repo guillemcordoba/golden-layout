@@ -1,6 +1,5 @@
 import { AssertError, UnexpectedNullError } from '../errors/internal-error';
 import { EventEmitter } from '../utils/event-emitter';
-import { getJQueryOffset } from '../utils/jquery-legacy';
 import { getUniqueId, setElementDisplayVisibility } from '../utils/utils';
 /**
  * This is the baseclass that all content items inherit from.
@@ -30,10 +29,10 @@ export class ContentItem extends EventEmitter {
         this.isColumn = false;
         this.isStack = false;
         this.isComponent = false;
-        this.width = config.width;
-        this.minWidth = config.minWidth;
-        this.height = config.height;
-        this.minHeight = config.minHeight;
+        this.size = config.size;
+        this.sizeUnit = config.sizeUnit;
+        this.minSize = config.minSize;
+        this.minSizeUnit = config.minSizeUnit;
         this._isClosable = config.isClosable;
         this._pendingEventPropagations = {};
         this._throttledEvents = ['stateChanged'];
@@ -41,6 +40,7 @@ export class ContentItem extends EventEmitter {
     }
     get type() { return this._type; }
     get id() { return this._id; }
+    set id(value) { this._id = value; }
     /** @internal */
     get popInParentIds() { return this._popInParentIds; }
     get parent() { return this._parent; }
@@ -88,7 +88,7 @@ export class ContentItem extends EventEmitter {
          * If this node still contains other content items, adjust their size
          */
         if (this._contentItems.length > 0) {
-            this.updateSize();
+            this.updateSize(false);
         }
         else {
             /**
@@ -154,8 +154,10 @@ export class ContentItem extends EventEmitter {
             this._contentItems[index] = newChild;
             newChild.setParent(this);
             // newChild inherits the sizes from the old child:
-            newChild.height = oldChild.height;
-            newChild.width = oldChild.width;
+            newChild.size = oldChild.size;
+            newChild.sizeUnit = oldChild.sizeUnit;
+            newChild.minSize = oldChild.minSize;
+            newChild.minSizeUnit = oldChild.minSizeUnit;
             //TODO This doesn't update the config... refactor to leave item nodes untouched after creation
             if (newChild._parent === null) {
                 throw new UnexpectedNullError('CIRCNC45699');
@@ -164,7 +166,7 @@ export class ContentItem extends EventEmitter {
                 if (newChild._parent._isInitialised === true && newChild._isInitialised === false) {
                     newChild.init();
                 }
-                this.updateSize();
+                this.updateSize(false);
             }
         }
     }
@@ -208,7 +210,7 @@ export class ContentItem extends EventEmitter {
             throw new UnexpectedNullError('ACIHDZ5593');
         }
         else {
-            dropTargetIndicator.highlightArea(area);
+            dropTargetIndicator.highlightArea(area, 1);
         }
     }
     /** @internal */
@@ -218,13 +220,19 @@ export class ContentItem extends EventEmitter {
     }
     /** @internal */
     show() {
-        // Not sure why showAllActiveContentItems() was called. GoldenLayout seems to work fine without it.  Left commented code
-        // in source in case a reason for it becomes apparent.
-        // this.layoutManager.showAllActiveContentItems();
-        setElementDisplayVisibility(this._element, true);
-        this.layoutManager.updateSizeFromContainer();
-        for (let i = 0; i < this._contentItems.length; i++) {
-            this._contentItems[i].show();
+        this.layoutManager.beginSizeInvalidation();
+        try {
+            // Not sure why showAllActiveContentItems() was called. GoldenLayout seems to work fine without it.  Left commented code
+            // in source in case a reason for it becomes apparent.
+            // this.layoutManager.showAllActiveContentItems();
+            setElementDisplayVisibility(this._element, true);
+            // this.layoutManager.updateSizeFromContainer();
+            for (let i = 0; i < this._contentItems.length; i++) {
+                this._contentItems[i].show();
+            }
+        }
+        finally {
+            this.layoutManager.endSizeInvalidation();
         }
     }
     /**
@@ -246,15 +254,16 @@ export class ContentItem extends EventEmitter {
      */
     getElementArea(element) {
         element = element !== null && element !== void 0 ? element : this._element;
-        const offset = getJQueryOffset(element);
-        const width = element.offsetWidth;
-        const height = element.offsetHeight;
-        // const widthAndHeight = getJQueryWidthAndHeight(element);
+        const rect = element.getBoundingClientRect();
+        const top = rect.top + document.body.scrollTop;
+        const left = rect.left + document.body.scrollLeft;
+        const width = rect.width;
+        const height = rect.height;
         return {
-            x1: offset.left + 1,
-            y1: offset.top + 1,
-            x2: offset.left + width - 1,
-            y2: offset.top + height - 1,
+            x1: left,
+            y1: top,
+            x2: left + width,
+            y2: top + height,
             surface: width * height,
             contentItem: this
         };
@@ -290,13 +299,19 @@ export class ContentItem extends EventEmitter {
     }
     /** @internal */
     hide() {
-        setElementDisplayVisibility(this._element, false);
-        this.layoutManager.updateSizeFromContainer();
+        this.layoutManager.beginSizeInvalidation();
+        try {
+            setElementDisplayVisibility(this._element, false);
+            // this.layoutManager.updateSizeFromContainer();
+        }
+        finally {
+            this.layoutManager.endSizeInvalidation();
+        }
     }
     /** @internal */
-    updateContentItemsSize() {
+    updateContentItemsSize(force) {
         for (let i = 0; i < this._contentItems.length; i++) {
-            this._contentItems[i].updateSize();
+            this._contentItems[i].updateSize(force);
         }
     }
     /**

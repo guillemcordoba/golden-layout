@@ -106,34 +106,16 @@ class Header extends event_emitter_1.EventEmitter {
     }
     // /** @internal */
     // private _activeComponentItem: ComponentItem | null = null; // only used to identify active tab
-    /** @internal */
     get show() { return this._show; }
-    /** @internal */
     get side() { return this._side; }
-    /** @internal */
     get leftRightSided() { return this._leftRightSided; }
     get layoutManager() { return this._layoutManager; }
     get parent() { return this._parent; }
     get tabs() { return this._tabsContainer.tabs; }
     get lastVisibleTabIndex() { return this._tabsContainer.lastVisibleTabIndex; }
-    /**
-     * @deprecated use {@link (Stack:class).getActiveComponentItem} */
-    get activeContentItem() {
-        const activeComponentItem = this._getActiveComponentItemEvent();
-        if (activeComponentItem === undefined) {
-            return null;
-        }
-        else {
-            return activeComponentItem;
-        }
-    }
     get element() { return this._element; }
-    /** @deprecated use {@link (Header:class).tabsContainerElement} */
-    get tabsContainer() { return this._tabsContainer.element; }
     get tabsContainerElement() { return this._tabsContainer.element; }
     get controlsContainerElement() { return this._controlsContainerElement; }
-    /** @deprecated use {@link (Header:class).controlsContainerElement} */
-    get controlsContainer() { return this._controlsContainerElement; }
     /**
      * Destroys the entire header
      * @internal
@@ -216,10 +198,10 @@ class Header extends event_emitter_1.EventEmitter {
             }
         }
         if (this._closeButton !== null) {
-            utils_1.setElementDisplayVisibility(this._closeButton.element, isClosable);
+            (0, utils_1.setElementDisplayVisibility)(this._closeButton.element, isClosable);
         }
         if (this._popoutButton !== null) {
-            utils_1.setElementDisplayVisibility(this._popoutButton.element, isClosable);
+            (0, utils_1.setElementDisplayVisibility)(this._popoutButton.element, isClosable);
         }
         this._canRemoveComponent = isClosable || this._tabsContainer.tabCount > 1;
     }
@@ -259,11 +241,11 @@ class Header extends event_emitter_1.EventEmitter {
             const headerHeight = this._show ? this._layoutManager.layoutConfig.dimensions.headerHeight : 0;
             if (this._leftRightSided) {
                 this._element.style.height = '';
-                this._element.style.width = utils_1.numberToPixels(headerHeight);
+                this._element.style.width = (0, utils_1.numberToPixels)(headerHeight);
             }
             else {
                 this._element.style.width = '';
-                this._element.style.height = utils_1.numberToPixels(headerHeight);
+                this._element.style.height = (0, utils_1.numberToPixels)(headerHeight);
             }
             let availableWidth;
             if (this._leftRightSided) {
@@ -312,7 +294,7 @@ class Header extends event_emitter_1.EventEmitter {
     /** @internal */
     processTabDropdownActiveChanged() {
         if (this._tabDropdownButton !== undefined) {
-            utils_1.setElementDisplayVisibility(this._tabDropdownButton.element, this._tabsContainer.dropdownActive);
+            (0, utils_1.setElementDisplayVisibility)(this._tabDropdownButton.element, this._tabsContainer.dropdownActive);
         }
     }
     /** @internal */

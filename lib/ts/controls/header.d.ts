@@ -1,5 +1,4 @@
 import { ComponentItem } from '../items/component-item';
-import { ContentItem } from '../items/content-item';
 import { Stack } from '../items/stack';
 import { LayoutManager } from '../layout-manager';
 import { DragListener } from '../utils/drag-listener';
@@ -85,26 +84,16 @@ export declare class Header extends EventEmitter {
     private readonly _tabDropdownButton;
     /** @internal */
     private readonly _maximiseButton;
-    /** @internal */
     get show(): boolean;
-    /** @internal */
     get side(): Side;
-    /** @internal */
     get leftRightSided(): boolean;
     get layoutManager(): LayoutManager;
     get parent(): Stack;
     get tabs(): Tab[];
     get lastVisibleTabIndex(): number;
-    /**
-     * @deprecated use {@link (Stack:class).getActiveComponentItem} */
-    get activeContentItem(): ContentItem | null;
     get element(): HTMLElement;
-    /** @deprecated use {@link (Header:class).tabsContainerElement} */
-    get tabsContainer(): HTMLElement;
     get tabsContainerElement(): HTMLElement;
     get controlsContainerElement(): HTMLElement;
-    /** @deprecated use {@link (Header:class).controlsContainerElement} */
-    get controlsContainer(): HTMLElement;
     /** @internal */
     constructor(
     /** @internal */

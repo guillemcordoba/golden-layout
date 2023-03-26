@@ -11,10 +11,10 @@ var ResolvedItemConfig;
     ResolvedItemConfig.defaults = {
         type: types_1.ItemType.ground,
         content: [],
-        width: 50,
-        minWidth: 0,
-        height: 50,
-        minHeight: 0,
+        size: 1,
+        sizeUnit: types_1.SizeUnitEnum.Fractional,
+        minSize: undefined,
+        minSizeUnit: types_1.SizeUnitEnum.Pixel,
         id: '',
         isClosable: true,
     };
@@ -96,10 +96,10 @@ var ResolvedStackItemConfig;
         const result = {
             type: original.type,
             content: content !== undefined ? copyContent(content) : copyContent(original.content),
-            width: original.width,
-            minWidth: original.minWidth,
-            height: original.height,
-            minHeight: original.minHeight,
+            size: original.size,
+            sizeUnit: original.sizeUnit,
+            minSize: original.minSize,
+            minSizeUnit: original.minSizeUnit,
             id: original.id,
             maximised: original.maximised,
             isClosable: original.isClosable,
@@ -122,10 +122,10 @@ var ResolvedStackItemConfig;
         const result = {
             type: types_1.ItemType.stack,
             content: [],
-            width: ResolvedItemConfig.defaults.width,
-            minWidth: ResolvedItemConfig.defaults.minWidth,
-            height: ResolvedItemConfig.defaults.height,
-            minHeight: ResolvedItemConfig.defaults.minHeight,
+            size: ResolvedItemConfig.defaults.size,
+            sizeUnit: ResolvedItemConfig.defaults.sizeUnit,
+            minSize: ResolvedItemConfig.defaults.minSize,
+            minSizeUnit: ResolvedItemConfig.defaults.minSizeUnit,
             id: ResolvedItemConfig.defaults.id,
             maximised: ResolvedHeaderedItemConfig.defaultMaximised,
             isClosable: ResolvedItemConfig.defaults.isClosable,
@@ -154,10 +154,10 @@ var ResolvedComponentItemConfig;
         const result = {
             type: original.type,
             content: [],
-            width: original.width,
-            minWidth: original.minWidth,
-            height: original.height,
-            minHeight: original.minHeight,
+            size: original.size,
+            sizeUnit: original.sizeUnit,
+            minSize: original.minSize,
+            minSizeUnit: original.minSizeUnit,
             id: original.id,
             maximised: original.maximised,
             isClosable: original.isClosable,
@@ -165,7 +165,7 @@ var ResolvedComponentItemConfig;
             title: original.title,
             header: ResolvedHeaderedItemConfig.Header.createCopy(original.header),
             componentType: original.componentType,
-            componentState: utils_1.deepExtendValue(undefined, original.componentState),
+            componentState: (0, utils_1.deepExtendValue)(undefined, original.componentState),
         };
         return result;
     }
@@ -174,10 +174,10 @@ var ResolvedComponentItemConfig;
         const result = {
             type: types_1.ItemType.component,
             content: [],
-            width: ResolvedItemConfig.defaults.width,
-            minWidth: ResolvedItemConfig.defaults.minWidth,
-            height: ResolvedItemConfig.defaults.height,
-            minHeight: ResolvedItemConfig.defaults.minHeight,
+            size: ResolvedItemConfig.defaults.size,
+            sizeUnit: ResolvedItemConfig.defaults.sizeUnit,
+            minSize: ResolvedItemConfig.defaults.minSize,
+            minSizeUnit: ResolvedItemConfig.defaults.minSizeUnit,
             id: ResolvedItemConfig.defaults.id,
             maximised: ResolvedHeaderedItemConfig.defaultMaximised,
             isClosable: ResolvedItemConfig.defaults.isClosable,
@@ -191,7 +191,7 @@ var ResolvedComponentItemConfig;
     }
     ResolvedComponentItemConfig.createDefault = createDefault;
     function copyComponentType(componentType) {
-        return utils_1.deepExtendValue({}, componentType);
+        return (0, utils_1.deepExtendValue)({}, componentType);
     }
     ResolvedComponentItemConfig.copyComponentType = copyComponentType;
 })(ResolvedComponentItemConfig = exports.ResolvedComponentItemConfig || (exports.ResolvedComponentItemConfig = {}));
@@ -216,10 +216,10 @@ var ResolvedRowOrColumnItemConfig;
         const result = {
             type: original.type,
             content: content !== undefined ? copyContent(content) : copyContent(original.content),
-            width: original.width,
-            minWidth: original.minWidth,
-            height: original.height,
-            minHeight: original.minHeight,
+            size: original.size,
+            sizeUnit: original.sizeUnit,
+            minSize: original.minSize,
+            minSizeUnit: original.minSizeUnit,
             id: original.id,
             isClosable: original.isClosable,
         };
@@ -239,10 +239,10 @@ var ResolvedRowOrColumnItemConfig;
         const result = {
             type,
             content: [],
-            width: ResolvedItemConfig.defaults.width,
-            minWidth: ResolvedItemConfig.defaults.minWidth,
-            height: ResolvedItemConfig.defaults.height,
-            minHeight: ResolvedItemConfig.defaults.minHeight,
+            size: ResolvedItemConfig.defaults.size,
+            sizeUnit: ResolvedItemConfig.defaults.sizeUnit,
+            minSize: ResolvedItemConfig.defaults.minSize,
+            minSizeUnit: ResolvedItemConfig.defaults.minSizeUnit,
             id: ResolvedItemConfig.defaults.id,
             isClosable: ResolvedItemConfig.defaults.isClosable,
         };
@@ -280,10 +280,10 @@ var ResolvedGroundItemConfig;
         return {
             type: types_1.ItemType.ground,
             content,
-            width: 100,
-            minWidth: 0,
-            height: 100,
-            minHeight: 0,
+            size: 100,
+            sizeUnit: types_1.SizeUnitEnum.Percent,
+            minSize: 0,
+            minSizeUnit: types_1.SizeUnitEnum.Pixel,
             id: '',
             isClosable: false,
             title: '',
@@ -331,8 +331,10 @@ var ResolvedLayoutConfig;
             return {
                 borderWidth: original.borderWidth,
                 borderGrabWidth: original.borderGrabWidth,
-                minItemHeight: original.minItemHeight,
-                minItemWidth: original.minItemWidth,
+                defaultMinItemHeight: original.defaultMinItemHeight,
+                defaultMinItemHeightUnit: original.defaultMinItemHeightUnit,
+                defaultMinItemWidth: original.defaultMinItemWidth,
+                defaultMinItemWidthUnit: original.defaultMinItemWidthUnit,
                 headerHeight: original.headerHeight,
                 dragProxyWidth: original.dragProxyWidth,
                 dragProxyHeight: original.dragProxyHeight,
@@ -342,8 +344,10 @@ var ResolvedLayoutConfig;
         Dimensions.defaults = {
             borderWidth: 5,
             borderGrabWidth: 5,
-            minItemHeight: 10,
-            minItemWidth: 10,
+            defaultMinItemHeight: 0,
+            defaultMinItemHeightUnit: types_1.SizeUnitEnum.Pixel,
+            defaultMinItemWidth: 10,
+            defaultMinItemWidthUnit: types_1.SizeUnitEnum.Pixel,
             headerHeight: 20,
             dragProxyWidth: 300,
             dragProxyHeight: 200

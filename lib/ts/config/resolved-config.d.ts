@@ -1,12 +1,12 @@
-import { ItemType, JsonValue, ResponsiveMode, Side } from '../utils/types';
+import { ItemType, JsonValue, ResponsiveMode, Side, SizeUnitEnum } from '../utils/types';
 /** @public */
 export interface ResolvedItemConfig {
     readonly type: ItemType;
     readonly content: readonly ResolvedItemConfig[];
-    readonly width: number;
-    readonly minWidth: number;
-    readonly height: number;
-    readonly minHeight: number;
+    readonly size: number;
+    readonly sizeUnit: SizeUnitEnum;
+    readonly minSize: number | undefined;
+    readonly minSizeUnit: SizeUnitEnum;
     readonly id: string;
     readonly isClosable: boolean;
 }
@@ -109,10 +109,10 @@ export declare namespace ResolvedRootItemConfig {
 /** @internal */
 export interface ResolvedGroundItemConfig extends ResolvedItemConfig {
     readonly type: 'ground';
-    readonly width: 100;
-    readonly minWidth: 0;
-    readonly height: 100;
-    readonly minHeight: 0;
+    readonly size: 100;
+    readonly sizeUnit: SizeUnitEnum.Percent;
+    readonly minSize: 0;
+    readonly minSizeUnit: SizeUnitEnum.Pixel;
     readonly id: '';
     readonly isClosable: false;
     readonly title: '';
@@ -138,6 +138,7 @@ export declare namespace ResolvedLayoutConfig {
         readonly reorderEnabled: boolean;
         readonly popoutWholeStack: boolean;
         readonly blockedPopoutsThrowError: boolean;
+        /** @deprecated Will be removed in version 3. */
         readonly closePopoutsOnUnload: boolean;
         readonly responsiveMode: ResponsiveMode;
         readonly tabOverlapAllowance: number;
@@ -152,8 +153,10 @@ export declare namespace ResolvedLayoutConfig {
     interface Dimensions {
         readonly borderWidth: number;
         readonly borderGrabWidth: number;
-        readonly minItemHeight: number;
-        readonly minItemWidth: number;
+        readonly defaultMinItemHeight: number;
+        readonly defaultMinItemHeightUnit: SizeUnitEnum;
+        readonly defaultMinItemWidth: number;
+        readonly defaultMinItemWidthUnit: SizeUnitEnum;
         readonly headerHeight: number;
         readonly dragProxyWidth: number;
         readonly dragProxyHeight: number;

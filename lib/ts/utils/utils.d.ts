@@ -1,10 +1,17 @@
 import { WidthAndHeight } from './types';
 /** @internal */
-export declare function getQueryStringParam(key: string): string | null;
-/** @internal */
 export declare function numberToPixels(value: number): string;
 /** @internal */
 export declare function pixelsToNumber(value: string): number;
+/** @internal */
+export interface SplitStringAtFirstNonNumericCharResult {
+    numericPart: string;
+    firstNonNumericCharPart: string;
+}
+/** @internal */
+export declare function splitStringAtFirstNonNumericChar(value: string): SplitStringAtFirstNonNumericCharResult;
+/** @internal */
+export declare function isDigit(char: string): boolean;
 /** @internal */
 export declare function getElementWidth(element: HTMLElement): number;
 /** @internal */
@@ -35,4 +42,6 @@ export declare function deepExtendValue(existingTarget: unknown, value: unknown)
 export declare function removeFromArray<T>(item: T, array: T[]): void;
 /** @internal */
 export declare function getUniqueId(): string;
+/** @internal */
+export declare function getErrorMessage(e: unknown): string;
 //# sourceMappingURL=utils.d.ts.map

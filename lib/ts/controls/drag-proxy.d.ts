@@ -35,7 +35,6 @@ export declare class DragProxy extends EventEmitter {
     /** Create Stack-like structure to contain the dragged component */
     private createDragProxyElements;
     private determineMinMaxXY;
-    private getXYWithinMinMax;
     /**
      * Callback on every mouseMove event during a drag. Determines if the drag is
      * still within the valid drag area and calls the layoutManager to highlight the

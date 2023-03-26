@@ -1,12 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUniqueId = exports.removeFromArray = exports.deepExtendValue = exports.deepExtend = exports.extend = exports.ensureElementPositionAbsolute = exports.setElementDisplayVisibility = exports.getElementWidthAndHeight = exports.setElementHeight = exports.getElementHeight = exports.setElementWidth = exports.getElementWidth = exports.pixelsToNumber = exports.numberToPixels = exports.getQueryStringParam = void 0;
-/** @internal */
-function getQueryStringParam(key) {
-    const matches = location.search.match(new RegExp(key + '=([^&]*)'));
-    return matches ? matches[1] : null;
-}
-exports.getQueryStringParam = getQueryStringParam;
+exports.getErrorMessage = exports.getUniqueId = exports.removeFromArray = exports.deepExtendValue = exports.deepExtend = exports.extend = exports.ensureElementPositionAbsolute = exports.setElementDisplayVisibility = exports.getElementWidthAndHeight = exports.setElementHeight = exports.getElementHeight = exports.setElementWidth = exports.getElementWidth = exports.isDigit = exports.splitStringAtFirstNonNumericChar = exports.pixelsToNumber = exports.numberToPixels = void 0;
 /** @internal */
 function numberToPixels(value) {
     return value.toString(10) + 'px';
@@ -18,6 +12,45 @@ function pixelsToNumber(value) {
     return parseFloat(numberStr);
 }
 exports.pixelsToNumber = pixelsToNumber;
+/** @internal */
+function splitStringAtFirstNonNumericChar(value) {
+    value = value.trimStart();
+    const length = value.length;
+    if (length === 0) {
+        return { numericPart: '', firstNonNumericCharPart: '' };
+    }
+    else {
+        let firstNonDigitPartIndex = length;
+        let gotDecimalPoint = false;
+        for (let i = 0; i < length; i++) {
+            const char = value[i];
+            if (!isDigit(char)) {
+                if (char !== '.') {
+                    firstNonDigitPartIndex = i;
+                    break;
+                }
+                else {
+                    if (gotDecimalPoint) {
+                        firstNonDigitPartIndex = i;
+                        break;
+                    }
+                    else {
+                        gotDecimalPoint = true;
+                    }
+                }
+            }
+        }
+        const digitsPart = value.substring(0, firstNonDigitPartIndex);
+        const firstNonDigitPart = value.substring(firstNonDigitPartIndex).trim();
+        return { numericPart: digitsPart, firstNonNumericCharPart: firstNonDigitPart };
+    }
+}
+exports.splitStringAtFirstNonNumericChar = splitStringAtFirstNonNumericChar;
+/** @internal */
+function isDigit(char) {
+    return char >= '0' && char <= '9';
+}
+exports.isDigit = isDigit;
 /** @internal */
 function getElementWidth(element) {
     return element.offsetWidth;
@@ -160,4 +193,19 @@ function getUniqueId() {
         .replace('.', '');
 }
 exports.getUniqueId = getUniqueId;
+/** @internal */
+function getErrorMessage(e) {
+    if (e instanceof Error) {
+        return e.message;
+    }
+    else {
+        if (typeof e === 'string') {
+            return e;
+        }
+        else {
+            return 'Unknown Error';
+        }
+    }
+}
+exports.getErrorMessage = getErrorMessage;
 //# sourceMappingURL=utils.js.map

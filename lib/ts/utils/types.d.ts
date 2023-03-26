@@ -32,6 +32,12 @@ export declare namespace LogicalZIndex {
     const drag = "drag";
     const stackMaximised = "stackMaximised";
 }
+/** @public */
+export declare const LogicalZIndexToDefaultMap: {
+    base: string;
+    drag: string;
+    stackMaximised: string;
+};
 /** @internal */
 export interface Rect {
     left: number;
@@ -76,5 +82,22 @@ export declare namespace ResponsiveMode {
     const none = "none";
     const always = "always";
     const onload = "onload";
+}
+/**
+ * Length units which can specify the size of a Component Item
+ * @public
+ */
+export declare type SizeUnit = 'px' | '%' | 'fr' | 'em';
+/** @public */
+export declare enum SizeUnitEnum {
+    Pixel = "px",
+    Percent = "%",
+    Fractional = "fr",
+    Em = "em"
+}
+/** @public */
+export declare namespace SizeUnitEnum {
+    function tryParse(value: string): SizeUnitEnum | undefined;
+    function format(value: SizeUnitEnum): SizeUnitEnum;
 }
 //# sourceMappingURL=types.d.ts.map

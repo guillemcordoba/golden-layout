@@ -4,7 +4,6 @@ exports.DragProxy = void 0;
 const internal_error_1 = require("../errors/internal-error");
 const stack_1 = require("../items/stack");
 const event_emitter_1 = require("../utils/event-emitter");
-const jquery_legacy_1 = require("../utils/jquery-legacy");
 const types_1 = require("../utils/types");
 const utils_1 = require("../utils/utils");
 /**
@@ -48,11 +47,6 @@ class DragProxy extends event_emitter_1.EventEmitter {
             document.body.appendChild(this._element);
         }
         this.determineMinMaxXY();
-        if (this._layoutManager.layoutConfig.settings.constrainDragToContainer) {
-            const constrainedPosition = this.getXYWithinMinMax(x, y);
-            x = constrainedPosition.x;
-            y = constrainedPosition.y;
-        }
         this._layoutManager.calculateItemAreas();
         this.setDropPosition(x, y);
     }
@@ -83,34 +77,25 @@ class DragProxy extends event_emitter_1.EventEmitter {
                 this._proxyContainerElement.insertAdjacentElement('afterend', headerElement);
             }
         }
-        this._element.style.left = utils_1.numberToPixels(initialX);
-        this._element.style.top = utils_1.numberToPixels(initialY);
+        this._element.style.left = (0, utils_1.numberToPixels)(initialX);
+        this._element.style.top = (0, utils_1.numberToPixels)(initialY);
         tabElement.setAttribute('title', this._componentItem.title);
         titleElement.insertAdjacentText('afterbegin', this._componentItem.title);
         this._proxyContainerElement.appendChild(this._componentItem.element);
     }
     determineMinMaxXY() {
-        const offset = jquery_legacy_1.getJQueryOffset(this._layoutManager.container);
-        this._minX = offset.left;
-        this._minY = offset.top;
-        const { width: containerWidth, height: containerHeight } = utils_1.getElementWidthAndHeight(this._layoutManager.container);
-        this._maxX = containerWidth + this._minX;
-        this._maxY = containerHeight + this._minY;
-    }
-    getXYWithinMinMax(x, y) {
-        if (x <= this._minX) {
-            x = Math.ceil(this._minX + 1);
+        const groundItem = this._layoutManager.groundItem;
+        if (groundItem === undefined) {
+            throw new internal_error_1.UnexpectedUndefinedError('DPDMMXY73109');
         }
-        else if (x >= this._maxX) {
-            x = Math.floor(this._maxX - 1);
+        else {
+            const groundElement = groundItem.element;
+            const rect = groundElement.getBoundingClientRect();
+            this._minX = rect.left + document.body.scrollLeft;
+            this._minY = rect.top + document.body.scrollTop;
+            this._maxX = this._minX + rect.width;
+            this._maxY = this._minY + rect.height;
         }
-        if (y <= this._minY) {
-            y = Math.ceil(this._minY + 1);
-        }
-        else if (y >= this._maxY) {
-            y = Math.floor(this._maxY - 1);
-        }
-        return { x, y };
     }
     /**
      * Callback on every mouseMove event during a drag. Determines if the drag is
@@ -125,15 +110,7 @@ class DragProxy extends event_emitter_1.EventEmitter {
     onDrag(offsetX, offsetY, event) {
         const x = event.pageX;
         const y = event.pageY;
-        if (!this._layoutManager.layoutConfig.settings.constrainDragToContainer) {
-            this.setDropPosition(x, y);
-        }
-        else {
-            const isWithinContainer = x > this._minX && x < this._maxX && y > this._minY && y < this._maxY;
-            if (isWithinContainer) {
-                this.setDropPosition(x, y);
-            }
-        }
+        this.setDropPosition(x, y);
         this._componentItem.drag();
     }
     /**
@@ -145,8 +122,22 @@ class DragProxy extends event_emitter_1.EventEmitter {
      * @internal
      */
     setDropPosition(x, y) {
-        this._element.style.left = utils_1.numberToPixels(x);
-        this._element.style.top = utils_1.numberToPixels(y);
+        if (this._layoutManager.layoutConfig.settings.constrainDragToContainer) {
+            if (x <= this._minX) {
+                x = Math.ceil(this._minX);
+            }
+            else if (x >= this._maxX) {
+                x = Math.floor(this._maxX);
+            }
+            if (y <= this._minY) {
+                y = Math.ceil(this._minY);
+            }
+            else if (y >= this._maxY) {
+                y = Math.floor(this._maxY);
+            }
+        }
+        this._element.style.left = (0, utils_1.numberToPixels)(x);
+        this._element.style.top = (0, utils_1.numberToPixels)(y);
         this._area = this._layoutManager.getArea(x, y);
         if (this._area !== null) {
             this._lastValidArea = this._area;
@@ -222,12 +213,12 @@ class DragProxy extends event_emitter_1.EventEmitter {
             throw new Error('DragProxy.setDimensions: width and/or height undefined');
         }
         const headerHeight = this._layoutManager.layoutConfig.header.show === false ? 0 : dimensions.headerHeight;
-        this._element.style.width = utils_1.numberToPixels(width);
-        this._element.style.height = utils_1.numberToPixels(height);
+        this._element.style.width = (0, utils_1.numberToPixels)(width);
+        this._element.style.height = (0, utils_1.numberToPixels)(height);
         width -= (this._sided ? headerHeight : 0);
         height -= (!this._sided ? headerHeight : 0);
-        this._proxyContainerElement.style.width = utils_1.numberToPixels(width);
-        this._proxyContainerElement.style.height = utils_1.numberToPixels(height);
+        this._proxyContainerElement.style.width = (0, utils_1.numberToPixels)(width);
+        this._proxyContainerElement.style.height = (0, utils_1.numberToPixels)(height);
         this._componentItem.enterDragMode(width, height);
         this._componentItem.show();
     }
