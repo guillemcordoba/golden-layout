@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getErrorMessage = exports.getUniqueId = exports.removeFromArray = exports.deepExtendValue = exports.deepExtend = exports.extend = exports.ensureElementPositionAbsolute = exports.setElementDisplayVisibility = exports.getElementWidthAndHeight = exports.setElementHeight = exports.getElementHeight = exports.setElementWidth = exports.getElementWidth = exports.isDigit = exports.splitStringAtFirstNonNumericChar = exports.pixelsToNumber = exports.numberToPixels = void 0;
+exports.getErrorMessage = exports.getUniqueId = exports.removeFromArray = exports.deepExtendValue = exports.deepExtend = exports.extend = exports.ensureElementPositionAbsolute = exports.enableIFramePointerEvents = exports.setElementDisplayVisibility = exports.getElementWidthAndHeight = exports.setElementHeight = exports.getElementHeight = exports.setElementWidth = exports.getElementWidth = exports.isDigit = exports.splitStringAtFirstNonNumericChar = exports.pixelsToNumber = exports.numberToPixels = void 0;
 /** @internal */
 function numberToPixels(value) {
     return value.toString(10) + 'px';
@@ -91,6 +91,11 @@ function setElementDisplayVisibility(element, visible) {
     }
 }
 exports.setElementDisplayVisibility = setElementDisplayVisibility;
+/** @internal */
+function enableIFramePointerEvents(enable) {
+    document.querySelectorAll('iframe.lm_content').forEach((element) => element.style.setProperty('pointer-events', enable ? '' : 'none'));
+}
+exports.enableIFramePointerEvents = enableIFramePointerEvents;
 /** @internal */
 function ensureElementPositionAbsolute(element) {
     const absolutePosition = 'absolute';

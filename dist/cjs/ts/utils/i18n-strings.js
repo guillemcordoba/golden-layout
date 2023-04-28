@@ -10,43 +10,43 @@ var I18nStrings;
     /** @internal */
     const infosObject = {
         PopoutCannotBeCreatedWithGroundItemConfig: {
-            id: 0 /* PopoutCannotBeCreatedWithGroundItemConfig */,
+            id: 0 /* I18nStringId.PopoutCannotBeCreatedWithGroundItemConfig */,
             default: 'Popout cannot be created with ground ItemConfig'
         },
         PleaseRegisterAConstructorFunction: {
-            id: 1 /* PleaseRegisterAConstructorFunction */,
+            id: 1 /* I18nStringId.PleaseRegisterAConstructorFunction */,
             default: 'Please register a constructor function'
         },
         ComponentTypeNotRegisteredAndBindComponentEventHandlerNotAssigned: {
-            id: 2 /* ComponentTypeNotRegisteredAndBindComponentEventHandlerNotAssigned */,
+            id: 2 /* I18nStringId.ComponentTypeNotRegisteredAndBindComponentEventHandlerNotAssigned */,
             default: 'Component type not registered and BindComponentEvent handler not assigned',
         },
         ComponentIsAlreadyRegistered: {
-            id: 3 /* ComponentIsAlreadyRegistered */,
+            id: 3 /* I18nStringId.ComponentIsAlreadyRegistered */,
             default: 'Component is already registered',
         },
         ComponentIsNotVirtuable: {
-            id: 4 /* ComponentIsNotVirtuable */,
+            id: 4 /* I18nStringId.ComponentIsNotVirtuable */,
             default: 'Component is not virtuable. Requires rootHtmlElement field/getter',
         },
         VirtualComponentDoesNotHaveRootHtmlElement: {
-            id: 5 /* VirtualComponentDoesNotHaveRootHtmlElement */,
+            id: 5 /* I18nStringId.VirtualComponentDoesNotHaveRootHtmlElement */,
             default: 'Virtual component does not have getter "rootHtmlElement"',
         },
         ItemConfigIsNotTypeComponent: {
-            id: 6 /* ItemConfigIsNotTypeComponent */,
+            id: 6 /* I18nStringId.ItemConfigIsNotTypeComponent */,
             default: 'ItemConfig is not of type component',
         },
         InvalidNumberPartInSizeString: {
-            id: 7 /* InvalidNumberPartInSizeString */,
+            id: 7 /* I18nStringId.InvalidNumberPartInSizeString */,
             default: 'Invalid number part in size string',
         },
         UnknownUnitInSizeString: {
-            id: 8 /* UnknownUnitInSizeString */,
+            id: 8 /* I18nStringId.UnknownUnitInSizeString */,
             default: 'Unknown unit in size string',
         },
         UnsupportedUnitInSizeString: {
-            id: 9 /* UnsupportedUnitInSizeString */,
+            id: 9 /* I18nStringId.UnsupportedUnitInSizeString */,
             default: 'Unsupported unit in size string',
         },
     };

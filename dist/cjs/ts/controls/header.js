@@ -12,6 +12,18 @@ const tabs_container_1 = require("./tabs-container");
  * @public
  */
 class Header extends event_emitter_1.EventEmitter {
+    // /** @internal */
+    // private _activeComponentItem: ComponentItem | null = null; // only used to identify active tab
+    get show() { return this._show; }
+    get side() { return this._side; }
+    get leftRightSided() { return this._leftRightSided; }
+    get layoutManager() { return this._layoutManager; }
+    get parent() { return this._parent; }
+    get tabs() { return this._tabsContainer.tabs; }
+    get lastVisibleTabIndex() { return this._tabsContainer.lastVisibleTabIndex; }
+    get element() { return this._element; }
+    get tabsContainerElement() { return this._tabsContainer.element; }
+    get controlsContainerElement() { return this._controlsContainerElement; }
     /** @internal */
     constructor(
     /** @internal */
@@ -58,6 +70,8 @@ class Header extends event_emitter_1.EventEmitter {
         this._closeButton = null;
         /** @internal */
         this._popoutButton = null;
+        /** @internal */
+        this._updateRequested = 0;
         this._tabsContainer = new tabs_container_1.TabsContainer(this._layoutManager, (item) => this.handleTabInitiatedComponentRemoveEvent(item), (item) => this.handleTabInitiatedComponentFocusEvent(item), (x, y, dragListener, item) => this.handleTabInitiatedDragStartEvent(x, y, dragListener, item), () => this.processTabDropdownActiveChanged());
         this._show = settings.show;
         this._popoutEnabled = settings.popoutEnabled;
@@ -73,65 +87,67 @@ class Header extends event_emitter_1.EventEmitter {
         this.setSide(settings.side);
         this._canRemoveComponent = this._configClosable;
         this._element = document.createElement('section');
-        this._element.classList.add("lm_header" /* Header */);
+        this._element.classList.add("lm_header" /* DomConstants.ClassName.Header */);
         this._controlsContainerElement = document.createElement('section');
-        this._controlsContainerElement.classList.add("lm_controls" /* Controls */);
-        this._element.appendChild(this._tabsContainer.element);
-        this._element.appendChild(this._controlsContainerElement);
-        this._element.appendChild(this._tabsContainer.dropdownElement);
+        this._controlsContainerElement.classList.add("lm_controls" /* DomConstants.ClassName.Controls */);
+        this.layoutDefault();
         this._element.addEventListener('click', this._clickListener, { passive: true });
-        this._element.addEventListener('touchstart', this._touchStartListener, { passive: true });
+        //this._element.addEventListener('touchstart', this._touchStartListener, { passive: true });
         this._documentMouseUpListener = () => this._tabsContainer.hideAdditionalTabsDropdown();
         globalThis.document.addEventListener('mouseup', this._documentMouseUpListener, { passive: true });
         this._tabControlOffset = this._layoutManager.layoutConfig.settings.tabControlOffset;
         if (this._tabDropdownEnabled) {
-            this._tabDropdownButton = new header_button_1.HeaderButton(this, this._tabDropdownLabel, "lm_tabdropdown" /* TabDropdown */, () => this._tabsContainer.showAdditionalTabsDropdown());
+            this._tabDropdownButton = new header_button_1.HeaderButton(this, this._tabDropdownLabel, "lm_tabdropdown" /* DomConstants.ClassName.TabDropdown */, () => this._tabsContainer.showAdditionalTabsDropdown());
         }
         if (this._popoutEnabled) {
-            this._popoutButton = new header_button_1.HeaderButton(this, this._popoutLabel, "lm_popout" /* Popout */, () => this.handleButtonPopoutEvent());
+            this._popoutButton = new header_button_1.HeaderButton(this, this._popoutLabel, "lm_popout" /* DomConstants.ClassName.Popout */, (ev) => this.handleButtonPopoutEvent(ev));
         }
         /**
          * Maximise control - set the component to the full size of the layout
          */
         if (this._maximiseEnabled) {
-            this._maximiseButton = new header_button_1.HeaderButton(this, this._maximiseLabel, "lm_maximise" /* Maximise */, (ev) => this.handleButtonMaximiseToggleEvent(ev));
+            this._maximiseButton = new header_button_1.HeaderButton(this, this._maximiseLabel, "lm_maximise" /* DomConstants.ClassName.Maximise */, (ev) => this.handleButtonMaximiseToggleEvent(ev));
         }
         /**
          * Close button
          */
         if (this._configClosable) {
-            this._closeButton = new header_button_1.HeaderButton(this, this._closeLabel, "lm_close" /* Close */, () => closeEvent());
+            this._closeButton = new header_button_1.HeaderButton(this, this._closeLabel, "lm_close" /* DomConstants.ClassName.Close */, () => closeEvent());
         }
         this.processTabDropdownActiveChanged();
     }
-    // /** @internal */
-    // private _activeComponentItem: ComponentItem | null = null; // only used to identify active tab
-    get show() { return this._show; }
-    get side() { return this._side; }
-    get leftRightSided() { return this._leftRightSided; }
-    get layoutManager() { return this._layoutManager; }
-    get parent() { return this._parent; }
-    get tabs() { return this._tabsContainer.tabs; }
-    get lastVisibleTabIndex() { return this._tabsContainer.lastVisibleTabIndex; }
-    get element() { return this._element; }
-    get tabsContainerElement() { return this._tabsContainer.element; }
-    get controlsContainerElement() { return this._controlsContainerElement; }
+    layoutDefault() {
+        const el = this._element;
+        while (el.firstChild)
+            el.removeChild(el.firstChild);
+        el.appendChild(this._tabsContainer.element);
+        el.appendChild(this._controlsContainerElement);
+        el.appendChild(this._tabsContainer.dropdownElement);
+    }
     /**
      * Destroys the entire header
      * @internal
      */
     destroy() {
-        this.emit('destroy');
-        this._popoutEvent = undefined;
-        this._maximiseToggleEvent = undefined;
-        this._clickEvent = undefined;
-        this._touchStartEvent = undefined;
-        this._componentRemoveEvent = undefined;
-        this._componentFocusEvent = undefined;
-        this._componentDragStartEvent = undefined;
-        this._tabsContainer.destroy();
-        globalThis.document.removeEventListener('mouseup', this._documentMouseUpListener);
-        this._element.remove();
+        this._element.style.opacity = '0';
+        this.layoutManager.deferIfDragging((cancel) => {
+            if (cancel) {
+                this._element.style.opacity = '';
+            }
+            else {
+                this.emit('destroy');
+                this._popoutEvent = undefined;
+                this._maximiseToggleEvent = undefined;
+                this._clickEvent = undefined;
+                this._touchStartEvent = undefined;
+                this._componentRemoveEvent = undefined;
+                this._componentFocusEvent = undefined;
+                this._componentDragStartEvent = undefined;
+                this._tabsContainer.destroy();
+                globalThis.document.removeEventListener('mouseup', this._documentMouseUpListener);
+                this._element.remove();
+            }
+        });
     }
     /**
      * Creates a new tab and associates it with a contentItem
@@ -208,10 +224,10 @@ class Header extends event_emitter_1.EventEmitter {
     /** @internal */
     applyFocusedValue(value) {
         if (value) {
-            this._element.classList.add("lm_focused" /* Focused */);
+            this._element.classList.add("lm_focused" /* DomConstants.ClassName.Focused */);
         }
         else {
-            this._element.classList.remove("lm_focused" /* Focused */);
+            this._element.classList.remove("lm_focused" /* DomConstants.ClassName.Focused */);
         }
     }
     /** @internal */
@@ -237,25 +253,35 @@ class Header extends event_emitter_1.EventEmitter {
      * @internal
      */
     updateTabSizes() {
-        if (this._tabsContainer.tabCount > 0) {
-            const headerHeight = this._show ? this._layoutManager.layoutConfig.dimensions.headerHeight : 0;
-            if (this._leftRightSided) {
-                this._element.style.height = '';
-                this._element.style.width = (0, utils_1.numberToPixels)(headerHeight);
+        if (this._updateRequested)
+            return;
+        this._updateRequested = window.requestAnimationFrame(() => {
+            this._updateRequested = 0;
+            if (this._tabsContainer.tabCount > 0) {
+                /* We need explicit this._element.style.width
+                * if the header is in an lm_header container.
+                const headerHeight = this._show ? this._layoutManager.layoutConfig.dimensions.headerHeight : 0;
+                if (this._leftRightSided) {
+                    this._element.style.height = '';
+                    this._element.style.width = `${headerHeight}px;
+                } else {
+                    this._element.style.width = '';
+                    this._element.style.height = `${headerHeight}px`;
+                }
+                */
+                this._tabsContainer.updateTabSizes(this, this._getActiveComponentItemEvent());
             }
-            else {
-                this._element.style.width = '';
-                this._element.style.height = (0, utils_1.numberToPixels)(headerHeight);
+        });
+    }
+    availableTabsSize() {
+        const el = this._element;
+        let avail = this._leftRightSided ? el.offsetHeight : el.offsetWidth;
+        for (let ch = el.firstElementChild; ch; ch = ch.nextElementSibling) {
+            if (ch !== this.tabsContainerElement && ch instanceof HTMLElement) {
+                avail -= this._leftRightSided ? ch.offsetHeight : ch.offsetWidth;
             }
-            let availableWidth;
-            if (this._leftRightSided) {
-                availableWidth = this._element.offsetHeight - this._controlsContainerElement.offsetHeight - this._tabControlOffset;
-            }
-            else {
-                availableWidth = this._element.offsetWidth - this._controlsContainerElement.offsetWidth - this._tabControlOffset;
-            }
-            this._tabsContainer.updateTabSizes(availableWidth, this._getActiveComponentItemEvent());
         }
+        return avail;
     }
     /** @internal */
     handleTabInitiatedComponentRemoveEvent(componentItem) {
@@ -298,7 +324,9 @@ class Header extends event_emitter_1.EventEmitter {
         }
     }
     /** @internal */
-    handleButtonPopoutEvent() {
+    handleButtonPopoutEvent(ev) {
+        if (this._layoutManager.popoutClickHandler(this.parent, ev))
+            return;
         if (this._layoutManager.layoutConfig.settings.popoutWholeStack) {
             if (this._popoutEvent === undefined) {
                 throw new internal_error_1.UnexpectedUndefinedError('HHBPOE17834');
@@ -326,7 +354,7 @@ class Header extends event_emitter_1.EventEmitter {
         }
     }
     /**
-     * Invoked when the header's background is clicked (not it's tabs or controls)
+     * Invoked when the header's background is clicked (not its tabs or controls)
      * @internal
      */
     onClick(event) {
@@ -335,7 +363,7 @@ class Header extends event_emitter_1.EventEmitter {
         }
     }
     /**
-     * Invoked when the header's background is touched (not it's tabs or controls)
+     * Invoked when the header's background is touched (not its tabs or controls)
      * @internal
      */
     onTouchStart(event) {

@@ -502,34 +502,6 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "golden-layout!ComponentContainer#component:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "get component(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer.Component",
-                  "canonicalReference": "golden-layout!ComponentContainer.Component:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "component",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false
-            },
-            {
-              "kind": "Property",
               "canonicalReference": "golden-layout!ComponentContainer#componentType:member",
               "docComment": "",
               "excerptTokens": [
@@ -558,6 +530,38 @@
             },
             {
               "kind": "Property",
+              "canonicalReference": "golden-layout!ComponentContainer#contentElement:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly contentElement: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLElement",
+                  "canonicalReference": "!HTMLElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "contentElement",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
               "canonicalReference": "golden-layout!ComponentContainer#element:member",
               "docComment": "/**\n * The inner DOM element where the container's content is intended to live in\n */\n",
               "excerptTokens": [
@@ -572,6 +576,10 @@
                 },
                 {
                   "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
                   "text": ";"
                 }
               ],
@@ -580,7 +588,7 @@
               "name": "element",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
+                "endIndex": 3
               },
               "isStatic": false
             },
@@ -697,6 +705,10 @@
                 },
                 {
                   "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
                   "text": ";"
                 }
               ],
@@ -704,7 +716,7 @@
               "isStatic": false,
               "returnTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
+                "endIndex": 3
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -744,6 +756,34 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "getState"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!ComponentContainer#handle:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get handle(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentContainer.Handle",
+                  "canonicalReference": "golden-layout!ComponentContainer.Handle:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "handle",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
             },
             {
               "kind": "Property",
@@ -885,6 +925,38 @@
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!ComponentContainer#notifyResize:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "notifyResize: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentContainer.NotifyResizeHandler",
+                  "canonicalReference": "golden-layout!ComponentContainer.NotifyResizeHandler:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "notifyResize",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
               },
               "isStatic": false
             },
@@ -1131,6 +1203,57 @@
                 }
               ],
               "name": "setTitle"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!ComponentContainer#setTitleRenderer:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setTitleRenderer(renderer: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Tab.TitleRenderer",
+                  "canonicalReference": "golden-layout!Tab.TitleRenderer:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "renderer",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "setTitleRenderer"
             },
             {
               "kind": "Method",
@@ -1478,75 +1601,6 @@
           "name": "ComponentContainer",
           "members": [
             {
-              "kind": "Interface",
-              "canonicalReference": "golden-layout!ComponentContainer.BindableComponent:interface",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "interface BindableComponent "
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "BindableComponent",
-              "members": [
-                {
-                  "kind": "PropertySignature",
-                  "canonicalReference": "golden-layout!ComponentContainer.BindableComponent#component:member",
-                  "docComment": "",
-                  "excerptTokens": [
-                    {
-                      "kind": "Content",
-                      "text": "component: "
-                    },
-                    {
-                      "kind": "Reference",
-                      "text": "Component",
-                      "canonicalReference": "golden-layout!ComponentContainer.Component:type"
-                    },
-                    {
-                      "kind": "Content",
-                      "text": ";"
-                    }
-                  ],
-                  "isOptional": false,
-                  "releaseTag": "Public",
-                  "name": "component",
-                  "propertyTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  }
-                },
-                {
-                  "kind": "PropertySignature",
-                  "canonicalReference": "golden-layout!ComponentContainer.BindableComponent#virtual:member",
-                  "docComment": "",
-                  "excerptTokens": [
-                    {
-                      "kind": "Content",
-                      "text": "virtual: "
-                    },
-                    {
-                      "kind": "Content",
-                      "text": "boolean"
-                    },
-                    {
-                      "kind": "Content",
-                      "text": ";"
-                    }
-                  ],
-                  "isOptional": false,
-                  "releaseTag": "Public",
-                  "name": "virtual",
-                  "propertyTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  }
-                }
-              ],
-              "extendsTokenRanges": []
-            },
-            {
               "kind": "TypeAlias",
               "canonicalReference": "golden-layout!ComponentContainer.Component:type",
               "docComment": "",
@@ -1569,6 +1623,65 @@
               "typeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "golden-layout!ComponentContainer.Handle:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type Handle = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Handle",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "golden-layout!ComponentContainer.NotifyResizeHandler:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type NotifyResizeHandler = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(this: void, container: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentContainer",
+                  "canonicalReference": "golden-layout!ComponentContainer:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", left: number, top: number, width: number, height: number) => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "NotifyResizeHandler",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
               }
             },
             {
@@ -1861,38 +1974,6 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "close"
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "golden-layout!ComponentItem#component:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "get component(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer.Component",
-                  "canonicalReference": "golden-layout!ComponentContainer.Component:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | undefined"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "component",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              },
-              "isStatic": false
             },
             {
               "kind": "Property",
@@ -2204,6 +2285,57 @@
               "name": "setTitle"
             },
             {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!ComponentItem#setTitleRenderer:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setTitleRenderer(renderer: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Tab.TitleRenderer",
+                  "canonicalReference": "golden-layout!Tab.TitleRenderer:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "renderer",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "setTitleRenderer"
+            },
+            {
               "kind": "Property",
               "canonicalReference": "golden-layout!ComponentItem#tab:member",
               "docComment": "",
@@ -2255,6 +2387,38 @@
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!ComponentItem#titleRenderer:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get titleRenderer(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Tab.TitleRenderer",
+                  "canonicalReference": "golden-layout!Tab.TitleRenderer:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "titleRenderer",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
               },
               "isStatic": false
             },
@@ -2414,7 +2578,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "golden-layout!ComponentItemConfig#componentType:member",
-              "docComment": "/**\n * The type of the component. `componentType` must be of type `string` if it is registered with any of the following functions: * {@link (GoldenLayout:class).registerComponent} (deprecated) * {@link (GoldenLayout:class).registerComponentConstructor} * {@link (GoldenLayout:class).registerComponentFactoryFunction}\n */\n",
+              "docComment": "/**\n * The type of the component. `componentType` must be of type `string` if it is registered with any of the following functions: * {@link (GoldenLayout:class).registerComponent}\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2617,7 +2781,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type Config = "
+              "text": "export type Config = "
             },
             {
               "kind": "Reference",
@@ -2878,6 +3042,60 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!ContentItem#ignoring:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "ignoring: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "ignoring",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!ContentItem#ignoringChild:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "ignoringChild: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "ignoringChild",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -4893,6 +5111,40 @@
             },
             {
               "kind": "TypeAlias",
+              "canonicalReference": "golden-layout!EventEmitter.DragMovedParams:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type DragMovedParams = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "[offsetX: number, offsetY: number, component: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentItem",
+                  "canonicalReference": "golden-layout!ComponentItem:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "DragMovedParams",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "TypeAlias",
               "canonicalReference": "golden-layout!EventEmitter.DragParams:type",
               "docComment": "",
               "excerptTokens": [
@@ -5019,6 +5271,60 @@
                   "isOptional": false,
                   "releaseTag": "Public",
                   "name": "__all",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#\"drag-enter-window\":member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "\"drag-enter-window\": "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "MouseEventParams",
+                      "canonicalReference": "golden-layout!EventEmitter.MouseEventParams:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "\"drag-enter-window\"",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#\"drag-leave-window\":member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "\"drag-leave-window\": "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "MouseEventParams",
+                      "canonicalReference": "golden-layout!EventEmitter.MouseEventParams:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "\"drag-leave-window\"",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -5242,6 +5548,114 @@
                 },
                 {
                   "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#dragend:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "\"dragend\": "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "NoParams",
+                      "canonicalReference": "golden-layout!EventEmitter.NoParams:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "dragend",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#dragExported:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "\"dragExported\": "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "DragMovedParams",
+                      "canonicalReference": "golden-layout!EventEmitter.DragMovedParams:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "dragExported",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#dragMoved:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "\"dragMoved\": "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "DragMovedParams",
+                      "canonicalReference": "golden-layout!EventEmitter.DragMovedParams:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "dragMoved",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#dragstart:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "\"dragstart\": "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "MouseComponentParams",
+                      "canonicalReference": "golden-layout!EventEmitter.MouseComponentParams:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "dragstart",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
                   "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#dragStart:member",
                   "docComment": "",
                   "excerptTokens": [
@@ -5289,6 +5703,33 @@
                   "isOptional": false,
                   "releaseTag": "Public",
                   "name": "dragStop",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!EventEmitter.EventParamsMap#drop:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "\"drop\": "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "MouseEventParams",
+                      "canonicalReference": "golden-layout!EventEmitter.MouseEventParams:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "drop",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -5927,6 +6368,83 @@
             },
             {
               "kind": "TypeAlias",
+              "canonicalReference": "golden-layout!EventEmitter.MouseComponentParams:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type MouseComponentParams = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "[event: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "MouseEvent",
+                  "canonicalReference": "!MouseEvent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", component: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentItem",
+                  "canonicalReference": "golden-layout!ComponentItem:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "MouseComponentParams",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "golden-layout!EventEmitter.MouseEventParams:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type MouseEventParams = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "[event: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "MouseEvent",
+                  "canonicalReference": "!MouseEvent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "MouseEventParams",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "TypeAlias",
               "canonicalReference": "golden-layout!EventEmitter.NoParams:type",
               "docComment": "",
               "excerptTokens": [
@@ -6516,6 +7034,76 @@
             {
               "kind": "Constructor",
               "canonicalReference": "golden-layout!GoldenLayout:constructor(2)",
+              "docComment": "/**\n * Constructs a new instance of the `GoldenLayout` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(config: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "LayoutConfig",
+                  "canonicalReference": "golden-layout!LayoutConfig:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", container?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLElement",
+                  "canonicalReference": "!HTMLElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", position?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Node",
+                  "canonicalReference": "!Node:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 2,
+              "parameters": [
+                {
+                  "parameterName": "config",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "container",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  },
+                  "isOptional": true
+                },
+                {
+                  "parameterName": "position",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 5,
+                    "endIndex": 7
+                  },
+                  "isOptional": true
+                }
+              ]
+            },
+            {
+              "kind": "Constructor",
+              "canonicalReference": "golden-layout!GoldenLayout:constructor(3)",
               "docComment": "/**\n * Constructs a new instance of the `GoldenLayout` class\n *\n * @deprecated\n *\n * specify layoutConfig in {@link (LayoutManager:class).loadLayout}\n */\n",
               "excerptTokens": [
                 {
@@ -6542,7 +7130,7 @@
                 }
               ],
               "releaseTag": "Public",
-              "overloadIndex": 2,
+              "overloadIndex": 3,
               "parameters": [
                 {
                   "parameterName": "config",
@@ -6564,52 +7152,6 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "golden-layout!GoldenLayout#fireBeforeVirtualRectingEvent:member(1)",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "fireBeforeVirtualRectingEvent(count: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "number"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "count",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                }
-              ],
-              "name": "fireBeforeVirtualRectingEvent"
-            },
-            {
-              "kind": "Method",
               "canonicalReference": "golden-layout!GoldenLayout#getComponentInstantiator:member(1)",
               "docComment": "/**\n * Returns a previously registered component instantiator. Attempts to utilize registered component type by first, then falls back to the component constructor callback function (if registered). If neither gets an instantiator, then returns `undefined`. Note that `undefined` will return if config.componentType is not a string\n *\n * @param config - The item config\n *\n * @public\n */\n",
               "excerptTokens": [
@@ -6628,8 +7170,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "GoldenLayout.ComponentInstantiator",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentInstantiator:interface"
+                  "text": "GoldenLayout.ComponentFactoryFunction",
+                  "canonicalReference": "golden-layout!GoldenLayout.ComponentFactoryFunction:type"
                 },
                 {
                   "kind": "Content",
@@ -6692,178 +7234,11 @@
             {
               "kind": "Method",
               "canonicalReference": "golden-layout!GoldenLayout#registerComponent:member(1)",
-              "docComment": "/**\n * Register a new component type with the layout manager.\n *\n * @deprecated\n *\n * See {@link https://stackoverflow.com/questions/40922531/how-to-check-if-a-javascript-function-is-a-constructor} instead use {@link (GoldenLayout:class).registerComponentConstructor} or {@link (GoldenLayout:class).registerComponentFactoryFunction}\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "registerComponent(name: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", componentConstructorOrFactoryFtn: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "GoldenLayout.ComponentConstructor",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentConstructor:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "GoldenLayout.ComponentFactoryFunction",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentFactoryFunction:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", virtual?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 9,
-                "endIndex": 10
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "name",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "componentConstructorOrFactoryFtn",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 6
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "virtual",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 7,
-                    "endIndex": 8
-                  },
-                  "isOptional": true
-                }
-              ],
-              "name": "registerComponent"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "golden-layout!GoldenLayout#registerComponentConstructor:member(1)",
-              "docComment": "/**\n * Register a new component type with the layout manager.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "registerComponentConstructor(typeName: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", componentConstructor: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "GoldenLayout.ComponentConstructor",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentConstructor:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", virtual?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 7,
-                "endIndex": 8
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "typeName",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "componentConstructor",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 4
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "virtual",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 5,
-                    "endIndex": 6
-                  },
-                  "isOptional": true
-                }
-              ],
-              "name": "registerComponentConstructor"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "golden-layout!GoldenLayout#registerComponentFactoryFunction:member(1)",
               "docComment": "/**\n * Register a new component with the layout manager.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "registerComponentFactoryFunction(typeName: "
+                  "text": "registerComponent(typeName: "
                 },
                 {
                   "kind": "Content",
@@ -6880,14 +7255,6 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", virtual?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
                   "text": "): "
                 },
                 {
@@ -6902,8 +7269,8 @@
               "isOptional": false,
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 7,
-                "endIndex": 8
+                "startIndex": 5,
+                "endIndex": 6
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -6923,31 +7290,23 @@
                     "endIndex": 4
                   },
                   "isOptional": false
-                },
-                {
-                  "parameterName": "virtual",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 5,
-                    "endIndex": 6
-                  },
-                  "isOptional": true
                 }
               ],
-              "name": "registerComponentFactoryFunction"
+              "name": "registerComponent"
             },
             {
               "kind": "Method",
-              "canonicalReference": "golden-layout!GoldenLayout#registerComponentFunction:member(1)",
-              "docComment": "/**\n * Register a component function with the layout manager. This function should return a constructor for a component based on a config. This function will be called if a component type with the required name is not already registered. It is recommended that applications use the {@link (VirtualLayout:class).getComponentEvent} and {@link (VirtualLayout:class).releaseComponentEvent} instead of registering a constructor callback\n *\n * @deprecated\n *\n * use {@link (GoldenLayout:class).registerGetComponentConstructorCallback}\n */\n",
+              "canonicalReference": "golden-layout!GoldenLayout#registerComponentDefault:member(1)",
+              "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "registerComponentFunction(callback: "
+                  "text": "registerComponentDefault(componentFactoryFunction: "
                 },
                 {
                   "kind": "Reference",
-                  "text": "GoldenLayout.GetComponentConstructorCallback",
-                  "canonicalReference": "golden-layout!GoldenLayout.GetComponentConstructorCallback:type"
+                  "text": "GoldenLayout.ComponentFactoryFunction",
+                  "canonicalReference": "golden-layout!GoldenLayout.ComponentFactoryFunction:type"
                 },
                 {
                   "kind": "Content",
@@ -6972,7 +7331,7 @@
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "callback",
+                  "parameterName": "componentFactoryFunction",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -6980,54 +7339,7 @@
                   "isOptional": false
                 }
               ],
-              "name": "registerComponentFunction"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "golden-layout!GoldenLayout#registerGetComponentConstructorCallback:member(1)",
-              "docComment": "/**\n * Register a callback closure with the layout manager which supplies a Component Constructor. This callback should return a constructor for a component based on a config. This function will be called if a component type with the required name is not already registered. It is recommended that applications use the {@link (VirtualLayout:class).getComponentEvent} and {@link (VirtualLayout:class).releaseComponentEvent} instead of registering a constructor callback\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "registerGetComponentConstructorCallback(callback: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "GoldenLayout.GetComponentConstructorCallback",
-                  "canonicalReference": "golden-layout!GoldenLayout.GetComponentConstructorCallback:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "callback",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                }
-              ],
-              "name": "registerGetComponentConstructorCallback"
+              "name": "registerComponentDefault"
             }
           ],
           "extendsTokenRange": {
@@ -7049,54 +7361,6 @@
           "releaseTag": "Public",
           "name": "GoldenLayout",
           "members": [
-            {
-              "kind": "TypeAlias",
-              "canonicalReference": "golden-layout!GoldenLayout.ComponentConstructor:type",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "type ComponentConstructor = "
-                },
-                {
-                  "kind": "Content",
-                  "text": "new (container: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer",
-                  "canonicalReference": "golden-layout!ComponentContainer:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", state: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "JsonValue",
-                  "canonicalReference": "golden-layout!JsonValue:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | undefined, virtual: boolean) => "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer.Component",
-                  "canonicalReference": "golden-layout!ComponentContainer.Component:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "ComponentConstructor",
-              "typeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 7
-              }
-            },
             {
               "kind": "TypeAlias",
               "canonicalReference": "golden-layout!GoldenLayout.ComponentFactoryFunction:type",
@@ -7126,16 +7390,12 @@
                 },
                 {
                   "kind": "Content",
-                  "text": " | undefined, virtual: boolean) => "
+                  "text": " | undefined) => "
                 },
                 {
                   "kind": "Reference",
-                  "text": "ComponentContainer.Component",
-                  "canonicalReference": "golden-layout!ComponentContainer.Component:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | undefined"
+                  "text": "ComponentContainer.Handle",
+                  "canonicalReference": "golden-layout!ComponentContainer.Handle:type"
                 },
                 {
                   "kind": "Content",
@@ -7146,150 +7406,7 @@
               "name": "ComponentFactoryFunction",
               "typeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 8
-              }
-            },
-            {
-              "kind": "Interface",
-              "canonicalReference": "golden-layout!GoldenLayout.ComponentInstantiator:interface",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "interface ComponentInstantiator "
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "ComponentInstantiator",
-              "members": [
-                {
-                  "kind": "PropertySignature",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentInstantiator#constructor:member",
-                  "docComment": "",
-                  "excerptTokens": [
-                    {
-                      "kind": "Content",
-                      "text": "constructor: "
-                    },
-                    {
-                      "kind": "Reference",
-                      "text": "ComponentConstructor",
-                      "canonicalReference": "golden-layout!GoldenLayout.ComponentConstructor:type"
-                    },
-                    {
-                      "kind": "Content",
-                      "text": " | undefined"
-                    },
-                    {
-                      "kind": "Content",
-                      "text": ";"
-                    }
-                  ],
-                  "isOptional": false,
-                  "releaseTag": "Public",
-                  "name": "constructor",
-                  "propertyTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 3
-                  }
-                },
-                {
-                  "kind": "PropertySignature",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentInstantiator#factoryFunction:member",
-                  "docComment": "",
-                  "excerptTokens": [
-                    {
-                      "kind": "Content",
-                      "text": "factoryFunction: "
-                    },
-                    {
-                      "kind": "Reference",
-                      "text": "ComponentFactoryFunction",
-                      "canonicalReference": "golden-layout!GoldenLayout.ComponentFactoryFunction:type"
-                    },
-                    {
-                      "kind": "Content",
-                      "text": " | undefined"
-                    },
-                    {
-                      "kind": "Content",
-                      "text": ";"
-                    }
-                  ],
-                  "isOptional": false,
-                  "releaseTag": "Public",
-                  "name": "factoryFunction",
-                  "propertyTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 3
-                  }
-                },
-                {
-                  "kind": "PropertySignature",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentInstantiator#virtual:member",
-                  "docComment": "",
-                  "excerptTokens": [
-                    {
-                      "kind": "Content",
-                      "text": "virtual: "
-                    },
-                    {
-                      "kind": "Content",
-                      "text": "boolean"
-                    },
-                    {
-                      "kind": "Content",
-                      "text": ";"
-                    }
-                  ],
-                  "isOptional": false,
-                  "releaseTag": "Public",
-                  "name": "virtual",
-                  "propertyTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  }
-                }
-              ],
-              "extendsTokenRanges": []
-            },
-            {
-              "kind": "TypeAlias",
-              "canonicalReference": "golden-layout!GoldenLayout.GetComponentConstructorCallback:type",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "type GetComponentConstructorCallback = "
-                },
-                {
-                  "kind": "Content",
-                  "text": "(this: void, config: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ResolvedComponentItemConfig",
-                  "canonicalReference": "golden-layout!ResolvedComponentItemConfig:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ") => "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentConstructor",
-                  "canonicalReference": "golden-layout!GoldenLayout.ComponentConstructor:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "GetComponentConstructorCallback",
-              "typeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 5
+                "endIndex": 7
               }
             },
             {
@@ -7359,6 +7476,35 @@
           "releaseTag": "Public",
           "name": "Header",
           "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!Header#availableTabsSize:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "availableTabsSize(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "availableTabsSize"
+            },
             {
               "kind": "Property",
               "canonicalReference": "golden-layout!Header#controlsContainerElement:member",
@@ -7441,6 +7587,35 @@
                 "endIndex": 2
               },
               "isStatic": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!Header#layoutDefault:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "layoutDefault(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "layoutDefault"
             },
             {
               "kind": "Property",
@@ -9087,7 +9262,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type ItemType = "
+              "text": "export type ItemType = "
             },
             {
               "kind": "Content",
@@ -9301,7 +9476,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type JsonValue = "
+              "text": "export type JsonValue = "
             },
             {
               "kind": "Content",
@@ -9340,7 +9515,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type JsonValueArray = "
+              "text": "export type JsonValueArray = "
             },
             {
               "kind": "Reference",
@@ -9640,7 +9815,7 @@
                 {
                   "kind": "PropertySignature",
                   "canonicalReference": "golden-layout!LayoutConfig.Dimensions#borderGrabWidth:member",
-                  "docComment": "/**\n * Default: 15\n */\n",
+                  "docComment": "/**\n * Default: 5\n */\n",
                   "excerptTokens": [
                     {
                       "kind": "Content",
@@ -9684,6 +9859,32 @@
                   "isOptional": true,
                   "releaseTag": "Public",
                   "name": "borderWidth",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!LayoutConfig.Dimensions#contentInset:member",
+                  "docComment": "/**\n * Space to allocate between component wrapper and content element. This can be used for an 'outline'. This may affect drag from other window over iframe which may not trigger depending on the CSS pointer-events setting. (Uncertain: needs testing/experimentation.) Default: 0\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "contentInset?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "number"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "contentInset",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -10483,6 +10684,32 @@
                 },
                 {
                   "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!LayoutConfig.Settings#checkGlWindowKey:member",
+                  "docComment": "/**\n * Check whether location.search contains a gl-window parameter. This is used to handle window popin in simple cases. Default: true\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "checkGlWindowKey?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "checkGlWindowKey",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
                   "canonicalReference": "golden-layout!LayoutConfig.Settings#closePopoutsOnUnload:member",
                   "docComment": "/**\n * Specifies if all popouts should be closed when the page that created them is closed. Popouts don't have a strong dependency on their parent and can exist on their own, but can be quite annoying to close by hand. In addition, any changes made to popouts won't be stored after the parent is closed. Default: true\n *\n * @deprecated\n *\n * Will be removed in version 3.\n */\n",
                   "excerptTokens": [
@@ -10528,6 +10755,58 @@
                   "isOptional": true,
                   "releaseTag": "Public",
                   "name": "constrainDragToContainer",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!LayoutConfig.Settings#copyForDragImage:member",
+                  "docComment": "/**\n * Use component's element for setDragImage, if possible. Has side-effect of nesting content element inside a component. Ignored unless useDragAndDrop.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "copyForDragImage?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "copyForDragImage",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!LayoutConfig.Settings#dragDataMimetype:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "dragDataMimetype?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "string"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "dragDataMimetype",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -10744,6 +11023,32 @@
                 },
                 {
                   "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!LayoutConfig.Settings#showOldPositionWhenDragging:member",
+                  "docComment": "/**\n * When dragging an item, indicate the original position. The default style uses a dashed light-brown outline. Default: true\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "showOldPositionWhenDragging?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "showOldPositionWhenDragging",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
                   "canonicalReference": "golden-layout!LayoutConfig.Settings#showPopoutIcon:member",
                   "docComment": "/**\n * Specifies if the popout icon should be displayed in the header-bar.\n *\n * @deprecated\n *\n * use {@link (LayoutConfig:namespace).(Header:interface).popout} instead\n */\n",
                   "excerptTokens": [
@@ -10815,6 +11120,32 @@
                   "isOptional": true,
                   "releaseTag": "Public",
                   "name": "tabOverlapAllowance",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!LayoutConfig.Settings#useDragAndDrop:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "useDragAndDrop?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "useDragAndDrop",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -10912,6 +11243,35 @@
           "releaseTag": "Public",
           "name": "LayoutManager",
           "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#_hideTargetIndicator:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "_hideTargetIndicator(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "_hideTargetIndicator"
+            },
             {
               "kind": "Method",
               "canonicalReference": "golden-layout!LayoutManager#addComponent:member(1)",
@@ -11490,6 +11850,38 @@
               "isStatic": false
             },
             {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!LayoutManager#containerWidthAndHeight:member",
+              "docComment": "/**\n * Return width and height available for root element. By default size of containerElement - which is usually document.root. Should be overridden if not 100% of containerElement.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "containerWidthAndHeight: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "WidthAndHeight",
+                  "canonicalReference": "golden-layout!WidthAndHeight:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "containerWidthAndHeight",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "isStatic": false
+            },
+            {
               "kind": "Method",
               "canonicalReference": "golden-layout!LayoutManager#createAndInitContentItem:member(1)",
               "docComment": "/**\n * @public\n */\n",
@@ -11553,6 +11945,96 @@
                 }
               ],
               "name": "createAndInitContentItem"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!LayoutManager#createComponentElement:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "createComponentElement: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(config: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolvedComponentItemConfig",
+                  "canonicalReference": "golden-layout!ResolvedComponentItemConfig:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", component: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentContainer",
+                  "canonicalReference": "golden-layout!ComponentContainer:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLElement",
+                  "canonicalReference": "!HTMLElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "createComponentElement",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 8
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!LayoutManager#createDragProxy:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "createDragProxy: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "((item: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentItem",
+                  "canonicalReference": "golden-layout!ComponentItem:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", x: number, y: number) => void) | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "createDragProxy",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isStatic": false
             },
             {
               "kind": "Method",
@@ -11661,6 +12143,81 @@
               "name": "createPopout"
             },
             {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#currentlyDragging:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "currentlyDragging(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "currentlyDragging"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#deferIfDragging:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "deferIfDragging(action: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(cancel: boolean) => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "action",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "deferIfDragging"
+            },
+            {
               "kind": "Property",
               "canonicalReference": "golden-layout!LayoutManager#deprecatedConstructor:member",
               "docComment": "/**\n * @deprecated\n *\n * indicates deprecated constructor use\n */\n",
@@ -11715,6 +12272,202 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "destroy"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#doDeferredActions:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "doDeferredActions(cancel: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "cancel",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "doDeferredActions"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#dragDataMimetype:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dragDataMimetype(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "dragDataMimetype"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#draggingInOtherWindow:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "draggingInOtherWindow(ending: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "ending",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "draggingInOtherWindow"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#droppedInOtherWindow:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "droppedInOtherWindow(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "droppedInOtherWindow"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#enterOrLeaveSomeWindow:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "enterOrLeaveSomeWindow(entering: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "entering",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "enterOrLeaveSomeWindow"
             },
             {
               "kind": "Property",
@@ -11911,6 +12664,33 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "height",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!LayoutManager#inSomeWindow:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "inSomeWindow: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "inSomeWindow",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -12380,7 +13160,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "() => "
+                  "text": "() => ("
                 },
                 {
                   "kind": "Reference",
@@ -12395,6 +13175,10 @@
                   "kind": "Reference",
                   "text": "ComponentItemConfig",
                   "canonicalReference": "golden-layout!ComponentItemConfig:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ")"
                 },
                 {
                   "kind": "Content",
@@ -12413,8 +13197,8 @@
               "isOptional": false,
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 8,
-                "endIndex": 9
+                "startIndex": 9,
+                "endIndex": 10
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -12431,7 +13215,7 @@
                   "parameterName": "itemConfigCallback",
                   "parameterTypeTokenRange": {
                     "startIndex": 3,
-                    "endIndex": 7
+                    "endIndex": 8
                   },
                   "isOptional": false
                 }
@@ -12747,6 +13531,51 @@
               "isStatic": false
             },
             {
+              "kind": "Property",
+              "canonicalReference": "golden-layout!LayoutManager#popoutClickHandler:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "popoutClickHandler: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(item: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Stack",
+                  "canonicalReference": "golden-layout!Stack:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ev: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Event",
+                  "canonicalReference": "!Event:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "popoutClickHandler",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              },
+              "isStatic": false
+            },
+            {
               "kind": "Method",
               "canonicalReference": "golden-layout!LayoutManager#removeDragSource:member(1)",
               "docComment": "/**\n * Removes a DragListener added by createDragSource() so the corresponding DOM element is not a drag source any more.\n */\n",
@@ -12792,6 +13621,53 @@
                 }
               ],
               "name": "removeDragSource"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#removeElementEventually:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "removeElementEventually(element: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLElement",
+                  "canonicalReference": "!HTMLElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "element",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "removeElementEventually"
             },
             {
               "kind": "Property",
@@ -13079,19 +13955,11 @@
             {
               "kind": "Method",
               "canonicalReference": "golden-layout!LayoutManager#updateRootSize:member(1)",
-              "docComment": "/**\n * Update the size of the root ContentItem. This will update the size of all contentItems in the tree\n *\n * @param force - In some cases the size is not updated if it has not changed. In this case, events (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the relevant events need to be fired.\n */\n",
+              "docComment": "/**\n * Update the size of the root ContentItem. This will update the size of all contentItems in the tree\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "updateRootSize(force?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
+                  "text": "updateRootSize(): "
                 },
                 {
                   "kind": "Content",
@@ -13105,21 +13973,12 @@
               "isOptional": false,
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
+                "startIndex": 1,
+                "endIndex": 2
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "force",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": true
-                }
-              ],
+              "parameters": [],
               "name": "updateRootSize"
             },
             {
@@ -13183,6 +14042,82 @@
                 }
               ],
               "name": "updateSize"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#useNativeDragAndDrop:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "useNativeDragAndDrop(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "useNativeDragAndDrop"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!LayoutManager#validDragEvent:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "validDragEvent(e: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DragEvent",
+                  "canonicalReference": "!DragEvent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "e",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                }
+              ],
+              "name": "validDragEvent"
             },
             {
               "kind": "Property",
@@ -13752,7 +14687,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type LogicalZIndex = "
+              "text": "export type LogicalZIndex = "
             },
             {
               "kind": "Content",
@@ -15961,6 +16896,32 @@
                 },
                 {
                   "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!ResolvedLayoutConfig.Dimensions#contentInset:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly contentInset: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "number"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "contentInset",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
                   "canonicalReference": "golden-layout!ResolvedLayoutConfig.Dimensions#defaultMinItemHeight:member",
                   "docComment": "",
                   "excerptTokens": [
@@ -16657,6 +17618,32 @@
                 },
                 {
                   "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!ResolvedLayoutConfig.Settings#checkGlWindowKey:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly checkGlWindowKey: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "checkGlWindowKey",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
                   "canonicalReference": "golden-layout!ResolvedLayoutConfig.Settings#closePopoutsOnUnload:member",
                   "docComment": "/**\n * @deprecated\n *\n * Will be removed in version 3.\n */\n",
                   "excerptTokens": [
@@ -16702,6 +17689,58 @@
                   "isOptional": false,
                   "releaseTag": "Public",
                   "name": "constrainDragToContainer",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!ResolvedLayoutConfig.Settings#copyForDragImage:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly copyForDragImage: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean | undefined"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "copyForDragImage",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!ResolvedLayoutConfig.Settings#dragDataMimetype:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly dragDataMimetype: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "string"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "dragDataMimetype",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -16840,6 +17879,32 @@
                 },
                 {
                   "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!ResolvedLayoutConfig.Settings#showOldPositionWhenDragging:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly showOldPositionWhenDragging: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "showOldPositionWhenDragging",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
                   "canonicalReference": "golden-layout!ResolvedLayoutConfig.Settings#tabControlOffset:member",
                   "docComment": "",
                   "excerptTokens": [
@@ -16885,6 +17950,32 @@
                   "isOptional": false,
                   "releaseTag": "Public",
                   "name": "tabOverlapAllowance",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "golden-layout!ResolvedLayoutConfig.Settings#useDragAndDrop:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly useDragAndDrop: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "useDragAndDrop",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 2
@@ -17520,7 +18611,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type ResolvedRootItemConfig = "
+              "text": "export type ResolvedRootItemConfig = "
             },
             {
               "kind": "Reference",
@@ -18317,7 +19408,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type ResponsiveMode = "
+              "text": "export type ResponsiveMode = "
             },
             {
               "kind": "Content",
@@ -18412,7 +19503,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type RootItemConfig = "
+              "text": "export type RootItemConfig = "
             },
             {
               "kind": "Reference",
@@ -19062,52 +20153,6 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "toConfig"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "golden-layout!RowOrColumn#updateSize:member(1)",
-              "docComment": "/**\n * Called whenever the dimensions of this item or one of its parents change\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "updateSize(force: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "force",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                }
-              ],
-              "name": "updateSize"
             }
           ],
           "extendsTokenRange": {
@@ -19443,7 +20488,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type Side = "
+              "text": "export type Side = "
             },
             {
               "kind": "Content",
@@ -19468,7 +20513,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type SizeUnit = "
+              "text": "export type SizeUnit = "
             },
             {
               "kind": "Content",
@@ -20682,6 +21727,35 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "toggleMaximise"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "golden-layout!Stack#updateTabSizes:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "updateTabSizes(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "updateTabSizes"
             }
           ],
           "extendsTokenRange": {
@@ -21178,6 +22252,42 @@
             },
             {
               "kind": "Property",
+              "canonicalReference": "golden-layout!Tab#tabClickListener:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly tabClickListener: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(ev: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "MouseEvent",
+                  "canonicalReference": "!MouseEvent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "tabClickListener",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
               "canonicalReference": "golden-layout!Tab#titleElement:member",
               "docComment": "",
               "excerptTokens": [
@@ -21219,7 +22329,138 @@
           ],
           "releaseTag": "Public",
           "name": "Tab",
-          "members": []
+          "members": [
+            {
+              "kind": "Enum",
+              "canonicalReference": "golden-layout!Tab.RenderFlags:enum",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "enum RenderFlags "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "RenderFlags",
+              "members": [
+                {
+                  "kind": "EnumMember",
+                  "canonicalReference": "golden-layout!Tab.RenderFlags.DropdownActive:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "DropdownActive = "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "1"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "DropdownActive",
+                  "initializerTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "EnumMember",
+                  "canonicalReference": "golden-layout!Tab.RenderFlags.InDropdownMenu:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "InDropdownMenu = "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "2"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "InDropdownMenu",
+                  "initializerTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "EnumMember",
+                  "canonicalReference": "golden-layout!Tab.RenderFlags.IsActiveTab:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "IsActiveTab = "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "4"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "IsActiveTab",
+                  "initializerTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "golden-layout!Tab.TitleRenderer:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type TitleRenderer = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(component: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentContainer",
+                  "canonicalReference": "golden-layout!ComponentContainer:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", target: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HTMLElement",
+                  "canonicalReference": "!HTMLElement:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", availableWidth: number, flags: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RenderFlags",
+                  "canonicalReference": "golden-layout!Tab.RenderFlags:enum"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "TitleRenderer",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 8
+              }
+            }
+          ]
         },
         {
           "kind": "Class",
@@ -21228,7 +22469,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare class VirtualLayout extends "
+              "text": "export declare abstract class VirtualLayout extends "
             },
             {
               "kind": "Reference",
@@ -21478,38 +22719,6 @@
               "name": "destroy"
             },
             {
-              "kind": "Property",
-              "canonicalReference": "golden-layout!VirtualLayout#getComponentEvent:member",
-              "docComment": "/**\n * @deprecated\n *\n * Use {@link (VirtualLayout:class).bindComponentEvent} and {@link (VirtualLayout:class).unbindComponentEvent} with virtual components\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "getComponentEvent: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "VirtualLayout.GetComponentEventHandler",
-                  "canonicalReference": "golden-layout!VirtualLayout.GetComponentEventHandler:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | undefined"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "getComponentEvent",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              },
-              "isStatic": false
-            },
-            {
               "kind": "Method",
               "canonicalReference": "golden-layout!VirtualLayout#init:member(1)",
               "docComment": "/**\n * Creates the actual layout. Must be called after all initial components are registered. Recurses through the configuration and sets up the item tree.\n *\n * If called before the document is ready it adds itself as a listener to the document.ready event\n *\n * @deprecated\n *\n * LayoutConfig should not be loaded in {@link (LayoutManager:class)} constructor, but rather in a {@link (LayoutManager:class).loadLayout} call. If LayoutConfig is not specified in {@link (LayoutManager:class)} constructor, then init() will be automatically called internally and should not be called externally.\n */\n",
@@ -21537,38 +22746,6 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "init"
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "golden-layout!VirtualLayout#releaseComponentEvent:member",
-              "docComment": "/**\n * @deprecated\n *\n * Use {@link (VirtualLayout:class).bindComponentEvent} and {@link (VirtualLayout:class).unbindComponentEvent} with virtual components\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "releaseComponentEvent: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "VirtualLayout.ReleaseComponentEventHandler",
-                  "canonicalReference": "golden-layout!VirtualLayout.ReleaseComponentEventHandler:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | undefined"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "releaseComponentEvent",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              },
-              "isStatic": false
             },
             {
               "kind": "Property",
@@ -21680,8 +22857,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "ComponentContainer.BindableComponent",
-                  "canonicalReference": "golden-layout!ComponentContainer.BindableComponent:interface"
+                  "text": "ComponentContainer.Handle",
+                  "canonicalReference": "golden-layout!ComponentContainer.Handle:type"
                 },
                 {
                   "kind": "Content",
@@ -21693,97 +22870,6 @@
               "typeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 7
-              }
-            },
-            {
-              "kind": "TypeAlias",
-              "canonicalReference": "golden-layout!VirtualLayout.GetComponentEventHandler:type",
-              "docComment": "/**\n * @deprecated\n *\n * Use virtual components with {@link (VirtualLayout:class).bindComponentEvent} and {@link (VirtualLayout:class).unbindComponentEvent} events.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "type GetComponentEventHandler = "
-                },
-                {
-                  "kind": "Content",
-                  "text": "(this: void, container: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer",
-                  "canonicalReference": "golden-layout!ComponentContainer:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", itemConfig: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ResolvedComponentItemConfig",
-                  "canonicalReference": "golden-layout!ResolvedComponentItemConfig:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ") => "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer.Component",
-                  "canonicalReference": "golden-layout!ComponentContainer.Component:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "GetComponentEventHandler",
-              "typeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 7
-              }
-            },
-            {
-              "kind": "TypeAlias",
-              "canonicalReference": "golden-layout!VirtualLayout.ReleaseComponentEventHandler:type",
-              "docComment": "/**\n * @deprecated\n *\n * Use virtual components with {@link (VirtualLayout:class).bindComponentEvent} and {@link (VirtualLayout:class).unbindComponentEvent} events.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "type ReleaseComponentEventHandler = "
-                },
-                {
-                  "kind": "Content",
-                  "text": "(this: void, container: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer",
-                  "canonicalReference": "golden-layout!ComponentContainer:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", component: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ComponentContainer.Component",
-                  "canonicalReference": "golden-layout!ComponentContainer.Component:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ") => void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "ReleaseComponentEventHandler",
-              "typeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 6
               }
             },
             {
@@ -21821,6 +22907,74 @@
               }
             }
           ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "golden-layout!WidthAndHeight:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface WidthAndHeight "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "WidthAndHeight",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "golden-layout!WidthAndHeight#height:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "height: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "height",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "golden-layout!WidthAndHeight#width:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "width: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "width",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         }
       ]
     }

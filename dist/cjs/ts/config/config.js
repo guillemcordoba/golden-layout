@@ -118,14 +118,14 @@ var ItemConfig;
     /** @internal */
     function calculateSizeWidthHeightSpecificationType(config) {
         if (config.size !== undefined) {
-            return 1 /* Size */;
+            return 1 /* SizeWidthHeightSpecificationType.Size */;
         }
         else {
             if (config.width !== undefined || config.height !== undefined) {
-                return 2 /* WidthOrHeight */;
+                return 2 /* SizeWidthHeightSpecificationType.WidthOrHeight */;
             }
             else {
-                return 0 /* None */;
+                return 0 /* SizeWidthHeightSpecificationType.None */;
             }
         }
     }
@@ -427,12 +427,12 @@ var RowOrColumnItemConfig;
                     if (!sizeSpecifiedAtLeastOnce) {
                         const sizeWidthHeightSpecificationType = ItemConfig.calculateSizeWidthHeightSpecificationType(childItemConfig);
                         switch (sizeWidthHeightSpecificationType) {
-                            case 0 /* None */:
+                            case 0 /* ItemConfig.SizeWidthHeightSpecificationType.None */:
                                 break;
-                            case 2 /* WidthOrHeight */:
+                            case 2 /* ItemConfig.SizeWidthHeightSpecificationType.WidthOrHeight */:
                                 widthOrHeightSpecifiedAtLeastOnce = true;
                                 break;
-                            case 1 /* Size */:
+                            case 1 /* ItemConfig.SizeWidthHeightSpecificationType.Size */:
                                 sizeSpecifiedAtLeastOnce = true;
                                 break;
                             default:
@@ -561,18 +561,23 @@ var LayoutConfig;
     let Settings;
     (function (Settings) {
         function resolve(settings) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
             const result = {
-                constrainDragToContainer: (_a = settings === null || settings === void 0 ? void 0 : settings.constrainDragToContainer) !== null && _a !== void 0 ? _a : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.constrainDragToContainer,
-                reorderEnabled: (_b = settings === null || settings === void 0 ? void 0 : settings.reorderEnabled) !== null && _b !== void 0 ? _b : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.reorderEnabled,
-                popoutWholeStack: (_c = settings === null || settings === void 0 ? void 0 : settings.popoutWholeStack) !== null && _c !== void 0 ? _c : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.popoutWholeStack,
-                blockedPopoutsThrowError: (_d = settings === null || settings === void 0 ? void 0 : settings.blockedPopoutsThrowError) !== null && _d !== void 0 ? _d : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.blockedPopoutsThrowError,
-                closePopoutsOnUnload: (_e = settings === null || settings === void 0 ? void 0 : settings.closePopoutsOnUnload) !== null && _e !== void 0 ? _e : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.closePopoutsOnUnload,
-                responsiveMode: (_f = settings === null || settings === void 0 ? void 0 : settings.responsiveMode) !== null && _f !== void 0 ? _f : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.responsiveMode,
-                tabOverlapAllowance: (_g = settings === null || settings === void 0 ? void 0 : settings.tabOverlapAllowance) !== null && _g !== void 0 ? _g : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.tabOverlapAllowance,
-                reorderOnTabMenuClick: (_h = settings === null || settings === void 0 ? void 0 : settings.reorderOnTabMenuClick) !== null && _h !== void 0 ? _h : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.reorderOnTabMenuClick,
-                tabControlOffset: (_j = settings === null || settings === void 0 ? void 0 : settings.tabControlOffset) !== null && _j !== void 0 ? _j : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.tabControlOffset,
-                popInOnClose: (_k = settings === null || settings === void 0 ? void 0 : settings.popInOnClose) !== null && _k !== void 0 ? _k : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.popInOnClose,
+                useDragAndDrop: (_a = settings === null || settings === void 0 ? void 0 : settings.useDragAndDrop) !== null && _a !== void 0 ? _a : false,
+                copyForDragImage: settings === null || settings === void 0 ? void 0 : settings.copyForDragImage,
+                showOldPositionWhenDragging: (_b = settings === null || settings === void 0 ? void 0 : settings.showOldPositionWhenDragging) !== null && _b !== void 0 ? _b : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.showOldPositionWhenDragging,
+                dragDataMimetype: (_c = settings === null || settings === void 0 ? void 0 : settings.dragDataMimetype) !== null && _c !== void 0 ? _c : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.dragDataMimetype,
+                checkGlWindowKey: (_d = settings === null || settings === void 0 ? void 0 : settings.checkGlWindowKey) !== null && _d !== void 0 ? _d : true,
+                constrainDragToContainer: (_e = settings === null || settings === void 0 ? void 0 : settings.constrainDragToContainer) !== null && _e !== void 0 ? _e : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.constrainDragToContainer,
+                reorderEnabled: (_f = settings === null || settings === void 0 ? void 0 : settings.reorderEnabled) !== null && _f !== void 0 ? _f : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.reorderEnabled,
+                popoutWholeStack: (_g = settings === null || settings === void 0 ? void 0 : settings.popoutWholeStack) !== null && _g !== void 0 ? _g : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.popoutWholeStack,
+                blockedPopoutsThrowError: (_h = settings === null || settings === void 0 ? void 0 : settings.blockedPopoutsThrowError) !== null && _h !== void 0 ? _h : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.blockedPopoutsThrowError,
+                closePopoutsOnUnload: (_j = settings === null || settings === void 0 ? void 0 : settings.closePopoutsOnUnload) !== null && _j !== void 0 ? _j : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.closePopoutsOnUnload,
+                responsiveMode: (_k = settings === null || settings === void 0 ? void 0 : settings.responsiveMode) !== null && _k !== void 0 ? _k : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.responsiveMode,
+                tabOverlapAllowance: (_l = settings === null || settings === void 0 ? void 0 : settings.tabOverlapAllowance) !== null && _l !== void 0 ? _l : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.tabOverlapAllowance,
+                reorderOnTabMenuClick: (_m = settings === null || settings === void 0 ? void 0 : settings.reorderOnTabMenuClick) !== null && _m !== void 0 ? _m : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.reorderOnTabMenuClick,
+                tabControlOffset: (_o = settings === null || settings === void 0 ? void 0 : settings.tabControlOffset) !== null && _o !== void 0 ? _o : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.tabControlOffset,
+                popInOnClose: (_p = settings === null || settings === void 0 ? void 0 : settings.popInOnClose) !== null && _p !== void 0 ? _p : resolved_config_1.ResolvedLayoutConfig.Settings.defaults.popInOnClose,
             };
             return result;
         }
@@ -582,19 +587,20 @@ var LayoutConfig;
     (function (Dimensions) {
         /** @internal */
         function resolve(dimensions) {
-            var _a, _b, _c, _d, _e;
+            var _a, _b, _c, _d, _e, _f;
             const { size: defaultMinItemHeight, sizeUnit: defaultMinItemHeightUnit } = Dimensions.resolveDefaultMinItemHeight(dimensions);
             const { size: defaultMinItemWidth, sizeUnit: defaultMinItemWidthUnit } = Dimensions.resolveDefaultMinItemWidth(dimensions);
             const result = {
                 borderWidth: (_a = dimensions === null || dimensions === void 0 ? void 0 : dimensions.borderWidth) !== null && _a !== void 0 ? _a : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.borderWidth,
                 borderGrabWidth: (_b = dimensions === null || dimensions === void 0 ? void 0 : dimensions.borderGrabWidth) !== null && _b !== void 0 ? _b : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.borderGrabWidth,
+                contentInset: (_c = dimensions === null || dimensions === void 0 ? void 0 : dimensions.contentInset) !== null && _c !== void 0 ? _c : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.contentInset,
                 defaultMinItemHeight,
                 defaultMinItemHeightUnit,
                 defaultMinItemWidth,
                 defaultMinItemWidthUnit,
-                headerHeight: (_c = dimensions === null || dimensions === void 0 ? void 0 : dimensions.headerHeight) !== null && _c !== void 0 ? _c : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.headerHeight,
-                dragProxyWidth: (_d = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyWidth) !== null && _d !== void 0 ? _d : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.dragProxyWidth,
-                dragProxyHeight: (_e = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyHeight) !== null && _e !== void 0 ? _e : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.dragProxyHeight,
+                headerHeight: (_d = dimensions === null || dimensions === void 0 ? void 0 : dimensions.headerHeight) !== null && _d !== void 0 ? _d : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.headerHeight,
+                dragProxyWidth: (_e = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyWidth) !== null && _e !== void 0 ? _e : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.dragProxyWidth,
+                dragProxyHeight: (_f = dimensions === null || dimensions === void 0 ? void 0 : dimensions.dragProxyHeight) !== null && _f !== void 0 ? _f : resolved_config_1.ResolvedLayoutConfig.Dimensions.defaults.dragProxyHeight,
             };
             return result;
         }
@@ -834,16 +840,16 @@ function parseSize(sizeString, allowableSizeUnits) {
     const { numericPart: digitsPart, firstNonNumericCharPart: firstNonDigitPart } = (0, utils_1.splitStringAtFirstNonNumericChar)(sizeString);
     const size = Number.parseInt(digitsPart, 10);
     if (isNaN(size)) {
-        throw new external_error_1.ConfigurationError(`${i18n_strings_1.i18nStrings[7 /* InvalidNumberPartInSizeString */]}: ${sizeString}`);
+        throw new external_error_1.ConfigurationError(`${i18n_strings_1.i18nStrings[7 /* I18nStringId.InvalidNumberPartInSizeString */]}: ${sizeString}`);
     }
     else {
         const sizeUnit = types_1.SizeUnitEnum.tryParse(firstNonDigitPart);
         if (sizeUnit === undefined) {
-            throw new external_error_1.ConfigurationError(`${i18n_strings_1.i18nStrings[8 /* UnknownUnitInSizeString */]}: ${sizeString}`);
+            throw new external_error_1.ConfigurationError(`${i18n_strings_1.i18nStrings[8 /* I18nStringId.UnknownUnitInSizeString */]}: ${sizeString}`);
         }
         else {
             if (!allowableSizeUnits.includes(sizeUnit)) {
-                throw new external_error_1.ConfigurationError(`${i18n_strings_1.i18nStrings[9 /* UnsupportedUnitInSizeString */]}: ${sizeString}`);
+                throw new external_error_1.ConfigurationError(`${i18n_strings_1.i18nStrings[9 /* I18nStringId.UnsupportedUnitInSizeString */]}: ${sizeString}`);
             }
             else {
                 return { size, sizeUnit };

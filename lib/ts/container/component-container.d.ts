@@ -14,8 +14,6 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal */
     private readonly _layoutManager;
     /** @internal */
-    private readonly _element;
-    /** @internal */
     private readonly _updateItemConfigEvent;
     /** @internal */
     private readonly _showEvent;
@@ -28,7 +26,7 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal */
     private _componentType;
     /** @internal */
-    private _boundComponent;
+    private _handle;
     /** @internal */
     private _width;
     /** @internal */
@@ -49,8 +47,11 @@ export declare class ComponentContainer extends EventEmitter {
     private _stackMaximised;
     /** @internal */
     private _logicalZIndex;
+    /** @internal */
+    private _element;
     stateRequestEvent: ComponentContainer.StateRequestEventHandler | undefined;
     virtualRectingRequiredEvent: ComponentContainer.VirtualRectingRequiredEvent | undefined;
+    notifyResize: ComponentContainer.NotifyResizeHandler | undefined;
     virtualVisibilityChangeRequiredEvent: ComponentContainer.VirtualVisibilityChangeRequiredEvent | undefined;
     virtualZIndexChangeRequiredEvent: ComponentContainer.VirtualZIndexChangeRequiredEvent | undefined;
     get width(): number;
@@ -59,8 +60,8 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal @deprecated use {@link (ComponentContainer:class).componentType} */
     get componentName(): JsonValue;
     get componentType(): JsonValue;
+    get handle(): ComponentContainer.Handle;
     get virtual(): boolean;
-    get component(): ComponentContainer.Component;
     get tab(): Tab;
     get title(): string;
     get layoutManager(): LayoutManager;
@@ -70,7 +71,8 @@ export declare class ComponentContainer extends EventEmitter {
     /** Return the initial component state */
     get initialState(): JsonValue | undefined;
     /** The inner DOM element where the container's content is intended to live in */
-    get element(): HTMLElement;
+    get element(): HTMLElement | undefined;
+    readonly contentElement: HTMLElement | undefined;
     /** @internal */
     constructor(
     /** @internal */
@@ -79,8 +81,6 @@ export declare class ComponentContainer extends EventEmitter {
     _parent: ComponentItem, 
     /** @internal */
     _layoutManager: LayoutManager, 
-    /** @internal */
-    _element: HTMLElement, 
     /** @internal */
     _updateItemConfigEvent: ComponentContainer.UpdateItemConfigEventHandler, 
     /** @internal */
@@ -94,7 +94,7 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal */
     destroy(): void;
     /** @deprecated use {@link (ComponentContainer:class).element } */
-    getElement(): HTMLElement;
+    getElement(): HTMLElement | undefined;
     /**
      * Hides the container's component item (and hence, the container) if not already hidden.
      * Emits hide event prior to hiding the container.
@@ -156,6 +156,7 @@ export declare class ComponentContainer extends EventEmitter {
      * Set's the components title
      */
     setTitle(title: string): void;
+    setTitleRenderer(renderer: Tab.TitleRenderer | undefined): void;
     /** @internal */
     setTab(tab: Tab): void;
     /** @internal */
@@ -176,24 +177,12 @@ export declare class ComponentContainer extends EventEmitter {
     exitStackMaximised(): void;
     /** @internal */
     drag(): void;
-    /**
-     * Sets the container's size. Called by the container's component item.
-     * To instead set the size programmatically from within the component itself,
-     * use the public setSize method
-     * @param width - in px
-     * @param height - in px
-     * @param force - set even if no change
-     * @internal
-     */
-    setSizeToNodeSize(width: number, height: number, force: boolean): void;
     /** @internal */
     notifyVirtualRectingRequired(): void;
     /** @internal */
     private notifyVirtualZIndexChangeRequired;
     /** @internal */
     private updateElementPositionPropertyFromBoundComponent;
-    /** @internal */
-    private addVirtualSizedContainerToLayoutManager;
     /** @internal */
     private checkShownFromZeroDimensions;
     /** @internal */
@@ -204,16 +193,14 @@ export declare class ComponentContainer extends EventEmitter {
     private releaseComponent;
 }
 /** @public @deprecated use {@link ComponentContainer} */
-export declare type ItemContainer = ComponentContainer;
+export type ItemContainer = ComponentContainer;
 /** @public */
 export declare namespace ComponentContainer {
+    type Handle = unknown;
     type Component = unknown;
-    interface BindableComponent {
-        component: Component;
-        virtual: boolean;
-    }
     type StateRequestEventHandler = (this: void) => JsonValue | undefined;
     type VirtualRectingRequiredEvent = (this: void, container: ComponentContainer, width: number, height: number) => void;
+    type NotifyResizeHandler = (this: void, container: ComponentContainer, left: number, top: number, width: number, height: number) => void;
     type VirtualVisibilityChangeRequiredEvent = (this: void, container: ComponentContainer, visible: boolean) => void;
     type VirtualZIndexChangeRequiredEvent = (this: void, container: ComponentContainer, logicalZIndex: LogicalZIndex, defaultZIndex: string) => void;
     /** @internal */

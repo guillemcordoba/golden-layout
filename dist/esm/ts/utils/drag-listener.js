@@ -1,7 +1,8 @@
 import { EventEmitter } from './event-emitter';
+import { enableIFramePointerEvents } from './utils';
 /** @internal */
 export class DragListener extends EventEmitter {
-    constructor(_eElement, extraAllowableChildTargets) {
+    constructor(_eElement) {
         super();
         this._eElement = _eElement;
         this._pointerTracking = false;
@@ -9,7 +10,6 @@ export class DragListener extends EventEmitter {
         this._pointerMoveEventListener = (ev) => this.onPointerMove(ev);
         this._pointerUpEventListener = (ev) => this.onPointerUp(ev);
         this._timeout = undefined;
-        this._allowableTargets = [_eElement, ...extraAllowableChildTargets];
         this._oDocument = document;
         this._eBody = document.body;
         /**
@@ -40,10 +40,16 @@ export class DragListener extends EventEmitter {
         this.processDragStop(undefined);
     }
     onPointerDown(oEvent) {
-        if (this._allowableTargets.includes(oEvent.target) && oEvent.isPrimary) {
-            const coordinates = this.getPointerCoordinates(oEvent);
-            this.processPointerDown(coordinates);
+        for (let target = oEvent.target;; target = target.parentNode) {
+            if (!(target instanceof HTMLElement))
+                return;
+            const draggable = target.getAttribute('draggable');
+            if (draggable === 'true')
+                break;
+            if (draggable !== null)
+                return;
         }
+        this.processPointerDown(this.getPointerCoordinates(oEvent));
     }
     processPointerDown(coordinates) {
         this._nOriginalX = coordinates.x;
@@ -84,16 +90,15 @@ export class DragListener extends EventEmitter {
         this.processDragStop(oEvent);
     }
     processDragStop(dragEvent) {
-        var _a;
         if (this._timeout !== undefined) {
             clearTimeout(this._timeout);
             this._timeout = undefined;
         }
         this.checkRemovePointerTrackingEventListeners();
         if (this._dragging === true) {
-            this._eBody.classList.remove("lm_dragging" /* Dragging */);
-            this._eElement.classList.remove("lm_dragging" /* Dragging */);
-            (_a = this._oDocument.querySelector('iframe')) === null || _a === void 0 ? void 0 : _a.style.setProperty('pointer-events', '');
+            this._eBody.classList.remove("lm_dragging" /* DomConstants.ClassName.Dragging */);
+            this._eElement.classList.remove("lm_dragging" /* DomConstants.ClassName.Dragging */);
+            enableIFramePointerEvents(true);
             this._dragging = false;
             this.emit('dragStop', dragEvent);
         }
@@ -106,15 +111,14 @@ export class DragListener extends EventEmitter {
         }
     }
     startDrag() {
-        var _a;
         if (this._timeout !== undefined) {
             clearTimeout(this._timeout);
             this._timeout = undefined;
         }
         this._dragging = true;
-        this._eBody.classList.add("lm_dragging" /* Dragging */);
-        this._eElement.classList.add("lm_dragging" /* Dragging */);
-        (_a = this._oDocument.querySelector('iframe')) === null || _a === void 0 ? void 0 : _a.style.setProperty('pointer-events', 'none');
+        this._eBody.classList.add("lm_dragging" /* DomConstants.ClassName.Dragging */);
+        this._eElement.classList.add("lm_dragging" /* DomConstants.ClassName.Dragging */);
+        enableIFramePointerEvents(false);
         this.emit('dragStart', this._nOriginalX, this._nOriginalY);
     }
     getPointerCoordinates(event) {

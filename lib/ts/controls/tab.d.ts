@@ -1,4 +1,5 @@
 import { ComponentItem } from '../items/component-item';
+import { ComponentContainer } from '../container/component-container';
 import { LayoutManager } from '../layout-manager';
 import { DragListener } from '../utils/drag-listener';
 /**
@@ -27,19 +28,20 @@ export declare class Tab {
     /** @internal */
     private _isActive;
     /** @internal */
-    private readonly _tabClickListener;
-    /** @internal */
     private readonly _tabTouchStartListener;
     /** @internal */
     private readonly _closeClickListener;
     /** @internal */
     private readonly _closeTouchStartListener;
     /** @internal */
+    private readonly _dragStartListenerOld;
+    /** @internal */
     private readonly _dragStartListener;
     /** @internal */
     private readonly _contentItemDestroyListener;
     /** @internal */
     private readonly _tabTitleChangedListener;
+    readonly tabClickListener: (ev: MouseEvent) => void;
     get isActive(): boolean;
     get componentItem(): ComponentItem;
     /** @deprecated use {@link (Tab:class).componentItem} */
@@ -82,11 +84,12 @@ export declare class Tab {
     /** @internal */
     setFocused(): void;
     /**
-     * Callback for the DragListener
+     * Old callback for the DragListener
      * @param x - The tabs absolute x position
      * @param y - The tabs absolute y position
      * @internal
      */
+    private onDragStartOld;
     private onDragStart;
     /** @internal */
     private onContentItemDestroy;
@@ -120,6 +123,12 @@ export declare class Tab {
 }
 /** @public */
 export declare namespace Tab {
+    enum RenderFlags {
+        DropdownActive = 1,
+        InDropdownMenu = 2,
+        IsActiveTab = 4
+    }
+    type TitleRenderer = (component: ComponentContainer, target: HTMLElement, availableWidth: number, flags: RenderFlags) => void;
     /** @internal */
     type CloseEvent = (componentItem: ComponentItem) => void;
     /** @internal */

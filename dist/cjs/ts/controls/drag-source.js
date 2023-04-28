@@ -21,29 +21,20 @@ class DragSource {
     /** @internal */
     _element, 
     /** @internal */
-    _extraAllowableChildTargets, 
-    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
     _componentTypeOrFtn, 
     /** @internal @deprecated remove in version 3 */
     _componentState, 
     /** @internal @deprecated remove in version 3 */
-    _title, 
-    /** @internal @deprecated remove in version 3 */
-    _id, 
-    /** @internal */
-    _rootContainer) {
+    _title) {
         this._layoutManager = _layoutManager;
         this._element = _element;
-        this._extraAllowableChildTargets = _extraAllowableChildTargets;
         this._componentTypeOrFtn = _componentTypeOrFtn;
         this._componentState = _componentState;
         this._title = _title;
-        this._id = _id;
-        this._rootContainer = _rootContainer;
         this._dragListener = null;
-        this._dummyGroundContainer = document.createElement("div");
-        const dummyRootItemConfig = resolved_config_1.ResolvedRowOrColumnItemConfig.createDefault("row");
-        this._dummyGroundContentItem = new ground_item_1.GroundItem(this._layoutManager, dummyRootItemConfig, this._dummyGroundContainer);
+        this._dummyGroundContainer = document.createElement('div');
+        const dummyRootItemConfig = resolved_config_1.ResolvedRowOrColumnItemConfig.createDefault('row');
+        this._dummyGroundContentItem = new ground_item_1.GroundItem(this._layoutManager, dummyRootItemConfig, this._dummyGroundContainer, null);
         this.createDragListener();
     }
     /**
@@ -59,9 +50,9 @@ class DragSource {
      */
     createDragListener() {
         this.removeDragListener();
-        this._dragListener = new drag_listener_1.DragListener(this._element, this._extraAllowableChildTargets);
-        this._dragListener.on("dragStart", (x, y) => this.onDragStart(x, y));
-        this._dragListener.on("dragStop", () => this.onDragStop());
+        this._dragListener = new drag_listener_1.DragListener(this._element);
+        this._dragListener.on('dragStart', (x, y) => this.onDragStart(x, y));
+        this._dragListener.on('dragStop', () => this.onDragStop());
     }
     /**
      * Callback for the DragListener's dragStart event
@@ -72,7 +63,7 @@ class DragSource {
      */
     onDragStart(x, y) {
         var _a;
-        const type = "component";
+        const type = 'component';
         let dragSourceItemConfig;
         if (typeof this._componentTypeOrFtn === "function") {
             const ftnDragSourceItemConfig = this._componentTypeOrFtn();
@@ -95,7 +86,6 @@ class DragSource {
                 componentState: this._componentState,
                 componentType: this._componentTypeOrFtn,
                 title: this._title,
-                id: this._id,
             };
         }
         // Create a dummy ContentItem only for drag purposes
@@ -106,17 +96,10 @@ class DragSource {
         const componentItem = new component_item_1.ComponentItem(this._layoutManager, resolvedItemConfig, this._dummyGroundContentItem);
         this._dummyGroundContentItem.contentItems.push(componentItem);
         if (this._dragListener === null) {
-            throw new internal_error_1.UnexpectedNullError("DSODSD66746");
+            throw new internal_error_1.UnexpectedNullError('DSODSD66746');
         }
         else {
-            const dragProxy = new drag_proxy_1.DragProxy(x, y, this._dragListener, this._layoutManager, componentItem, this._dummyGroundContentItem, this._rootContainer);
-            const transitionIndicator = this._layoutManager.transitionIndicator;
-            if (transitionIndicator === null) {
-                throw new internal_error_1.UnexpectedNullError("DSODST66746");
-            }
-            else {
-                transitionIndicator.transitionElements(this._element, dragProxy.element);
-            }
+            new drag_proxy_1.DragProxy(x, y, this._dragListener, this._layoutManager, componentItem, this._dummyGroundContentItem);
         }
     }
     /** @internal */

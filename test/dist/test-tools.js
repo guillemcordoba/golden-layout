@@ -2,7 +2,7 @@ import { GoldenLayout } from '../..';
 export default class TestTools {
     static createLayout(config) {
         const myLayout = new GoldenLayout();
-        myLayout.registerComponentFactoryFunction(this.TEST_COMPONENT_NAME, TestTools.createTestComponent);
+        myLayout.registerComponent(this.TEST_COMPONENT_NAME, TestTools.createTestComponent);
         myLayout.loadLayout(config);
         expect(myLayout.isInitialised).toBeTrue();
         return myLayout;
@@ -11,9 +11,8 @@ export default class TestTools {
         if (state === undefined) {
             const span = document.createElement('span');
             span.innerText = 'that worked';
-            container.element.appendChild;
         }
-        else if (state) {
+        else if (state && container.element) {
             const html = state.html;
             if (html) {
                 container.element.outerHTML = html;

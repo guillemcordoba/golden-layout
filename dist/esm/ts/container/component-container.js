@@ -1,10 +1,29 @@
 import { ComponentItemConfig, ItemConfig } from '../config/config';
 import { AssertError, UnexpectedNullError } from '../errors/internal-error';
 import { EventEmitter } from '../utils/event-emitter';
+import { setElementDisplayVisibility } from '../utils/utils';
 import { LogicalZIndex, LogicalZIndexToDefaultMap } from '../utils/types';
 import { deepExtend, setElementHeight, setElementWidth } from '../utils/utils';
 /** @public */
 export class ComponentContainer extends EventEmitter {
+    get width() { return this._width; }
+    get height() { return this._height; }
+    get parent() { return this._parent; }
+    /** @internal @deprecated use {@link (ComponentContainer:class).componentType} */
+    get componentName() { return this._componentType; }
+    get componentType() { return this._componentType; }
+    get handle() { return this._handle; }
+    get virtual() { return this._element === undefined; }
+    get tab() { return this._tab; }
+    get title() { return this._parent.title; }
+    get layoutManager() { return this._layoutManager; }
+    get isHidden() { return !this._visible; }
+    get visible() { return this._visible; }
+    get state() { return this._state; }
+    /** Return the initial component state */
+    get initialState() { return this._initialState; }
+    /** The inner DOM element where the container's content is intended to live in */
+    get element() { return this._element; }
     /** @internal */
     constructor(
     /** @internal */
@@ -13,8 +32,6 @@ export class ComponentContainer extends EventEmitter {
     _parent, 
     /** @internal */
     _layoutManager, 
-    /** @internal */
-    _element, 
     /** @internal */
     _updateItemConfigEvent, 
     /** @internal */
@@ -29,7 +46,6 @@ export class ComponentContainer extends EventEmitter {
         this._config = _config;
         this._parent = _parent;
         this._layoutManager = _layoutManager;
-        this._element = _element;
         this._updateItemConfigEvent = _updateItemConfigEvent;
         this._showEvent = _showEvent;
         this._hideEvent = _hideEvent;
@@ -37,6 +53,13 @@ export class ComponentContainer extends EventEmitter {
         this._blurEvent = _blurEvent;
         /** @internal */
         this._stackMaximised = false;
+        this._element = _layoutManager.createComponentElement(_config, this);
+        if (this._element) {
+            this._element.classList.add("lm_component" /* DomConstants.ClassName.Component */);
+            const content = this._element.querySelector(".lm_content");
+            this.contentElement = content instanceof HTMLElement ? content
+                : this._element;
+        }
         this._width = 0;
         this._height = 0;
         this._visible = true;
@@ -45,27 +68,9 @@ export class ComponentContainer extends EventEmitter {
         this._isClosable = _config.isClosable;
         this._initialState = _config.componentState;
         this._state = this._initialState;
-        this._boundComponent = this.layoutManager.bindComponent(this, _config);
-        this.updateElementPositionPropertyFromBoundComponent();
+        this._handle = this.layoutManager.bindComponent(this, _config);
+        //FIXME:this.updateElementPositionPropertyFromBoundComponent();
     }
-    get width() { return this._width; }
-    get height() { return this._height; }
-    get parent() { return this._parent; }
-    /** @internal @deprecated use {@link (ComponentContainer:class).componentType} */
-    get componentName() { return this._componentType; }
-    get componentType() { return this._componentType; }
-    get virtual() { return this._boundComponent.virtual; }
-    get component() { return this._boundComponent.component; }
-    get tab() { return this._tab; }
-    get title() { return this._parent.title; }
-    get layoutManager() { return this._layoutManager; }
-    get isHidden() { return !this._visible; }
-    get visible() { return this._visible; }
-    get state() { return this._state; }
-    /** Return the initial component state */
-    get initialState() { return this._initialState; }
-    /** The inner DOM element where the container's content is intended to live in */
-    get element() { return this._element; }
     /** @internal */
     destroy() {
         this.releaseComponent();
@@ -152,7 +157,7 @@ export class ComponentContainer extends EventEmitter {
                             ancestorItemContentItem.size += delta;
                         }
                     }
-                    ancestorItem.updateSize(false);
+                    ancestorItem.updateSize();
                     return true;
                 }
             }
@@ -171,6 +176,7 @@ export class ComponentContainer extends EventEmitter {
     }
     /** Replaces component without affecting layout */
     replaceComponent(itemConfig) {
+        var _a, _b, _c, _d;
         this.releaseComponent();
         if (!ItemConfig.isComponent(itemConfig)) {
             throw new Error('ReplaceComponent not passed a component ItemConfig');
@@ -181,23 +187,21 @@ export class ComponentContainer extends EventEmitter {
             this._state = this._initialState;
             this._componentType = config.componentType;
             this._updateItemConfigEvent(config);
-            this._boundComponent = this.layoutManager.bindComponent(this, config);
+            this._handle = this.layoutManager.bindComponent(this, config);
             this.updateElementPositionPropertyFromBoundComponent();
-            if (this._boundComponent.virtual) {
-                if (this.virtualVisibilityChangeRequiredEvent !== undefined) {
-                    this.virtualVisibilityChangeRequiredEvent(this, this._visible);
-                }
-                if (this.virtualRectingRequiredEvent !== undefined) {
-                    this._layoutManager.fireBeforeVirtualRectingEvent(1);
-                    try {
-                        this.virtualRectingRequiredEvent(this, this._width, this._height);
-                    }
-                    finally {
-                        this._layoutManager.fireAfterVirtualRectingEvent();
-                    }
-                }
-                this.setBaseLogicalZIndex();
+            if (this.virtualVisibilityChangeRequiredEvent !== undefined) {
+                this.virtualVisibilityChangeRequiredEvent(this, this._visible);
             }
+            if (this.virtualRectingRequiredEvent !== undefined) {
+                (_b = (_a = this._layoutManager).beforeVirtualRectingEvent) === null || _b === void 0 ? void 0 : _b.call(_a, 1);
+                try {
+                    this.virtualRectingRequiredEvent(this, this._width, this._height);
+                }
+                finally {
+                    (_d = (_c = this._layoutManager).afterVirtualRectingEvent) === null || _d === void 0 ? void 0 : _d.call(_c);
+                }
+            }
+            this.setBaseLogicalZIndex();
             this.emit('stateChanged');
         }
     }
@@ -231,6 +235,9 @@ export class ComponentContainer extends EventEmitter {
     setTitle(title) {
         this._parent.setTitle(title);
     }
+    setTitleRenderer(renderer) {
+        this._parent.setTitleRenderer(renderer);
+    }
     /** @internal */
     setTab(tab) {
         this._tab = tab;
@@ -238,11 +245,11 @@ export class ComponentContainer extends EventEmitter {
     }
     /** @internal */
     setVisibility(value) {
-        if (this._boundComponent.virtual) {
-            if (this.virtualVisibilityChangeRequiredEvent !== undefined) {
-                this.virtualVisibilityChangeRequiredEvent(this, value);
-            }
+        if (this.virtualVisibilityChangeRequiredEvent !== undefined) {
+            this.virtualVisibilityChangeRequiredEvent(this, value);
         }
+        if (this._element)
+            setElementDisplayVisibility(this._element, value);
         if (value) {
             if (!this._visible) {
                 this._visible = true;
@@ -251,14 +258,14 @@ export class ComponentContainer extends EventEmitter {
                 }
                 else {
                     this._isShownWithZeroDimensions = false;
-                    this.setSizeToNodeSize(this._width, this._height, true);
+                    this.parent.updateNodeSize();
                     this.emitShow();
                 }
             }
             else {
                 if (this._isShownWithZeroDimensions && (this._height !== 0 || this._width !== 0)) {
                     this._isShownWithZeroDimensions = false;
-                    this.setSizeToNodeSize(this._width, this._height, true);
+                    this.parent.updateNodeSize();
                     this.emitShow();
                 }
             }
@@ -288,8 +295,10 @@ export class ComponentContainer extends EventEmitter {
     enterDragMode(width, height) {
         this._width = width;
         this._height = height;
-        setElementWidth(this._element, width);
-        setElementHeight(this._element, height);
+        if (this._element) {
+            setElementWidth(this._element, width);
+            setElementHeight(this._element, height);
+        }
         this.setLogicalZIndex(LogicalZIndex.drag);
         this.drag();
     }
@@ -309,46 +318,29 @@ export class ComponentContainer extends EventEmitter {
     }
     /** @internal */
     drag() {
-        if (this._boundComponent.virtual) {
-            if (this.virtualRectingRequiredEvent !== undefined) {
-                this._layoutManager.fireBeforeVirtualRectingEvent(1);
-                try {
-                    this.virtualRectingRequiredEvent(this, this._width, this._height);
-                }
-                finally {
-                    this._layoutManager.fireAfterVirtualRectingEvent();
-                }
+        var _a, _b, _c, _d;
+        if (this.virtualRectingRequiredEvent !== undefined) {
+            (_b = (_a = this._layoutManager).beforeVirtualRectingEvent) === null || _b === void 0 ? void 0 : _b.call(_a, 1);
+            try {
+                this.virtualRectingRequiredEvent(this, this._width, this._height);
             }
-        }
-    }
-    /**
-     * Sets the container's size. Called by the container's component item.
-     * To instead set the size programmatically from within the component itself,
-     * use the public setSize method
-     * @param width - in px
-     * @param height - in px
-     * @param force - set even if no change
-     * @internal
-     */
-    setSizeToNodeSize(width, height, force) {
-        if (width !== this._width || height !== this._height || force) {
-            this._width = width;
-            this._height = height;
-            setElementWidth(this._element, width);
-            setElementHeight(this._element, height);
-            if (this._boundComponent.virtual) {
-                this.addVirtualSizedContainerToLayoutManager();
-            }
-            else {
-                this.emit('resize');
-                this.checkShownFromZeroDimensions();
+            finally {
+                (_d = (_c = this._layoutManager).afterVirtualRectingEvent) === null || _d === void 0 ? void 0 : _d.call(_c);
             }
         }
     }
     /** @internal */
     notifyVirtualRectingRequired() {
-        if (this.virtualRectingRequiredEvent !== undefined) {
-            this.virtualRectingRequiredEvent(this, this._width, this._height);
+        if (this.virtualRectingRequiredEvent !== undefined
+            || this.notifyResize) {
+            if (this.virtualRectingRequiredEvent)
+                this.virtualRectingRequiredEvent(this, this._width, this._height);
+            const element = this.parent.element;
+            //let left = 0, top = 0, width = 0, height = 0;
+            if (this.notifyResize && element) {
+                const bounds = element.getBoundingClientRect();
+                this.notifyResize(this, bounds.left, bounds.top, bounds.width, bounds.height);
+            }
             this.emit('resize');
             this.checkShownFromZeroDimensions();
         }
@@ -363,21 +355,13 @@ export class ComponentContainer extends EventEmitter {
     }
     /** @internal */
     updateElementPositionPropertyFromBoundComponent() {
-        if (this._boundComponent.virtual) {
-            this._element.style.position = 'static';
-        }
-        else {
-            this._element.style.position = ''; // set it back to attribute value
-        }
-    }
-    /** @internal */
-    addVirtualSizedContainerToLayoutManager() {
-        this._layoutManager.beginVirtualSizedContainerAdding();
-        try {
-            this._layoutManager.addVirtualSizedContainer(this);
-        }
-        finally {
-            this._layoutManager.endVirtualSizedContainerAdding();
+        if (this._element) {
+            if (this.virtual) {
+                this._element.style.position = 'static';
+            }
+            else {
+                this._element.style.position = ''; // set it back to attribute value
+            }
         }
     }
     /** @internal */
@@ -401,8 +385,8 @@ export class ComponentContainer extends EventEmitter {
         if (this._stackMaximised) {
             this.exitStackMaximised();
         }
-        this.emit('beforeComponentRelease', this._boundComponent.component);
-        this.layoutManager.unbindComponent(this, this._boundComponent.virtual, this._boundComponent.component);
+        this.emit('beforeComponentRelease', this._handle);
+        this.layoutManager.unbindComponent(this, this._handle);
     }
 }
 //# sourceMappingURL=component-container.js.map

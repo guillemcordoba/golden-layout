@@ -7,7 +7,6 @@ const browser_popout_1 = require("./controls/browser-popout");
 const drag_proxy_1 = require("./controls/drag-proxy");
 const drag_source_1 = require("./controls/drag-source");
 const drop_target_indicator_1 = require("./controls/drop-target-indicator");
-const transition_indicator_1 = require("./controls/transition-indicator");
 const external_error_1 = require("./errors/external-error");
 const internal_error_1 = require("./errors/internal-error");
 const component_item_1 = require("./items/component-item");
@@ -21,15 +20,65 @@ const event_hub_1 = require("./utils/event-hub");
 const i18n_strings_1 = require("./utils/i18n-strings");
 const types_1 = require("./utils/types");
 const utils_1 = require("./utils/utils");
+var DragState;
+(function (DragState) {
+    DragState[DragState["NotDragging"] = 0] = "NotDragging";
+    DragState[DragState["DroppedInThisWindow"] = 1] = "DroppedInThisWindow";
+    DragState[DragState["DroppedElsewhere"] = 2] = "DroppedElsewhere";
+    DragState[DragState["CurrentlyDragging"] = 3] = "CurrentlyDragging";
+})(DragState || (DragState = {}));
 /**
  * The main class that will be exposed as GoldenLayout.
  */
 /** @public */
 class LayoutManager extends event_emitter_1.EventEmitter {
+    enterOrLeaveSomeWindow(entering) {
+        this.inSomeWindow = entering;
+        if (!entering) {
+            this._lastDragLeaveTime = Date.now();
+        }
+    }
+    get container() { return this._containerElement; }
+    get isInitialised() { return this._isInitialised; }
+    /** @internal */
+    get groundItem() { return this._groundItem; }
+    /** @internal @deprecated use {@link (LayoutManager:class).groundItem} instead */
+    get root() { return this._groundItem; }
+    get openPopouts() { return this._openPopouts; }
+    /** @internal */
+    get dropTargetIndicator() { return this._dropTargetIndicator; }
+    get width() { return this._width; }
+    get height() { return this._height; }
     /**
-     * @param container - A Dom HTML element. Defaults to body
-     * @internal
+     * Retrieves the {@link (EventHub:class)} instance associated with this layout manager.
+     * This can be used to propagate events between the windows
+     * @public
      */
+    get eventHub() { return this._eventHub; }
+    get rootItem() {
+        if (this._groundItem === undefined) {
+            throw new Error('Cannot access rootItem before init');
+        }
+        else {
+            const groundContentItems = this._groundItem.contentItems;
+            if (groundContentItems.length === 0) {
+                return undefined;
+            }
+            else {
+                return this._groundItem.contentItems[0];
+            }
+        }
+    }
+    get focusedComponentItem() { return this._focusedComponentItem; }
+    /** @internal */
+    get tabDropPlaceholder() { return this._tabDropPlaceholder; }
+    get maximisedStack() { return this._maximisedStack; }
+    /** @deprecated indicates deprecated constructor use */
+    get deprecatedConstructor() { return !this.isSubWindow && this._constructorOrSubWindowLayoutConfig !== undefined; }
+    /**
+    * @param container - A Dom HTML element. Defaults to body
+    * @internal
+    */
     constructor(parameters) {
         super();
         /** Whether the layout will be automatically be resized to container whenever the container's size is changed
@@ -53,9 +102,11 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         /** @internal */
         this._dropTargetIndicator = null;
         /** @internal */
-        this._transitionIndicator = null;
+        this._itemAreas = null;
+        this._dragState = DragState.NotDragging;
+        this._lastDragLeaveTime = 0;
         /** @internal */
-        this._itemAreas = [];
+        this._dragEnterCount = 0;
         /** @internal */
         this._maximisePlaceholder = LayoutManager.createMaximisePlaceElement(document);
         /** @internal */
@@ -77,8 +128,6 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         /** @internal */
         this._virtualSizedContainerAddingBeginCount = 0;
         /** @internal */
-        this._sizeInvalidationBeginCount = 0;
-        /** @internal */
         this._resizeObserver = new ResizeObserver(() => this.handleContainerResize());
         /** @internal @deprecated to be removed in version 3 */
         this._windowBeforeUnloadListener = () => this.onBeforeUnload();
@@ -86,82 +135,39 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         this._windowBeforeUnloadListening = false;
         /** @internal */
         this._maximisedStackBeforeDestroyedListener = (ev) => this.cleanupBeforeMaximisedStackDestroyed(ev);
+        this._area = null;
+        this._lastValidArea = null;
+        this._actionsOnDragEnd = [];
+        this.popoutClickHandler = () => false;
+        this._removeItem = undefined;
+        // May be set by client code.
+        this.inSomeWindow = false;
+        this.delayedDragEndFunction = undefined;
+        this.createComponentElement = (config, component) => {
+            var _a, _b;
+            let parent = ((_a = this.groundItem) === null || _a === void 0 ? void 0 : _a.element) || document.body;
+            const contentElement = document.createElement('div');
+            let componentElement = contentElement;
+            if ((_b = this.layoutConfig.settings.copyForDragImage) !== null && _b !== void 0 ? _b : this.layoutConfig.settings.useDragAndDrop) {
+                componentElement = document.createElement('div');
+                parent.appendChild(componentElement);
+                parent = componentElement;
+            }
+            parent.appendChild(contentElement);
+            contentElement.classList.add("lm_content" /* DomConstants.ClassName.Content */);
+            return componentElement;
+        };
         this.isSubWindow = parameters.isSubWindow;
-        this._constructorOrSubWindowLayoutConfig =
-            parameters.constructorOrSubWindowLayoutConfig;
+        this._constructorOrSubWindowLayoutConfig = parameters.constructorOrSubWindowLayoutConfig;
         i18n_strings_1.I18nStrings.checkInitialise();
         config_minifier_1.ConfigMinifier.checkInitialise();
         if (parameters.containerElement !== undefined) {
             this._containerElement = parameters.containerElement;
         }
-    }
-    get container() {
-        return this._containerElement;
-    }
-    get isInitialised() {
-        return this._isInitialised;
-    }
-    /** @internal */
-    get groundItem() {
-        return this._groundItem;
-    }
-    /** @internal @deprecated use {@link (LayoutManager:class).groundItem} instead */
-    get root() {
-        return this._groundItem;
-    }
-    get openPopouts() {
-        return this._openPopouts;
-    }
-    /** @internal */
-    get dropTargetIndicator() {
-        return this._dropTargetIndicator;
-    }
-    /** @internal @deprecated To be removed */
-    get transitionIndicator() {
-        return this._transitionIndicator;
-    }
-    get width() {
-        return this._width;
-    }
-    get height() {
-        return this._height;
-    }
-    /**
-     * Retrieves the {@link (EventHub:class)} instance associated with this layout manager.
-     * This can be used to propagate events between the windows
-     * @public
-     */
-    get eventHub() {
-        return this._eventHub;
-    }
-    get rootItem() {
-        if (this._groundItem === undefined) {
-            throw new Error("Cannot access rootItem before init");
+        if (parameters.containerPosition !== undefined) {
+            this._containerPosition = parameters.containerPosition;
         }
-        else {
-            const groundContentItems = this._groundItem.contentItems;
-            if (groundContentItems.length === 0) {
-                return undefined;
-            }
-            else {
-                return this._groundItem.contentItems[0];
-            }
-        }
-    }
-    get focusedComponentItem() {
-        return this._focusedComponentItem;
-    }
-    /** @internal */
-    get tabDropPlaceholder() {
-        return this._tabDropPlaceholder;
-    }
-    get maximisedStack() {
-        return this._maximisedStack;
-    }
-    /** @deprecated indicates deprecated constructor use */
-    get deprecatedConstructor() {
-        return (!this.isSubWindow &&
-            this._constructorOrSubWindowLayoutConfig !== undefined);
+        this.containerWidthAndHeight = () => (0, utils_1.getElementWidthAndHeight)(this._containerElement);
     }
     /**
      * Destroys the LayoutManager instance itself as well as every ContentItem
@@ -174,7 +180,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     destroy() {
         if (this._isInitialised) {
             if (this._windowBeforeUnloadListening) {
-                globalThis.removeEventListener("beforeunload", this._windowBeforeUnloadListener);
+                globalThis.removeEventListener('beforeunload', this._windowBeforeUnloadListener);
                 this._windowBeforeUnloadListening = false;
             }
             if (this.layoutConfig.settings.closePopoutsOnUnload === true) {
@@ -188,9 +194,6 @@ class LayoutManager extends event_emitter_1.EventEmitter {
             this._tabDropPlaceholder.remove();
             if (this._dropTargetIndicator !== null) {
                 this._dropTargetIndicator.destroy();
-            }
-            if (this._transitionIndicator !== null) {
-                this._transitionIndicator.destroy();
             }
             this._eventHub.destroy();
             for (const dragSource of this._dragSources) {
@@ -209,6 +212,16 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     minifyConfig(config) {
         return resolved_config_1.ResolvedLayoutConfig.minifyConfig(config);
     }
+    useNativeDragAndDrop() { return this.layoutConfig.settings.useDragAndDrop; }
+    currentlyDragging() { return this._dragState == DragState.CurrentlyDragging; }
+    dragDataMimetype() { return this.layoutConfig.settings.dragDataMimetype; }
+    validDragEvent(e) {
+        var _a;
+        // FIXME. Might be a good idea to check that all componentTypes in the
+        // dataTransfer value are registered types.
+        // That should make it more robust even if dragDataMimetype is the default.
+        return ((_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.types.includes(this.dragDataMimetype())) || false;
+    }
     /**
      * Takes a configuration Object that was previously minified
      * using minifyConfig and returns its original version
@@ -217,26 +230,33 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     unminifyConfig(config) {
         return resolved_config_1.ResolvedLayoutConfig.unminifyConfig(config);
     }
+    _hideTargetIndicator() {
+        const dropTargetIndicator = this.dropTargetIndicator;
+        if (dropTargetIndicator === null) {
+            throw new internal_error_1.UnexpectedNullError('DPOD30011');
+        }
+        else {
+            dropTargetIndicator.hide();
+        }
+    }
     /**
      * Called from GoldenLayout class. Finishes of init
      * @internal
      */
     init() {
         this.setContainer();
-        this._dropTargetIndicator = new drop_target_indicator_1.DropTargetIndicator(this.container);
-        this._transitionIndicator = new transition_indicator_1.TransitionIndicator(this.container);
         this.updateSizeFromContainer();
         let subWindowRootConfig;
         if (this.isSubWindow) {
             if (this._constructorOrSubWindowLayoutConfig === undefined) {
                 // SubWindow LayoutConfig should have been generated by constructor
-                throw new internal_error_1.UnexpectedUndefinedError("LMIU07155");
+                throw new internal_error_1.UnexpectedUndefinedError('LMIU07155');
             }
             else {
                 const root = this._constructorOrSubWindowLayoutConfig.root;
                 if (root === undefined) {
                     // SubWindow LayoutConfig must not be empty
-                    throw new internal_error_1.AssertError("LMIC07156");
+                    throw new internal_error_1.AssertError('LMIC07156');
                 }
                 else {
                     if (config_1.ItemConfig.isComponent(root)) {
@@ -244,7 +264,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     }
                     else {
                         // SubWindow LayoutConfig must have Component as Root
-                        throw new internal_error_1.AssertError("LMIC07157");
+                        throw new internal_error_1.AssertError('LMIC07157');
                     }
                 }
                 const resolvedLayoutConfig = config_1.LayoutConfig.resolve(this._constructorOrSubWindowLayoutConfig);
@@ -262,17 +282,67 @@ class LayoutManager extends event_emitter_1.EventEmitter {
             }
         }
         const layoutConfig = this.layoutConfig;
-        this._groundItem = new ground_item_1.GroundItem(this, layoutConfig.root, this._containerElement);
+        this._groundItem = new ground_item_1.GroundItem(this, layoutConfig.root, this._containerElement, this._containerPosition);
         this._groundItem.init();
+        const element = this._groundItem.element;
+        this._dropTargetIndicator = new drop_target_indicator_1.DropTargetIndicator(element, element.firstChild);
         this.checkLoadedLayoutMaximiseItem();
         this._resizeObserver.observe(this._containerElement);
         this._isInitialised = true;
         this.adjustColumnsResponsive();
-        this.emit("initialised");
+        this.emit('initialised');
         if (subWindowRootConfig !== undefined) {
             // must be SubWindow
             this.loadComponentAsRoot(subWindowRootConfig);
         }
+        const elm = document.body; //this._groundItem.element;
+        if (this.useNativeDragAndDrop()) {
+            elm.addEventListener('dragover', (e) => this.onDragOver(e), true);
+            elm.addEventListener('dragenter', (e) => this.onDragEnter(e), true);
+            elm.addEventListener('dragleave', (e) => this.onDragLeave(e), true);
+            elm.addEventListener('dragend', (e) => {
+                const x = e.screenX, y = e.screenY;
+                if (this._dragState === DragState.CurrentlyDragging) {
+                    this.delayedDragEndFunction = () => {
+                        if (this.delayedDragEndTimer)
+                            clearTimeout(this.delayedDragEndTimer);
+                        this.delayedDragEndTimer = undefined;
+                        this.delayedDragEndFunction = undefined;
+                        this.onDragEnd(x, y);
+                    };
+                    this.delayedDragEndTimer = globalThis.setTimeout(this.delayedDragEndFunction, 100);
+                }
+                else
+                    this.onDragEnd(x, y, e);
+            }, true);
+            elm.addEventListener('drop', (e) => { console.log("drop event"); this.onDrop(e); });
+        }
+    }
+    /**
+    * Sets the target position, highlighting the appropriate area
+    *
+    * @param x - The x position in px
+    * @param y - The y position in px
+    *
+    * @internal
+    */
+    setDropPosition(x, y) {
+        // this._element.style.left = numberToPixels(x);
+        // this._element.style.top = numberToPixels(y);
+        this._area = this.getArea(x, y);
+        if (this._area !== null) {
+            this._lastValidArea = this._area;
+            this._area.contentItem.highlightDropZone(x, y, this._area);
+        }
+    }
+    onDrag(event) {
+        const x = event.pageX;
+        const y = event.pageY;
+        if (this._itemAreas === null)
+            this.calculateItemAreas();
+        if (this._itemAreas === null || this._itemAreas.length === 0)
+            return;
+        this.setDropPosition(x, y);
     }
     /**
      * Loads a new layout
@@ -281,11 +351,11 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     loadLayout(layoutConfig) {
         if (!this.isInitialised) {
             // In case application not correctly using legacy constructor
-            throw new Error("GoldenLayout: Need to call init() if LayoutConfig with defined root passed to constructor");
+            throw new Error('GoldenLayout: Need to call init() if LayoutConfig with defined root passed to constructor');
         }
         else {
             if (this._groundItem === undefined) {
-                throw new internal_error_1.UnexpectedUndefinedError("LMLL11119");
+                throw new internal_error_1.UnexpectedUndefinedError('LMLL11119');
             }
             else {
                 this.createSubWindows(); // still needs to be tested
@@ -304,17 +374,17 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     saveLayout() {
         if (this._isInitialised === false) {
-            throw new Error("Can't create config, layout not yet initialised");
+            throw new Error('Can\'t create config, layout not yet initialised');
         }
         else {
             // if (root !== undefined && !(root instanceof ContentItem)) {
             //     throw new Error('Root must be a ContentItem');
             // }
             /*
-             * Content
-             */
+            * Content
+            */
             if (this._groundItem === undefined) {
-                throw new internal_error_1.UnexpectedUndefinedError("LMTC18244");
+                throw new internal_error_1.UnexpectedUndefinedError('LMTC18244');
             }
             else {
                 const groundContent = this._groundItem.calculateConfigContent();
@@ -326,8 +396,8 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     rootItemConfig = groundContent[0];
                 }
                 /*
-                 * Retrieve config for subwindows
-                 */
+                * Retrieve config for subwindows
+                */
                 this.reconcilePopoutWindows();
                 const openPopouts = [];
                 for (let i = 0; i < this._openPopouts.length; i++) {
@@ -350,7 +420,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     clear() {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMCL11129");
+            throw new internal_error_1.UnexpectedUndefinedError('LMCL11129');
         }
         else {
             this._groundItem.clearRoot();
@@ -372,7 +442,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     newComponent(componentType, componentState, title) {
         const componentItem = this.newComponentAtLocation(componentType, componentState, title);
         if (componentItem === undefined) {
-            throw new internal_error_1.AssertError("LMNC65588");
+            throw new internal_error_1.AssertError('LMNC65588');
         }
         else {
             return componentItem;
@@ -389,7 +459,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     newComponentAtLocation(componentType, componentState, title, locationSelectors) {
         if (this._groundItem === undefined) {
-            throw new Error("Cannot add component before init");
+            throw new Error('Cannot add component before init');
         }
         else {
             const location = this.addComponentAtLocation(componentType, componentState, title, locationSelectors);
@@ -399,7 +469,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
             else {
                 const createdItem = location.parentItem.contentItems[location.index];
                 if (!content_item_1.ContentItem.isComponentItem(createdItem)) {
-                    throw new internal_error_1.AssertError("LMNC992877533");
+                    throw new internal_error_1.AssertError('LMNC992877533');
                 }
                 else {
                     return createdItem;
@@ -417,7 +487,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     addComponent(componentType, componentState, title) {
         const location = this.addComponentAtLocation(componentType, componentState, title);
         if (location === undefined) {
-            throw new internal_error_1.AssertError("LMAC99943");
+            throw new internal_error_1.AssertError('LMAC99943');
         }
         else {
             return location;
@@ -434,7 +504,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     addComponentAtLocation(componentType, componentState, title, locationSelectors) {
         const itemConfig = {
-            type: "component",
+            type: 'component',
             componentType,
             componentState,
             title,
@@ -446,11 +516,11 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      * component is successfully added
      * @param itemConfig - ResolvedItemConfig of child to be added.
      * @returns New ContentItem created.
-     */
+    */
     newItem(itemConfig) {
         const contentItem = this.newItemAtLocation(itemConfig);
         if (contentItem === undefined) {
-            throw new internal_error_1.AssertError("LMNC65588");
+            throw new internal_error_1.AssertError('LMNC65588');
         }
         else {
             return contentItem;
@@ -465,7 +535,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      * @returns New ContentItem created or undefined if no valid location selector was in array. */
     newItemAtLocation(itemConfig, locationSelectors) {
         if (this._groundItem === undefined) {
-            throw new Error("Cannot add component before init");
+            throw new Error('Cannot add component before init');
         }
         else {
             const location = this.addItemAtLocation(itemConfig, locationSelectors);
@@ -486,7 +556,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     addItem(itemConfig) {
         const location = this.addItemAtLocation(itemConfig);
         if (location === undefined) {
-            throw new internal_error_1.AssertError("LMAI99943");
+            throw new internal_error_1.AssertError('LMAI99943');
         }
         else {
             return location;
@@ -501,7 +571,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      * @returns Location of new ContentItem created or undefined if no valid location selector was in array. */
     addItemAtLocation(itemConfig, locationSelectors) {
         if (this._groundItem === undefined) {
-            throw new Error("Cannot add component before init");
+            throw new Error('Cannot add component before init');
         }
         else {
             if (locationSelectors === undefined) {
@@ -535,7 +605,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     }
                     case types_1.ItemType.stack: {
                         if (!config_1.ItemConfig.isComponent(itemConfig)) {
-                            throw Error(i18n_strings_1.i18nStrings[6 /* ItemConfigIsNotTypeComponent */]);
+                            throw Error(i18n_strings_1.i18nStrings[6 /* I18nStringId.ItemConfigIsNotTypeComponent */]);
                         }
                         else {
                             const stack = parentItem;
@@ -544,10 +614,10 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                         }
                     }
                     case types_1.ItemType.component: {
-                        throw new internal_error_1.AssertError("LMAIALC87444602");
+                        throw new internal_error_1.AssertError('LMAIALC87444602');
                     }
                     default:
-                        throw new internal_error_1.UnreachableCaseError("LMAIALU98881733", parentItem.type);
+                        throw new internal_error_1.UnreachableCaseError('LMAIALU98881733', parentItem.type);
                 }
                 if (config_1.ItemConfig.isComponent(itemConfig)) {
                     // see if stack was inserted
@@ -566,10 +636,10 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     /** Loads the specified component ResolvedItemConfig as root.
      * This can be used to display a Component all by itself.  The layout cannot be changed other than having another new layout loaded.
      * Note that, if this layout is saved and reloaded, it will reload with the Component as a child of a Stack.
-     */
+    */
     loadComponentAsRoot(itemConfig) {
         if (this._groundItem === undefined) {
-            throw new Error("Cannot add item before init");
+            throw new Error('Cannot add item before init');
         }
         else {
             this._groundItem.loadComponentAsRoot(itemConfig);
@@ -590,48 +660,34 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         this._height = height;
         if (this._isInitialised === true) {
             if (this._groundItem === undefined) {
-                throw new internal_error_1.UnexpectedUndefinedError("LMUS18881");
+                throw new internal_error_1.UnexpectedUndefinedError('LMUS18881');
             }
             else {
                 this._groundItem.setSize(this._width, this._height);
                 if (this._maximisedStack) {
-                    const { width, height } = (0, utils_1.getElementWidthAndHeight)(this._containerElement);
+                    const { width, height } = this.containerWidthAndHeight();
                     (0, utils_1.setElementWidth)(this._maximisedStack.element, width);
                     (0, utils_1.setElementHeight)(this._maximisedStack.element, height);
-                    this._maximisedStack.updateSize(false);
+                    this._maximisedStack.updateSize();
                 }
                 this.adjustColumnsResponsive();
             }
         }
     }
     /** @internal */
-    beginSizeInvalidation() {
-        this._sizeInvalidationBeginCount++;
-    }
-    /** @internal */
-    endSizeInvalidation() {
-        if (--this._sizeInvalidationBeginCount === 0) {
-            this.updateSizeFromContainer();
-        }
-    }
-    /** @internal */
     updateSizeFromContainer() {
-        const { width, height } = (0, utils_1.getElementWidthAndHeight)(this._containerElement);
+        const { width, height } = this.containerWidthAndHeight();
         this.setSize(width, height);
     }
     /**
      * Update the size of the root ContentItem.  This will update the size of all contentItems in the tree
-     * @param force - In some cases the size is not updated if it has not changed. In this case, events
-     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
-     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
-     * relevant events need to be fired.
      */
-    updateRootSize(force = false) {
+    updateRootSize() {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMURS28881");
+            throw new internal_error_1.UnexpectedUndefinedError('LMURS28881');
         }
         else {
-            this._groundItem.updateSize(force);
+            this._groundItem.updateSize();
         }
     }
     /** @public */
@@ -649,8 +705,8 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      * @internal
      */
     createContentItem(config, parent) {
-        if (typeof config.type !== "string") {
-            throw new external_error_1.ConfigurationError("Missing parameter 'type'", JSON.stringify(config));
+        if (typeof config.type !== 'string') {
+            throw new external_error_1.ConfigurationError('Missing parameter \'type\'', JSON.stringify(config));
         }
         /**
          * We add an additional stack around every component that's not within a stack anyways.
@@ -684,7 +740,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     }
     findFirstComponentItemById(id) {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMFFCIBI82446");
+            return undefined;
         }
         else {
             return this.findFirstContentItemTypeByIdRecursive(types_1.ItemType.component, id, this._groundItem);
@@ -719,14 +775,12 @@ class LayoutManager extends event_emitter_1.EventEmitter {
          */
         let parent = item.parent;
         let child = item;
-        while (parent !== null &&
-            parent.contentItems.length === 1 &&
-            !parent.isGround) {
+        while (parent !== null && parent.contentItems.length === 1 && !parent.isGround) {
             child = parent;
             parent = parent.parent;
         }
         if (parent === null) {
-            throw new internal_error_1.UnexpectedNullError("LMCPFCI00834");
+            throw new internal_error_1.UnexpectedNullError('LMCPFCI00834');
         }
         else {
             if (indexInParent === undefined) {
@@ -752,7 +806,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
             const itemConfig = item.toConfig();
             item.remove();
             if (!resolved_config_1.ResolvedRootItemConfig.isRootItemConfig(itemConfig)) {
-                throw new Error(`${i18n_strings_1.i18nStrings[0 /* PopoutCannotBeCreatedWithGroundItemConfig */]}`);
+                throw new Error(`${i18n_strings_1.i18nStrings[0 /* I18nStringId.PopoutCannotBeCreatedWithGroundItemConfig */]}`);
             }
             else {
                 return this.createPopoutFromItemConfig(itemConfig, window, parentId, indexInParent);
@@ -761,7 +815,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     }
     /** @internal */
     beginVirtualSizedContainerAdding() {
-        if (++this._virtualSizedContainerAddingBeginCount === 0) {
+        if (this._virtualSizedContainerAddingBeginCount++ === 0) {
             this._virtualSizedContainers.length = 0;
         }
     }
@@ -771,29 +825,18 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     }
     /** @internal */
     endVirtualSizedContainerAdding() {
+        var _a, _b;
         if (--this._virtualSizedContainerAddingBeginCount === 0) {
             const count = this._virtualSizedContainers.length;
             if (count > 0) {
-                this.fireBeforeVirtualRectingEvent(count);
+                (_a = this.beforeVirtualRectingEvent) === null || _a === void 0 ? void 0 : _a.call(this, count);
                 for (let i = 0; i < count; i++) {
                     const container = this._virtualSizedContainers[i];
                     container.notifyVirtualRectingRequired();
                 }
-                this.fireAfterVirtualRectingEvent();
+                (_b = this.afterVirtualRectingEvent) === null || _b === void 0 ? void 0 : _b.call(this);
                 this._virtualSizedContainers.length = 0;
             }
-        }
-    }
-    /** @internal */
-    fireBeforeVirtualRectingEvent(count) {
-        if (this.beforeVirtualRectingEvent !== undefined) {
-            this.beforeVirtualRectingEvent(count);
-        }
-    }
-    /** @internal */
-    fireAfterVirtualRectingEvent() {
-        if (this.afterVirtualRectingEvent !== undefined) {
-            this.afterVirtualRectingEvent();
         }
     }
     /** @internal */
@@ -823,12 +866,11 @@ class LayoutManager extends event_emitter_1.EventEmitter {
             height: (_d = configWindow.height) !== null && _d !== void 0 ? _d : 309,
         };
         const browserPopout = new browser_popout_1.BrowserPopout(config, initialWindow, this);
-        browserPopout.on("initialised", () => this.emit("windowOpened", browserPopout));
-        browserPopout.on("closed", () => this.reconcilePopoutWindows());
+        browserPopout.on('initialised', () => this.emit('windowOpened', browserPopout));
+        browserPopout.on('closed', () => this.reconcilePopoutWindows());
         this._openPopouts.push(browserPopout);
-        if (this.layoutConfig.settings.closePopoutsOnUnload &&
-            !this._windowBeforeUnloadListening) {
-            globalThis.addEventListener("beforeunload", this._windowBeforeUnloadListener, { passive: true });
+        if (this.layoutConfig.settings.closePopoutsOnUnload && !this._windowBeforeUnloadListening) {
+            globalThis.addEventListener('beforeunload', this._windowBeforeUnloadListener, { passive: true });
             this._windowBeforeUnloadListening = true;
         }
         return browserPopout;
@@ -843,12 +885,12 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         }
         this._openPopouts.length = 0;
         if (this._windowBeforeUnloadListening) {
-            globalThis.removeEventListener("beforeunload", this._windowBeforeUnloadListener);
+            globalThis.removeEventListener('beforeunload', this._windowBeforeUnloadListener);
             this._windowBeforeUnloadListening = false;
         }
     }
-    newDragSource(element, componentTypeOrItemConfigCallback, componentState, title, id) {
-        const dragSource = new drag_source_1.DragSource(this, element, [], componentTypeOrItemConfigCallback, componentState, title, id, this.container);
+    newDragSource(element, componentTypeOrItemConfigCallback, componentState, title) {
+        const dragSource = new drag_source_1.DragSource(this, element, componentTypeOrItemConfigCallback, componentState, title);
         this._dragSources.push(dragSource);
         return dragSource;
     }
@@ -860,9 +902,209 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         (0, utils_1.removeFromArray)(dragSource, this._dragSources);
         dragSource.destroy();
     }
+    removeElementEventually(element) {
+        if (this.currentlyDragging()) {
+            element.style.opacity = '0';
+            this._actionsOnDragEnd.push((cancel) => {
+                if (cancel)
+                    element.style.opacity = '';
+                else
+                    element.remove();
+            });
+        }
+        else {
+            element.remove();
+        }
+    }
+    deferIfDragging(action) {
+        if (this.currentlyDragging())
+            this._actionsOnDragEnd.push(action);
+        else
+            action(false);
+    }
+    doDeferredActions(cancel) {
+        for (const action of this._actionsOnDragEnd) {
+            action(cancel);
+        }
+        this._actionsOnDragEnd.length = 0;
+    }
     /** @internal */
-    startComponentDrag(x, y, dragListener, componentItem, stack) {
-        new drag_proxy_1.DragProxy(x, y, dragListener, this, componentItem, stack, this.container);
+    startComponentDragOld(x, y, dragListener, componentItem, stack) {
+        if (this.createDragProxy) {
+            this.createDragProxy(componentItem, x, y);
+            // return;
+        }
+        new drag_proxy_1.DragProxy(x, y, dragListener, this, componentItem, stack);
+    }
+    /** @internal */
+    startComponentDrag(ev, componentItem) {
+        var _a;
+        this._dragState = DragState.CurrentlyDragging;
+        this._draggedComponentItem = componentItem;
+        const data = { config: componentItem.toConfig() };
+        if (ev instanceof DragEvent && ev.dataTransfer) {
+            const jdata = JSON.stringify(data);
+            ev.dataTransfer.setData(this.dragDataMimetype(), jdata);
+        }
+        // Make drag-image
+        const tabElement = componentItem.tab.element;
+        //tabElement.style.visibility="visible";
+        const stack = componentItem.parent;
+        const isActiveTab = stack.getActiveComponentItem() === componentItem;
+        const headerElement = stack.header.element;
+        //headerElement.style.visibility="hidden";
+        const tabClone = tabElement.cloneNode(true);
+        const tabsContainer = document.createElement('section');
+        tabsContainer.classList.add("lm_tabs" /* DomConstants.ClassName.Tabs */);
+        tabsContainer.appendChild(tabClone);
+        const headerClone = document.createElement('section');
+        headerClone.classList.add("lm_header" /* DomConstants.ClassName.Header */);
+        headerClone.appendChild(tabsContainer);
+        let image;
+        const element = componentItem.container.element;
+        const contentElement = componentItem.container.contentElement;
+        // usually same as effective copyForDragImage - see createComponentElement
+        const useFreshDragImage = !element || element === contentElement;
+        if (useFreshDragImage) {
+            image = document.createElement('section');
+            image.classList.add("lm_dragImage" /* DomConstants.ClassName.DragImage */);
+            const inner = document.createElement('div');
+            inner.classList.add("lm_dragImageInner" /* DomConstants.ClassName.DragImageInner */);
+            image.appendChild(headerClone);
+            image.appendChild(inner);
+            document.body.appendChild(image);
+            const stackBounds = stack.element.getBoundingClientRect();
+            image.style.top = `${stackBounds.top}px`;
+            image.style.left = `${stackBounds.left}px`;
+            image.style.width = `${stackBounds.width}px`;
+            image.style.height = `${stackBounds.height}px`;
+            inner.style.left = "0px";
+            inner.style.right = "0px";
+            inner.style.height = `${stackBounds.height - tabsContainer.clientHeight}px`;
+            inner.style.top = `${tabsContainer.clientHeight}px`;
+            inner.style.bottom = "0px";
+        }
+        else {
+            image = element;
+            image.insertBefore(headerClone, image.firstChild);
+        }
+        headerClone.style.background = "transparent";
+        headerClone.style.position = "absolute";
+        headerClone.style.top = "0px";
+        if (!isActiveTab) {
+            for (const sibling of stack.contentItems) {
+                if (sibling !== componentItem)
+                    sibling.element.style.opacity = '0';
+            }
+        }
+        const oldOpacity = image.style.opacity;
+        //Ideally we'd like to have the drag image be partially transparent.
+        //That is the default on Firefox, so we're OK.
+        //The following works on GtkWebKit and presumably Safari
+        //THE FOLLOWING SEEMS TO BE NEEDED IF !useFreshDragImage
+        //(ON Chrome/Electron/Qt AND WebKit BUT NOT Firefox).
+        image.style.opacity = "0.6";
+        //However, it semi-breaks Firefox, making it too transparent.
+        //It also seems to have no effect on Chrome/Electron.
+        //Maybe this needs to be a browser-dependent setting.  FIXME.
+        //The offset from the mouse pointer is wrong on GtkWebKit:
+        //- It seems to ignore the offset and just center the image over
+        //- the mouse cursor. FIXME.
+        //Perhaps scale the image if it is really large. FIXME.
+        const etarget = ev.target;
+        const dX = ev.offsetX + etarget.offsetLeft;
+        const dY = ev.offsetY + etarget.offsetTop;
+        tabsContainer.style.marginLeft = `${ev.target.offsetLeft}px`;
+        (_a = ev.dataTransfer) === null || _a === void 0 ? void 0 : _a.setDragImage(image, dX, dY);
+        this.emit('dragstart', ev, componentItem);
+        (0, utils_1.enableIFramePointerEvents)(false);
+        // We need to visibly remove the componentItem during dragging.
+        // However, this needs to happen at a later 'tick' than setDragImage,
+        // at least if !useFreshDragImage.
+        this._removeItem = () => {
+            var _a;
+            if (!this._removeItem)
+                return;
+            this._removeItem = undefined;
+            // Set 'ignoring' property so calculateItemAreas works.
+            // The latter is called from onDragEnter, which may happen
+            // before the requestAnimationFrame action.
+            for (let item = componentItem;;) {
+                const parent = item.parent;
+                if (!parent)
+                    break;
+                if (item.contentItems.length >= 2) {
+                    break;
+                }
+                if (item === componentItem || item.isStack) {
+                    item.ignoring = true;
+                    parent.ignoringChild = true;
+                }
+                if (parent.isGround)
+                    break;
+                item = parent;
+            }
+            // Take the lm_item out of the layout (set position to absolute),
+            // so remaining elements can be re-positioned.
+            // Whle doing so, add a dashed border (at the old position)
+            // as a visual feedbakc.
+            const ielement = componentItem.element;
+            const oparent = stack.element.offsetParent;
+            const draggingWholeStack = stack.contentItems.length <= 1;
+            // FUTURE: draggingWholeStack should also be set if dragging
+            // an enture stack as a unit.
+            if (this.layoutConfig.settings.showOldPositionWhenDragging
+                && stack.parent && oparent //&& stack.parent.isGround
+                && ielement.style.position === '') {
+                const stackBounds = stack.element.getBoundingClientRect();
+                const parentBounds = oparent.getBoundingClientRect();
+                stack.element.classList.add("lm_drag_old_position");
+                stack.element.style.zIndex = '4';
+                if (draggingWholeStack) {
+                    const sstyle = stack.element.style;
+                    sstyle.top = `${stackBounds.top - parentBounds.top}px`;
+                    sstyle.left = `${stackBounds.left - parentBounds.left}px`;
+                    sstyle.width = `${stackBounds.width - 2}px`;
+                    sstyle.height = `${stackBounds.height - 2}px`;
+                    sstyle.position = 'absolute';
+                }
+                this._actionsOnDragEnd.push((cancel) => {
+                    stack.element.classList.remove("lm_drag_old_position");
+                    stack.element.style.zIndex = '';
+                    if (draggingWholeStack) {
+                        const sstyle = stack.element.style;
+                        sstyle.top = '';
+                        sstyle.left = '';
+                        sstyle.width = '';
+                        sstyle.height = '';
+                        sstyle.position = '';
+                    }
+                });
+            }
+            headerClone.remove();
+            if (!isActiveTab) {
+                for (const sibling of stack.contentItems) {
+                    if (sibling !== componentItem)
+                        sibling.element.style.opacity = '';
+                }
+            }
+            tabElement.style.visibility = '';
+            headerElement.style.visibility = '';
+            if (useFreshDragImage)
+                image.remove();
+            else
+                image.style.opacity = oldOpacity;
+            (_a = componentItem.parent) === null || _a === void 0 ? void 0 : _a.removeChild(componentItem, true);
+            const container = componentItem.container;
+            if (container.visible) {
+                container.setVisibility(false);
+                this._actionsOnDragEnd.push((cancel) => {
+                    container.setVisibility(true);
+                });
+            }
+            console.log("after removeChild");
+        };
+        window.requestAnimationFrame(this._removeItem);
     }
     /**
      * Programmatically focuses an item. This focuses the specified component item
@@ -924,18 +1166,14 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     /** @internal */
     createContentItemFromConfig(config, parent) {
         switch (config.type) {
-            case types_1.ItemType.ground:
-                throw new internal_error_1.AssertError("LMCCIFC68871");
-            case types_1.ItemType.row:
-                return new row_or_column_1.RowOrColumn(false, this, config, parent);
-            case types_1.ItemType.column:
-                return new row_or_column_1.RowOrColumn(true, this, config, parent);
-            case types_1.ItemType.stack:
-                return new stack_1.Stack(this, config, parent);
+            case types_1.ItemType.ground: throw new internal_error_1.AssertError('LMCCIFC68871');
+            case types_1.ItemType.row: return new row_or_column_1.RowOrColumn(false, this, config, parent);
+            case types_1.ItemType.column: return new row_or_column_1.RowOrColumn(true, this, config, parent);
+            case types_1.ItemType.stack: return new stack_1.Stack(this, config, parent);
             case types_1.ItemType.component:
                 return new component_item_1.ComponentItem(this, config, parent);
             default:
-                throw new internal_error_1.UnreachableCaseError("CCC913564", config.type, "Invalid Config Item type specified");
+                throw new internal_error_1.UnreachableCaseError('CCC913564', config.type, 'Invalid Config Item type specified');
         }
     }
     /**
@@ -1001,9 +1239,8 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     // }
     /** @internal */
     cleanupBeforeMaximisedStackDestroyed(event) {
-        if (this._maximisedStack !== null &&
-            this._maximisedStack === event.target) {
-            this._maximisedStack.off("beforeItemDestroyed", this._maximisedStackBeforeDestroyedListener);
+        if (this._maximisedStack !== null && this._maximisedStack === event.target) {
+            this._maximisedStack.off('beforeItemDestroyed', this._maximisedStackBeforeDestroyedListener);
             this._maximisedStack = undefined;
         }
     }
@@ -1026,8 +1263,11 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     getArea(x, y) {
         let matchingArea = null;
         let smallestSurface = Infinity;
-        for (let i = 0; i < this._itemAreas.length; i++) {
-            const area = this._itemAreas[i];
+        if (this._itemAreas === null)
+            this.calculateItemAreas();
+        const itemAreas = this._itemAreas;
+        for (let i = 0; i < itemAreas.length; i++) {
+            const area = itemAreas[i];
             if (x >= area.x1 &&
                 x < area.x2 && // x2 is not included in area
                 y >= area.y1 &&
@@ -1051,14 +1291,14 @@ class LayoutManager extends event_emitter_1.EventEmitter {
          */
         const groundItem = this._groundItem;
         if (groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMCIAR44365");
+            throw new internal_error_1.UnexpectedUndefinedError('LMCIAR44365');
         }
         else {
             if (allContentItems.length === 1) {
                 // No root ContentItem (just Ground ContentItem)
                 const groundArea = groundItem.getElementArea();
                 if (groundArea === null) {
-                    throw new internal_error_1.UnexpectedNullError("LMCIARA44365");
+                    throw new internal_error_1.UnexpectedNullError('LMCIARA44365');
                 }
                 else {
                     this._itemAreas = [groundArea];
@@ -1066,7 +1306,8 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                 return;
             }
             else {
-                if (groundItem.contentItems[0].isStack) {
+                if (allContentItems[1].isStack) {
+                    // No rows/columns (except ones we're ignoring).
                     // if root is Stack, then split stack and sides of Layout are same, so skip sides
                     this._itemAreas = [];
                 }
@@ -1085,12 +1326,11 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                             this._itemAreas.push(area);
                             const stackContentAreaDimensions = stack.contentAreaDimensions;
                             if (stackContentAreaDimensions === undefined) {
-                                throw new internal_error_1.UnexpectedUndefinedError("LMCIASC45599");
+                                throw new internal_error_1.UnexpectedUndefinedError('LMCIASC45599');
                             }
                             else {
                                 const highlightArea = stackContentAreaDimensions.header.highlightArea;
-                                const surface = (highlightArea.x2 - highlightArea.x1) *
-                                    (highlightArea.y2 - highlightArea.y1);
+                                const surface = (highlightArea.x2 - highlightArea.x1) * (highlightArea.y2 - highlightArea.y1);
                                 const header = {
                                     x1: highlightArea.x1,
                                     x2: highlightArea.x2,
@@ -1106,6 +1346,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                 }
             }
         }
+        console.log("l-m calculateItemAreas: " + this._itemAreas.length + " areas");
     }
     /**
      * Called as part of loading a new layout (including initial init()).
@@ -1114,7 +1355,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     checkLoadedLayoutMaximiseItem() {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMCLLMI43432");
+            throw new internal_error_1.UnexpectedUndefinedError('LMCLLMI43432');
         }
         else {
             const configMaximisedItems = this._groundItem.getConfigMaximisedItems();
@@ -1123,14 +1364,14 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                 if (content_item_1.ContentItem.isComponentItem(item)) {
                     const stack = item.parent;
                     if (stack === null) {
-                        throw new internal_error_1.UnexpectedNullError("LMXLLMI69999");
+                        throw new internal_error_1.UnexpectedNullError('LMXLLMI69999');
                     }
                     else {
                         item = stack;
                     }
                 }
                 if (!content_item_1.ContentItem.isStack(item)) {
-                    throw new internal_error_1.AssertError("LMCLLMI19993");
+                    throw new internal_error_1.AssertError('LMCLLMI19993');
                 }
                 else {
                     item.maximise();
@@ -1141,42 +1382,42 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     /** @internal */
     processMaximiseStack(stack) {
         this._maximisedStack = stack;
-        stack.on("beforeItemDestroyed", this._maximisedStackBeforeDestroyedListener);
-        stack.element.classList.add("lm_maximised" /* Maximised */);
-        stack.element.insertAdjacentElement("afterend", this._maximisePlaceholder);
+        stack.on('beforeItemDestroyed', this._maximisedStackBeforeDestroyedListener);
+        stack.element.classList.add("lm_maximised" /* DomConstants.ClassName.Maximised */);
+        stack.element.insertAdjacentElement('afterend', this._maximisePlaceholder);
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMMXI19993");
+            throw new internal_error_1.UnexpectedUndefinedError('LMMXI19993');
         }
         else {
             this._groundItem.element.prepend(stack.element);
-            const { width, height } = (0, utils_1.getElementWidthAndHeight)(this._containerElement);
+            const { width, height } = this.containerWidthAndHeight();
             (0, utils_1.setElementWidth)(stack.element, width);
             (0, utils_1.setElementHeight)(stack.element, height);
-            stack.updateSize(true);
+            stack.updateSize();
             stack.focusActiveContentItem();
-            this._maximisedStack.emit("maximised");
-            this.emit("stateChanged");
+            this._maximisedStack.emit('maximised');
+            this.emit('stateChanged');
         }
     }
     /** @internal */
     processMinimiseMaximisedStack() {
         if (this._maximisedStack === undefined) {
-            throw new internal_error_1.AssertError("LMMMS74422");
+            throw new internal_error_1.AssertError('LMMMS74422');
         }
         else {
             const stack = this._maximisedStack;
             if (stack.parent === null) {
-                throw new internal_error_1.UnexpectedNullError("LMMI13668");
+                throw new internal_error_1.UnexpectedNullError('LMMI13668');
             }
             else {
-                stack.element.classList.remove("lm_maximised" /* Maximised */);
-                this._maximisePlaceholder.insertAdjacentElement("afterend", stack.element);
+                stack.element.classList.remove("lm_maximised" /* DomConstants.ClassName.Maximised */);
+                this._maximisePlaceholder.insertAdjacentElement('afterend', stack.element);
                 this._maximisePlaceholder.remove();
-                this.updateRootSize(true);
+                stack.parent.updateSize();
                 this._maximisedStack = undefined;
-                stack.off("beforeItemDestroyed", this._maximisedStackBeforeDestroyedListener);
-                stack.emit("minimised");
-                this.emit("stateChanged");
+                stack.off('beforeItemDestroyed', this._maximisedStackBeforeDestroyedListener);
+                stack.emit('minimised');
+                this.emit('stateChanged');
             }
         }
     }
@@ -1193,12 +1434,12 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                 openPopouts.push(this._openPopouts[i]);
             }
             else {
-                this.emit("windowClosed", this._openPopouts[i]);
+                this.emit('windowClosed', this._openPopouts[i]);
             }
         }
         if (this._openPopouts.length !== openPopouts.length) {
             this._openPopouts = openPopouts;
-            this.emit("stateChanged");
+            this.emit('stateChanged');
         }
     }
     /**
@@ -1208,7 +1449,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     getAllContentItems() {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMGACI13130");
+            throw new internal_error_1.UnexpectedUndefinedError('LMGACI13130');
         }
         else {
             return this._groundItem.getAllContentItems();
@@ -1245,8 +1486,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         if (this._resizeTimeoutId === undefined) {
             this._resizeTimeoutId = setTimeout(() => {
                 this._resizeTimeoutId = undefined;
-                this.beginSizeInvalidation();
-                this.endSizeInvalidation();
+                this.updateSizeFromContainer();
             }, this.resizeDebounceInterval);
         }
     }
@@ -1264,17 +1504,18 @@ class LayoutManager extends event_emitter_1.EventEmitter {
         var _a;
         const bodyElement = document.body;
         const containerElement = (_a = this._containerElement) !== null && _a !== void 0 ? _a : bodyElement;
-        if (containerElement === bodyElement) {
+        if (containerElement === bodyElement
+            && bodyElement.firstElementChild === null) {
             this.resizeWithContainerAutomatically = true;
             const documentElement = document.documentElement;
-            documentElement.style.height = "100%";
-            documentElement.style.margin = "0";
-            documentElement.style.padding = "0";
-            documentElement.style.overflow = "clip";
-            bodyElement.style.height = "100%";
-            bodyElement.style.margin = "0";
-            bodyElement.style.padding = "0";
-            bodyElement.style.overflow = "clip";
+            documentElement.style.height = '100%';
+            documentElement.style.margin = '0';
+            documentElement.style.padding = '0';
+            documentElement.style.overflow = 'clip';
+            bodyElement.style.height = '100%';
+            bodyElement.style.margin = '0';
+            bodyElement.style.padding = '0';
+            bodyElement.style.overflow = 'clip';
         }
         this._containerElement = containerElement;
     }
@@ -1293,7 +1534,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     adjustColumnsResponsive() {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMACR20883");
+            throw new internal_error_1.UnexpectedUndefinedError('LMACR20883');
         }
         else {
             this._firstLoad = false;
@@ -1303,7 +1544,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                 this._groundItem.contentItems.length > 0 &&
                 this._groundItem.contentItems[0].isRow) {
                 if (this._groundItem === undefined || this._width === null) {
-                    throw new internal_error_1.UnexpectedUndefinedError("LMACR77412");
+                    throw new internal_error_1.UnexpectedUndefinedError('LMACR77412');
                 }
                 else {
                     // If there is only one column, do nothing.
@@ -1327,7 +1568,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                             const rootContentItem = this._groundItem.contentItems[0];
                             const allStacks = this.getAllStacks();
                             if (allStacks.length === 0) {
-                                throw new internal_error_1.AssertError("LMACRS77413");
+                                throw new internal_error_1.AssertError('LMACRS77413');
                             }
                             else {
                                 const firstStackContainer = allStacks[0];
@@ -1378,6 +1619,180 @@ class LayoutManager extends event_emitter_1.EventEmitter {
             }
         }
     }
+    onDragEnter(e) {
+        if (this._removeItem)
+            this._removeItem();
+        e.stopPropagation();
+        if (e instanceof DragEvent) {
+            if (e.dataTransfer)
+                e.dataTransfer.dropEffect = 'move';
+            if (!this.validDragEvent(e))
+                return;
+        }
+        if (this._dragEnterCount == 0) {
+            this.emit('drag-enter-window', e);
+            this.calculateItemAreas();
+        }
+        this._dragEnterCount++;
+        e.preventDefault();
+    }
+    onDragLeave(e) {
+        this._lastDragLeaveTime = Date.now();
+        e.stopPropagation();
+        if (e instanceof DragEvent) {
+            if (!this.validDragEvent(e))
+                return;
+        }
+        this._dragEnterCount--;
+        if (this._dragEnterCount <= 0) {
+            this.exitDrag();
+            this.emit('drag-leave-window', e);
+        }
+    }
+    onDragOver(e) {
+        if (e instanceof DragEvent && e.dataTransfer)
+            e.dataTransfer.dropEffect = 'move';
+        const valid = e instanceof DragEvent && this.validDragEvent(e);
+        //console.log("dragover "+(e.target as HTMLElement).getAttribute("class")+" valid:"+valid+" entercount:"+this._dragEnterCount+(e instanceof DragEvent ? (" dropEffect:"+e.dataTransfer?.dropEffect):""));
+        //      drag-listener.onPointerMove -> emit('drag', ...)
+        this.onDrag(e);
+        if (valid && this._area)
+            e.preventDefault(); // allow drop
+    }
+    onDragEnd(screenX, screenY, event = null) {
+        var _a;
+        console.log("onDragEnd st:" + this._dragState + " timer:" + this.delayedDragEndTimer);
+        // There are four cases we want to handle. Unfortunately, it is not
+        // possible to reliably distinguish them on all browsers we care about.
+        // (1) Normal drop in this window (_dragState == DroppedInThisWindow)
+        // (2) Normal drop in other window (_dragState == DroppedElsewhere)
+        // We can't detect this case unless we get an external notification
+        // (the application calls droppedInOtherWindow). The notification may
+        // happen after the dragend event, which is one reason we wait a bit.
+        // If we don't get the notification in time, we handle it as case (3).
+        // (3) Drop to desktop
+        // (4) Drag was cancelled (by typing Esc).
+        // Try to detact a cancelled drag. There doesn't seem to be a way
+        // to detect this reliably except on Firefox (with mozUserCancelled).
+        // Note that while the specification says dropEffect is supposed
+        // to be "none" if the drag was cancelled, this is unreliable.
+        let cancel = false;
+        if (event instanceof DragEvent
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            && event.dataTransfer.mozUserCancelled)
+            cancel = true;
+        if (this._dragState == DragState.CurrentlyDragging && !cancel) {
+            // Heuristic: If the most recent dragleave was less than 200ms ago,
+            // it was probably caused by a 'cancel' (Escape pressed).
+            const now = Date.now();
+            if (now >= this._lastDragLeaveTime
+                && now - this._lastDragLeaveTime <= 200) {
+                cancel = true;
+            }
+        }
+        const component = this._draggedComponentItem;
+        console.log("onDragEnd now:" + Date.now() + " cancel:" + cancel + " comp:" + component + " cur-drag:" + this._dragState + " in-win:" + this.inSomeWindow + " ecnt:" + this._dragEnterCount);
+        // if this is the only component, and it is dropped to the desktop,
+        // just reuse the window (though move it - if possible).
+        const onlyWindow = (component === null || component === void 0 ? void 0 : component.parent)
+            && component.parent.type === "stack"
+            && component.parent.contentItems.length === 1
+            && component.parent.contentItems[0] === component
+            && ((_a = component.parent.parent) === null || _a === void 0 ? void 0 : _a.type) === "ground";
+        let dropItem = undefined;
+        if (this._draggedComponentItem
+            && this._dragState == DragState.DroppedInThisWindow) {
+            if (onlyWindow)
+                cancel = true;
+            else {
+                dropItem = this._draggedComponentItem;
+            }
+        }
+        const moveWindow = !cancel && !this.inSomeWindow && onlyWindow;
+        if (!(cancel || moveWindow)
+            && component && component.container
+            && this._dragState >= DragState.DroppedElsewhere) {
+            // dropped in other window or to desktop
+            const parent = component.parent;
+            // dragExported callback may need size/position of element,
+            // which it can't get if display is 'none'.
+            if (parent && parent.type === 'stack')
+                parent.element.style.display = '';
+            component.container.emit('dragExported', screenX, screenY, component);
+        }
+        this.doDeferredActions(cancel || !!moveWindow);
+        if (dropItem && this._area)
+            this._area.contentItem.onDrop(dropItem, this._area);
+        //console.log("dragend ev-handler enter-count:"+this._dragEnterCount);
+        // FIXME incorporate drag-listener:processDragStop
+        // See processDragStop in drag-listener
+        //document.body.classList.remove(DomConstants.ClassName.Dragging);
+        // if iframe: clear style.pointer-events
+        (0, utils_1.enableIFramePointerEvents)(true);
+        if (moveWindow && component && component.container) {
+            component.container.emit('dragMoved', screenX, screenY, component);
+        }
+        this._draggedComponentItem = undefined;
+        this._dragState = DragState.NotDragging;
+        this.emit('dragend');
+    }
+    exitDrag() {
+        this._dragEnterCount = 0;
+        this._hideTargetIndicator();
+        //this.dropTargetIndicator.hide();
+        //this._componentItem.exitDragMode();
+    }
+    // A drag was started/ending in another (top-level) window
+    // Needs to be called from application.
+    draggingInOtherWindow(ending) {
+        (0, utils_1.enableIFramePointerEvents)(ending);
+    }
+    // Dropped to another (top-level) window.
+    // Needs to be called from application.
+    droppedInOtherWindow() {
+        this._dragState = DragState.DroppedElsewhere;
+        if (this.delayedDragEndFunction)
+            this.delayedDragEndFunction();
+    }
+    onDrop(e) {
+        var _a;
+        this.emit('drop', e);
+        let data;
+        if (e instanceof DragEvent) {
+            if (e.dataTransfer)
+                e.dataTransfer.dropEffect = "move";
+            const dvalue = (_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData(this.dragDataMimetype());
+            data = dvalue && JSON.parse(dvalue);
+        }
+        else if (this._draggedComponentItem) {
+            data = { config: this._draggedComponentItem.toConfig() };
+        }
+        console.log("onDrop area:" + this._area);
+        // JSON.parse(data);
+        e.preventDefault();
+        this.exitDrag();
+        // FIXME check type
+        // SEE drag-proxy:onDrop
+        //let droppedComponentItem: ComponentItem | undefined;
+        if (this._area !== null) {
+            if (this._draggedComponentItem) {
+                //this.doDeferredActions(false);
+                /*
+                droppedComponentItem = this._draggedComponentItem;
+                this._area.contentItem.onDrop(droppedComponentItem, this._area);
+                (droppedComponentItem.container.component as HTMLElement).style.zIndex = "";
+                */
+            }
+            else {
+                console.log("dropped from different window " + JSON.stringify(data.config));
+                const item = new component_item_1.ComponentItem(this, data.config, this.groundItem);
+                this._area.contentItem.onDrop(item, this._area);
+            }
+        }
+        this._dragState = DragState.DroppedInThisWindow;
+        if (this.delayedDragEndFunction)
+            this.delayedDragEndFunction();
+    }
     /**
      * Finds all the stacks.
      * @returns The found stack containers.
@@ -1385,7 +1800,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
      */
     getAllStacks() {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMFASC52778");
+            throw new internal_error_1.UnexpectedUndefinedError('LMFASC52778');
         }
         else {
             const stacks = [];
@@ -1396,7 +1811,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     /** @internal */
     findFirstContentItemType(type) {
         if (this._groundItem === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError("LMFFCIT82446");
+            throw new internal_error_1.UnexpectedUndefinedError('LMFFCIT82446');
         }
         else {
             return this.findFirstContentItemTypeRecursive(type, this._groundItem);
@@ -1487,7 +1902,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
     findLocation(selector) {
         const selectorIndex = selector.index;
         switch (selector.typeId) {
-            case 0 /* FocusedItem */: {
+            case 0 /* LayoutManager.LocationSelector.TypeId.FocusedItem */: {
                 if (this._focusedComponentItem === undefined) {
                     return undefined;
                 }
@@ -1510,7 +1925,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     }
                 }
             }
-            case 1 /* FocusedStack */: {
+            case 1 /* LayoutManager.LocationSelector.TypeId.FocusedStack */: {
                 if (this._focusedComponentItem === undefined) {
                     return undefined;
                 }
@@ -1519,7 +1934,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     return this.tryCreateLocationFromParentItem(parentItem, selectorIndex);
                 }
             }
-            case 2 /* FirstStack */: {
+            case 2 /* LayoutManager.LocationSelector.TypeId.FirstStack */: {
                 const parentItem = this.findFirstContentItemType(types_1.ItemType.stack);
                 if (parentItem === undefined) {
                     return undefined;
@@ -1528,7 +1943,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     return this.tryCreateLocationFromParentItem(parentItem, selectorIndex);
                 }
             }
-            case 3 /* FirstRowOrColumn */: {
+            case 3 /* LayoutManager.LocationSelector.TypeId.FirstRowOrColumn */: {
                 let parentItem = this.findFirstContentItemType(types_1.ItemType.row);
                 if (parentItem !== undefined) {
                     return this.tryCreateLocationFromParentItem(parentItem, selectorIndex);
@@ -1543,7 +1958,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     }
                 }
             }
-            case 4 /* FirstRow */: {
+            case 4 /* LayoutManager.LocationSelector.TypeId.FirstRow */: {
                 const parentItem = this.findFirstContentItemType(types_1.ItemType.row);
                 if (parentItem === undefined) {
                     return undefined;
@@ -1552,7 +1967,7 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     return this.tryCreateLocationFromParentItem(parentItem, selectorIndex);
                 }
             }
-            case 5 /* FirstColumn */: {
+            case 5 /* LayoutManager.LocationSelector.TypeId.FirstColumn */: {
                 const parentItem = this.findFirstContentItemType(types_1.ItemType.column);
                 if (parentItem === undefined) {
                     return undefined;
@@ -1561,9 +1976,9 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     return this.tryCreateLocationFromParentItem(parentItem, selectorIndex);
                 }
             }
-            case 6 /* Empty */: {
+            case 6 /* LayoutManager.LocationSelector.TypeId.Empty */: {
                 if (this._groundItem === undefined) {
-                    throw new internal_error_1.UnexpectedUndefinedError("LMFLRIF18244");
+                    throw new internal_error_1.UnexpectedUndefinedError('LMFLRIF18244');
                 }
                 else {
                     if (this.rootItem !== undefined) {
@@ -1578,9 +1993,9 @@ class LayoutManager extends event_emitter_1.EventEmitter {
                     }
                 }
             }
-            case 7 /* Root */: {
+            case 7 /* LayoutManager.LocationSelector.TypeId.Root */: {
                 if (this._groundItem === undefined) {
-                    throw new internal_error_1.UnexpectedUndefinedError("LMFLF18244");
+                    throw new internal_error_1.UnexpectedUndefinedError('LMFLF18244');
                 }
                 else {
                     const groundContentItems = this._groundItem.contentItems;
@@ -1621,15 +2036,15 @@ exports.LayoutManager = LayoutManager;
 (function (LayoutManager) {
     /** @internal */
     function createMaximisePlaceElement(document) {
-        const element = document.createElement("div");
-        element.classList.add("lm_maximise_place" /* MaximisePlace */);
+        const element = document.createElement('div');
+        element.classList.add("lm_maximise_place" /* DomConstants.ClassName.MaximisePlace */);
         return element;
     }
     LayoutManager.createMaximisePlaceElement = createMaximisePlaceElement;
     /** @internal */
     function createTabDropPlaceholderElement(document) {
-        const element = document.createElement("div");
-        element.classList.add("lm_drop_tab_placeholder" /* DropTabPlaceholder */);
+        const element = document.createElement('div');
+        element.classList.add("lm_drop_tab_placeholder" /* DomConstants.ClassName.DropTabPlaceholder */);
         return element;
     }
     LayoutManager.createTabDropPlaceholderElement = createTabDropPlaceholderElement;
@@ -1638,20 +2053,20 @@ exports.LayoutManager = LayoutManager;
      * @public
      */
     LayoutManager.defaultLocationSelectors = [
-        { typeId: 1 /* FocusedStack */, index: undefined },
-        { typeId: 2 /* FirstStack */, index: undefined },
-        { typeId: 3 /* FirstRowOrColumn */, index: undefined },
-        { typeId: 7 /* Root */, index: undefined },
+        { typeId: 1 /* LocationSelector.TypeId.FocusedStack */, index: undefined },
+        { typeId: 2 /* LocationSelector.TypeId.FirstStack */, index: undefined },
+        { typeId: 3 /* LocationSelector.TypeId.FirstRowOrColumn */, index: undefined },
+        { typeId: 7 /* LocationSelector.TypeId.Root */, index: undefined },
     ];
     /**
      * LocationSelectors to try to get location next to existing focused item
      * @public
      */
     LayoutManager.afterFocusedItemIfPossibleLocationSelectors = [
-        { typeId: 0 /* FocusedItem */, index: 1 },
-        { typeId: 2 /* FirstStack */, index: undefined },
-        { typeId: 3 /* FirstRowOrColumn */, index: undefined },
-        { typeId: 7 /* Root */, index: undefined },
+        { typeId: 0 /* LocationSelector.TypeId.FocusedItem */, index: 1 },
+        { typeId: 2 /* LocationSelector.TypeId.FirstStack */, index: undefined },
+        { typeId: 3 /* LocationSelector.TypeId.FirstRowOrColumn */, index: undefined },
+        { typeId: 7 /* LocationSelector.TypeId.Root */, index: undefined },
     ];
 })(LayoutManager = exports.LayoutManager || (exports.LayoutManager = {}));
 //# sourceMappingURL=layout-manager.js.map

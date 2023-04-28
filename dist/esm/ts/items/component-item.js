@@ -2,15 +2,29 @@ import { ResolvedComponentItemConfig, ResolvedHeaderedItemConfig } from '../conf
 import { ComponentContainer } from '../container/component-container';
 import { UnexpectedNullError } from '../errors/internal-error';
 import { ItemType } from '../utils/types';
-import { getElementWidthAndHeight, setElementHeight, setElementWidth } from '../utils/utils';
 import { ContentItem } from './content-item';
+import { Stack } from './stack';
+import { numberToPixels } from '../utils/utils';
 /** @public */
 export class ComponentItem extends ContentItem {
+    /** @internal @deprecated use {@link (ComponentItem:class).componentType} */
+    get componentName() { return this._container.componentType; }
+    get componentType() { return this._container.componentType; }
+    get reorderEnabled() { return this._reorderEnabled; }
+    /** @internal */
+    get initialWantMaximise() { return this._initialWantMaximise; }
+    get container() { return this._container; }
+    get parentItem() { return this._parentItem; }
+    get headerConfig() { return this._headerConfig; }
+    get title() { return this._title; }
+    get titleRenderer() { return this._titleRenderer; }
+    get tab() { return this._tab; }
+    get focused() { return this._focused; }
     /** @internal */
     constructor(layoutManager, config, 
     /** @internal */
     _parentItem) {
-        super(layoutManager, config, _parentItem, document.createElement('div'));
+        super(layoutManager, config, _parentItem, ContentItem.createElement());
         this._parentItem = _parentItem;
         /** @internal */
         this._focused = false;
@@ -18,28 +32,22 @@ export class ComponentItem extends ContentItem {
         this._reorderEnabled = config.reorderEnabled;
         this.applyUpdatableConfig(config);
         this._initialWantMaximise = config.maximised;
-        const containerElement = document.createElement('div');
-        containerElement.classList.add("lm_content" /* Content */);
-        this.element.appendChild(containerElement);
-        this._container = new ComponentContainer(config, this, layoutManager, containerElement, (itemConfig) => this.handleUpdateItemConfigEvent(itemConfig), () => this.show(), () => this.hide(), (suppressEvent) => this.focus(suppressEvent), (suppressEvent) => this.blur(suppressEvent));
+        this._container = new ComponentContainer(config, this, layoutManager, (itemConfig) => this.handleUpdateItemConfigEvent(itemConfig), () => this.show(), () => this.hide(), (suppressEvent) => this.focus(suppressEvent), (suppressEvent) => this.blur(suppressEvent));
     }
-    /** @internal @deprecated use {@link (ComponentItem:class).componentType} */
-    get componentName() { return this._container.componentType; }
-    get componentType() { return this._container.componentType; }
-    get reorderEnabled() { return this._reorderEnabled; }
-    /** @internal */
-    get initialWantMaximise() { return this._initialWantMaximise; }
-    get component() { return this._container.component; }
-    get container() { return this._container; }
-    get parentItem() { return this._parentItem; }
-    get headerConfig() { return this._headerConfig; }
-    get title() { return this._title; }
-    get tab() { return this._tab; }
-    get focused() { return this._focused; }
     /** @internal */
     destroy() {
-        this._container.destroy();
-        super.destroy();
+        const element = this.element;
+        if (element)
+            element.style.opacity = '0.1';
+        const wasDragging = this.layoutManager.currentlyDragging();
+        this.layoutManager.deferIfDragging((cancel) => {
+            if (element)
+                element.style.opacity = '';
+            if (!cancel && !wasDragging) {
+                this._container.destroy();
+                super.destroy();
+            }
+        });
     }
     applyUpdatableConfig(config) {
         this.setTitle(config.title);
@@ -77,12 +85,16 @@ export class ComponentItem extends ContentItem {
     // Used by Drag Proxy
     /** @internal */
     enterDragMode(width, height) {
-        setElementWidth(this.element, width);
-        setElementHeight(this.element, height);
+        const style = this.element.style;
+        style.height = `${height}px`;
+        style.width = `${width}px`;
         this._container.enterDragMode(width, height);
     }
     /** @internal */
     exitDragMode() {
+        const style = this.element.style;
+        style.height = '';
+        style.width = '';
         this._container.exitDragMode();
     }
     /** @internal */
@@ -99,12 +111,8 @@ export class ComponentItem extends ContentItem {
         this._container.drag();
     }
     /** @internal */
-    updateSize(force) {
-        this.updateNodeSize(force);
-    }
-    /** @internal */
     init() {
-        this.updateNodeSize(false);
+        this.updateNodeSize();
         super.init();
         this._container.emit('open');
         this.initContentItems();
@@ -120,6 +128,11 @@ export class ComponentItem extends ContentItem {
         this.emit('titleChanged', title);
         this.emit('stateChanged');
     }
+    setTitleRenderer(renderer) {
+        this._titleRenderer = renderer;
+        this.emit('titleChanged', this._title);
+        this.emit('stateChanged');
+    }
     setTab(tab) {
         this._tab = tab;
         this.emit('tab', tab);
@@ -127,12 +140,10 @@ export class ComponentItem extends ContentItem {
     }
     /** @internal */
     hide() {
-        super.hide();
         this._container.setVisibility(false);
     }
     /** @internal */
     show() {
-        super.show();
         this._container.setVisibility(true);
     }
     /**
@@ -175,12 +186,41 @@ export class ComponentItem extends ContentItem {
         this.applyUpdatableConfig(itemConfig);
     }
     /** @internal */
-    updateNodeSize(force) {
-        if (this.element.style.display !== 'none') {
+    updateNodeSize() {
+        // OLD:  this._container.setSizeToNodeSize(width, height, force)
+        const contentInset = this.layoutManager.layoutConfig.dimensions.contentInset;
+        this.element.style.margin = contentInset ? `${contentInset}px` : '';
+        const contentElement = this.container.contentElement;
+        const componentElement = this.container.element;
+        if (contentElement instanceof HTMLElement
+            // && contentElement.style.display !== 'none'
+            && this.parentItem instanceof Stack) {
             // Do not update size of hidden components to prevent unwanted reflows
-            const { width, height } = getElementWidthAndHeight(this.element);
-            this._container.setSizeToNodeSize(width, height, force);
+            const stackElement = this.parentItem.element;
+            let stackBounds;
+            const itemElement = this.element;
+            const itemBounds = itemElement.getBoundingClientRect();
+            const layoutBounds = this.layoutManager.container.getBoundingClientRect();
+            if (componentElement instanceof HTMLElement
+                && contentElement !== componentElement) {
+                stackBounds = stackElement.getBoundingClientRect();
+                componentElement.style.top = numberToPixels(stackBounds.top - layoutBounds.top);
+                componentElement.style.left = numberToPixels(stackBounds.left - layoutBounds.left);
+                componentElement.style.width = numberToPixels(stackBounds.width);
+                componentElement.style.height = numberToPixels(stackBounds.height);
+            }
+            else {
+                stackBounds = layoutBounds;
+            }
+            contentElement.style.position = "absolute";
+            contentElement.style.top = numberToPixels(itemBounds.top - stackBounds.top);
+            contentElement.style.left = numberToPixels(itemBounds.left - stackBounds.left);
+            contentElement.style.width = numberToPixels(itemBounds.width);
+            contentElement.style.height = numberToPixels(itemBounds.height);
         }
+        else
+            console.log('updateNodeSize ignored');
+        this.layoutManager.addVirtualSizedContainer(this.container);
     }
 }
 //# sourceMappingURL=component-item.js.map

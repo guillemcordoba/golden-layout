@@ -1,11 +1,11 @@
 /** @internal */
-export declare type WidthOrHeightPropertyName = 'width' | 'height';
+export type WidthOrHeightPropertyName = 'width' | 'height';
 /** @internal */
 export declare namespace WidthOrHeightPropertyName {
     const width = "width";
     const height = "height";
 }
-/** @internal */
+/** @public */
 export interface WidthAndHeight {
     width: number;
     height: number;
@@ -16,7 +16,7 @@ export interface LeftAndTop {
     top: number;
 }
 /** @public */
-export declare type Side = 'top' | 'left' | 'right' | 'bottom';
+export type Side = 'top' | 'left' | 'right' | 'bottom';
 /** @public */
 export declare namespace Side {
     const top = "top";
@@ -25,7 +25,7 @@ export declare namespace Side {
     const bottom = "bottom";
 }
 /** @public */
-export declare type LogicalZIndex = 'base' | 'drag' | 'stackMaximised';
+export type LogicalZIndex = 'base' | 'drag' | 'stackMaximised';
 /** @public */
 export declare namespace LogicalZIndex {
     const base = "base";
@@ -53,20 +53,20 @@ export interface AreaLinkedRect {
     y2: number;
 }
 /** @public */
-export declare type JsonValue = string | number | boolean | null | Json | object | JsonValueArray;
+export type JsonValue = string | number | boolean | null | Json | object | JsonValueArray;
 /** @public */
 export interface Json {
     [name: string]: JsonValue;
 }
 /** @public */
-export declare type JsonValueArray = Array<JsonValue>;
+export type JsonValueArray = Array<JsonValue>;
 /** @public */
 export declare namespace JsonValue {
     function isJson(value: JsonValue): value is Json;
     function isJsonObject(value: JsonValue): value is Json | object;
 }
 /** @public */
-export declare type ItemType = 'ground' | 'row' | 'column' | 'stack' | 'component';
+export type ItemType = 'ground' | 'row' | 'column' | 'stack' | 'component';
 /** @public */
 export declare namespace ItemType {
     const ground = "ground";
@@ -76,7 +76,7 @@ export declare namespace ItemType {
     const component = "component";
 }
 /** @public */
-export declare type ResponsiveMode = 'none' | 'always' | 'onload';
+export type ResponsiveMode = 'none' | 'always' | 'onload';
 /** @public */
 export declare namespace ResponsiveMode {
     const none = "none";
@@ -87,7 +87,7 @@ export declare namespace ResponsiveMode {
  * Length units which can specify the size of a Component Item
  * @public
  */
-export declare type SizeUnit = 'px' | '%' | 'fr' | 'em';
+export type SizeUnit = 'px' | '%' | 'fr' | 'em';
 /** @public */
 export declare enum SizeUnitEnum {
     Pixel = "px",

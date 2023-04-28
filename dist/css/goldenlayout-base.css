@@ -1,6 +1,19 @@
 .lm_root {
   position: relative;
 }
+.lm_goldenlayout {
+  --lm_border_color: #000000;
+  --lm_drag_old_position_border: 2px tan dashed;
+  --lm_splitter_drag_color: darkcyan;
+}
+.lm_items {
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--lm_border_color);
+}
+.lm_splitter .lm_bg {
+  background-color: var(--lm_border_color);
+}
 .lm_row > .lm_item {
   float: left;
 }
@@ -10,9 +23,13 @@
 }
 .lm_dragging,
 .lm_dragging * {
-  cursor: move !important;
+  cursor: move;
   -webkit-user-select: none;
           user-select: none;
+}
+.lm_splitter:hover .lm_drag_handle,
+.lm_splitter.lm_dragging .lm_drag_handle {
+  background-color: var(--lm_splitter_drag_color);
 }
 .lm_maximised {
   position: absolute;
@@ -25,28 +42,44 @@
 }
 .lm_splitter {
   position: relative;
+  z-index: auto;
+  touch-action: none;
+  background: transparent;
+}
+.lm_splitter .lm_bg {
+  opacity: 1;
+  z-index: -2;
+  position: absolute;
+}
+.lm_splitter .lm_drag_handle {
+  position: absolute;
+  background-clip: content-box;
   z-index: 2;
   touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  box-sizing: content-box;
+}
+.lm_splitter.lm_vertical .lm_bg {
+  width: 100%;
 }
 .lm_splitter.lm_vertical .lm_drag_handle {
   width: 100%;
-  position: absolute;
-  cursor: ns-resize;
-  touch-action: none;
-  -webkit-user-select: none;
-          user-select: none;
+  cursor: row-resize;
 }
 .lm_splitter.lm_horizontal {
   float: left;
   height: 100%;
 }
+.lm_splitter.lm_horizontal .lm_bg {
+  height: 100%;
+}
 .lm_splitter.lm_horizontal .lm_drag_handle {
   height: 100%;
+  cursor: col-resize;
+}
+.lm_component {
   position: absolute;
-  cursor: ew-resize;
-  touch-action: none;
-  -webkit-user-select: none;
-          user-select: none;
 }
 .lm_header {
   overflow: visible;
@@ -54,12 +87,14 @@
   z-index: 1;
   -webkit-user-select: none;
           user-select: none;
+  width: 100%;
 }
 .lm_header [class^=lm_] {
   box-sizing: content-box !important;
 }
 .lm_header .lm_controls {
   position: absolute;
+  top: 0px;
   right: 3px;
   display: flex;
 }
@@ -70,16 +105,12 @@
   height: 18px;
   text-align: center;
 }
-.lm_header .lm_tabs {
-  position: absolute;
-  display: flex;
-}
 .lm_header .lm_tab {
   cursor: pointer;
   float: left;
   height: 14px;
   margin-top: 1px;
-  padding: 0px 10px 5px;
+  padding: 0px 6px 5px;
   padding-right: 25px;
   position: relative;
   touch-action: none;
@@ -97,11 +128,6 @@
   top: 0;
   right: -2px;
 }
-.lm_header .lm_tab .lm_title {
-  display: inline-block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .lm_header .lm_tab .lm_close_tab {
   width: 14px;
   height: 14px;
@@ -110,11 +136,78 @@
   right: 0;
   text-align: center;
 }
+.lm_tabs {
+  display: flex;
+  overflow: hidden;
+}
+.lm_tab .lm_title {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+.lm_header.lm_tight_mode .lm_tabs .lm_tab {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.lm_header.lm_tight_mode .lm_tabs .lm_tab.lm_active {
+  display: inherit;
+  padding-right: 22px;
+}
+.lm_header.lm_tight_mode .lm_tabs .lm_tab.lm_active .lm_close_tab {
+  display: inherit;
+}
+.lm_header.lm_tight_mode .lm_drop_tab_placeholder {
+  padding-right: 70px;
+  margin-right: 0px;
+}
+.lm_header.lm_tight_mode .lm_tabs .lm_tab .lm_close_tab,
+.lm_stack.lm_single .lm_tabs .lm_tab.lm_active .lm_close_tab {
+  display: none;
+}
+.lm_stack.lm_single .lm_header .lm_tabs .lm_tab,
+.lm_stack.lm_single .lm_header .lm_tabs .lm_tab.lm_active {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+div.lm_drag_old_position {
+  box-sizing: border-box;
+}
+div.lm_drag_old_position .lm_header .lm_tab.lm_dragging,
+div.lm_drag_old_position .lm_item {
+  border: var(--lm_drag_old_position_border);
+}
+div.lm_drag_old_position .lm_header .lm_tab.lm_dragging {
+  opacity: 1;
+  background-color: transparent;
+}
+div.lm_drag_old_position.lm_single .lm_header {
+  background-color: transparent;
+}
+div.lm_drag_old_position .lm_header .lm_tab.lm_dragging .lm_title {
+  opacity: 0;
+}
+div.lm_drag_old_position .lm_controls {
+  display: none;
+}
 .lm_stack {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  z-index: auto;
 }
 .lm_stack > .lm_items {
   overflow: hidden;
+  flex-grow: 1;
+  position: relative;
+  z-index: auto;
+}
+.lm_stack > .lm_items .lm_item {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
 }
 .lm_stack.lm_left > .lm_items {
   position: absolute;
@@ -130,6 +223,7 @@
   position: absolute;
   right: 0;
   top: 0;
+  flex-grow: 0;
 }
 .lm_stack.lm_bottom > .lm_items {
   position: absolute;
@@ -226,7 +320,7 @@
 }
 .lm_drop_tab_placeholder {
   float: left;
-  width: 100px;
+  padding-right: 100px;
   visibility: hidden;
 }
 .lm_header .lm_controls .lm_tabdropdown:before {
@@ -246,6 +340,10 @@
   right: 0;
   z-index: 5;
   overflow: hidden;
+}
+.lm_header .lm_tabdropdown_list .lm_title {
+  display: block;
+  padding: 1px;
 }
 .lm_header .lm_tabdropdown_list .lm_tab {
   clear: both;
@@ -276,7 +374,7 @@
 }
 .lm_dropTargetIndicator {
   display: none;
-  position: absolute;
+  position: fixed;
   z-index: 35;
   transition: all 200ms ease;
 }
@@ -316,4 +414,16 @@
 }
 .lm_popin > .lm_icon {
   z-index: 20;
+}
+.lm_dragImage {
+  position: absolute;
+  opacity: 0.8;
+}
+.lm_dragImage section {
+  background-color: transparent;
+}
+.lm_dragImage .lm_dragImageInner {
+  border: solid 2px red;
+  background-color: transparent;
+  position: relative;
 }

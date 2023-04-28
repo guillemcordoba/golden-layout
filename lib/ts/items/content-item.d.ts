@@ -35,6 +35,8 @@ export declare abstract class ContentItem extends EventEmitter {
     private _throttledEvents;
     /** @internal */
     private _isInitialised;
+    ignoring: boolean;
+    ignoringChild: boolean;
     /** @internal */
     size: number;
     /** @internal */
@@ -69,13 +71,14 @@ export declare abstract class ContentItem extends EventEmitter {
     _element: HTMLElement);
     /**
      * Updaters the size of the component and its children, called recursively
-     * @param force - In some cases the size is not updated if it has not changed. In this case, events
-     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
-     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
-     * relevant events need to be fired.
+     * Called whenever the dimensions of this item or one of its parents change
      * @internal
      */
-    abstract updateSize(force: boolean): void;
+    updateSize(): void;
+    /**
+     * @internal
+     */
+    abstract updateNodeSize(): void;
     /**
      * Removes a child node (and its children) from the tree
      * @param contentItem - The child item to remove
@@ -146,7 +149,7 @@ export declare abstract class ContentItem extends EventEmitter {
     /** @internal */
     protected hide(): void;
     /** @internal */
-    protected updateContentItemsSize(force: boolean): void;
+    protected updateContentItemsSize(): void;
     /**
      * creates all content items for this node at initialisation time
      * PLEASE NOTE, please see addChild for adding contentItems at runtime
@@ -187,7 +190,9 @@ export declare namespace ContentItem {
         surface: number;
         contentItem: ContentItem;
     }
+    /** @internal */
+    function createElement(kindClass?: string): HTMLDivElement;
 }
 /** @public @deprecated Use {@link (ContentItem:class)} */
-export declare type AbstractContentItem = ContentItem;
+export type AbstractContentItem = ContentItem;
 //# sourceMappingURL=content-item.d.ts.map

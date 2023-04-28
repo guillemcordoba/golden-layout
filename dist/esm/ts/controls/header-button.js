@@ -1,5 +1,6 @@
 /** @internal */
 export class HeaderButton {
+    get element() { return this._element; }
     constructor(_header, label, cssClass, _pushEvent) {
         this._header = _header;
         this._pushEvent = _pushEvent;
@@ -13,7 +14,6 @@ export class HeaderButton {
         this._element.addEventListener('touchstart', this._touchStartEventListener, { passive: true });
         this._header.controlsContainerElement.appendChild(this._element);
     }
-    get element() { return this._element; }
     destroy() {
         var _a;
         this._element.removeEventListener('click', this._clickEventListener);

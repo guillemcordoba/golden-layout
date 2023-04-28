@@ -14,7 +14,6 @@ export declare class DragProxy extends EventEmitter {
     private readonly _layoutManager;
     private readonly _componentItem;
     private readonly _originalParent;
-    private readonly rootContainer?;
     private _area;
     private _lastValidArea;
     private _minX;
@@ -31,7 +30,7 @@ export declare class DragProxy extends EventEmitter {
      * @param y - The initial y position
      * @internal
      */
-    constructor(x: number, y: number, _dragListener: DragListener, _layoutManager: LayoutManager, _componentItem: ComponentItem, _originalParent: ContentItem, rootContainer?: HTMLElement | undefined);
+    constructor(x: number, y: number, _dragListener: DragListener, _layoutManager: LayoutManager, _componentItem: ComponentItem, _originalParent: ContentItem);
     /** Create Stack-like structure to contain the dragged component */
     private createDragProxyElements;
     private determineMinMaxXY;

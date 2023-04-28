@@ -25,6 +25,8 @@ export declare function getElementWidthAndHeight(element: HTMLElement): WidthAnd
 /** @internal */
 export declare function setElementDisplayVisibility(element: HTMLElement, visible: boolean): void;
 /** @internal */
+export declare function enableIFramePointerEvents(enable: boolean): void;
+/** @internal */
 export declare function ensureElementPositionAbsolute(element: HTMLElement): void;
 /**
  * Replacement for JQuery $.extend(target, obj)

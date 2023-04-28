@@ -121,8 +121,6 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal */
     private readonly _layoutManager;
     /** @internal */
-    private readonly _element;
-    /** @internal */
     private readonly _updateItemConfigEvent;
     /** @internal */
     private readonly _showEvent;
@@ -135,7 +133,7 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal */
     private _componentType;
     /** @internal */
-    private _boundComponent;
+    private _handle;
     /** @internal */
     private _width;
     /** @internal */
@@ -156,8 +154,11 @@ export declare class ComponentContainer extends EventEmitter {
     private _stackMaximised;
     /** @internal */
     private _logicalZIndex;
+    /** @internal */
+    private _element;
     stateRequestEvent: ComponentContainer.StateRequestEventHandler | undefined;
     virtualRectingRequiredEvent: ComponentContainer.VirtualRectingRequiredEvent | undefined;
+    notifyResize: ComponentContainer.NotifyResizeHandler | undefined;
     virtualVisibilityChangeRequiredEvent: ComponentContainer.VirtualVisibilityChangeRequiredEvent | undefined;
     virtualZIndexChangeRequiredEvent: ComponentContainer.VirtualZIndexChangeRequiredEvent | undefined;
     get width(): number;
@@ -166,8 +167,8 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal @deprecated use {@link (ComponentContainer:class).componentType} */
     get componentName(): JsonValue;
     get componentType(): JsonValue;
+    get handle(): ComponentContainer.Handle;
     get virtual(): boolean;
-    get component(): ComponentContainer.Component;
     get tab(): Tab;
     get title(): string;
     get layoutManager(): LayoutManager;
@@ -177,7 +178,8 @@ export declare class ComponentContainer extends EventEmitter {
     /** Return the initial component state */
     get initialState(): JsonValue | undefined;
     /** The inner DOM element where the container's content is intended to live in */
-    get element(): HTMLElement;
+    get element(): HTMLElement | undefined;
+    readonly contentElement: HTMLElement | undefined;
     /** @internal */
     constructor(
     /** @internal */
@@ -186,8 +188,6 @@ export declare class ComponentContainer extends EventEmitter {
     _parent: ComponentItem, 
     /** @internal */
     _layoutManager: LayoutManager, 
-    /** @internal */
-    _element: HTMLElement, 
     /** @internal */
     _updateItemConfigEvent: ComponentContainer.UpdateItemConfigEventHandler, 
     /** @internal */
@@ -201,7 +201,7 @@ export declare class ComponentContainer extends EventEmitter {
     /** @internal */
     destroy(): void;
     /** @deprecated use {@link (ComponentContainer:class).element } */
-    getElement(): HTMLElement;
+    getElement(): HTMLElement | undefined;
     /**
      * Hides the container's component item (and hence, the container) if not already hidden.
      * Emits hide event prior to hiding the container.
@@ -263,6 +263,7 @@ export declare class ComponentContainer extends EventEmitter {
      * Set's the components title
      */
     setTitle(title: string): void;
+    setTitleRenderer(renderer: Tab.TitleRenderer | undefined): void;
     /** @internal */
     setTab(tab: Tab): void;
     /** @internal */
@@ -283,24 +284,12 @@ export declare class ComponentContainer extends EventEmitter {
     exitStackMaximised(): void;
     /** @internal */
     drag(): void;
-    /**
-     * Sets the container's size. Called by the container's component item.
-     * To instead set the size programmatically from within the component itself,
-     * use the public setSize method
-     * @param width - in px
-     * @param height - in px
-     * @param force - set even if no change
-     * @internal
-     */
-    setSizeToNodeSize(width: number, height: number, force: boolean): void;
     /** @internal */
     notifyVirtualRectingRequired(): void;
     /** @internal */
     private notifyVirtualZIndexChangeRequired;
     /** @internal */
     private updateElementPositionPropertyFromBoundComponent;
-    /** @internal */
-    private addVirtualSizedContainerToLayoutManager;
     /** @internal */
     private checkShownFromZeroDimensions;
     /** @internal */
@@ -313,13 +302,11 @@ export declare class ComponentContainer extends EventEmitter {
 
 /** @public */
 export declare namespace ComponentContainer {
+    export type Handle = unknown;
     export type Component = unknown;
-    export interface BindableComponent {
-        component: Component;
-        virtual: boolean;
-    }
     export type StateRequestEventHandler = (this: void) => JsonValue | undefined;
     export type VirtualRectingRequiredEvent = (this: void, container: ComponentContainer, width: number, height: number) => void;
+    export type NotifyResizeHandler = (this: void, container: ComponentContainer, left: number, top: number, width: number, height: number) => void;
     export type VirtualVisibilityChangeRequiredEvent = (this: void, container: ComponentContainer, visible: boolean) => void;
     export type VirtualZIndexChangeRequiredEvent = (this: void, container: ComponentContainer, logicalZIndex: LogicalZIndex, defaultZIndex: string) => void;
     /** @internal */
@@ -351,6 +338,8 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     private _tab;
     /** @internal */
+    private _titleRenderer;
+    /** @internal */
     private _focused;
     /** @internal @deprecated use {@link (ComponentItem:class).componentType} */
     get componentName(): JsonValue;
@@ -358,11 +347,11 @@ export declare class ComponentItem extends ContentItem {
     get reorderEnabled(): boolean;
     /** @internal */
     get initialWantMaximise(): boolean;
-    get component(): ComponentContainer.Component | undefined;
     get container(): ComponentContainer;
     get parentItem(): ComponentParentableItem;
     get headerConfig(): ResolvedHeaderedItemConfig.Header | undefined;
     get title(): string;
+    get titleRenderer(): Tab.TitleRenderer | undefined;
     get tab(): Tab;
     get focused(): boolean;
     /** @internal */
@@ -385,8 +374,6 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     drag(): void;
     /** @internal */
-    updateSize(force: boolean): void;
-    /** @internal */
     init(): void;
     /**
      * Set this component's title
@@ -395,6 +382,7 @@ export declare class ComponentItem extends ContentItem {
      * @param title -
      */
     setTitle(title: string): void;
+    setTitleRenderer(renderer: Tab.TitleRenderer | undefined): void;
     setTab(tab: Tab): void;
     /** @internal */
     hide(): void;
@@ -417,7 +405,7 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     private handleUpdateItemConfigEvent;
     /** @internal */
-    private updateNodeSize;
+    updateNodeSize(): void;
 }
 
 /** @public */
@@ -442,9 +430,7 @@ export declare interface ComponentItemConfig extends HeaderedItemConfig {
     /**
      * The type of the component.
      * `componentType` must be of type `string` if it is registered with any of the following functions:
-     * * {@link (GoldenLayout:class).registerComponent} (deprecated)
-     * * {@link (GoldenLayout:class).registerComponentConstructor}
-     * * {@link (GoldenLayout:class).registerComponentFactoryFunction}
+     * * {@link (GoldenLayout:class).registerComponent}
      */
     componentType: JsonValue;
     /**
@@ -516,6 +502,8 @@ export declare abstract class ContentItem extends EventEmitter {
     private _throttledEvents;
     /** @internal */
     private _isInitialised;
+    ignoring: boolean;
+    ignoringChild: boolean;
     /** @internal */
     size: number;
     /** @internal */
@@ -550,13 +538,14 @@ export declare abstract class ContentItem extends EventEmitter {
     _element: HTMLElement);
     /**
      * Updaters the size of the component and its children, called recursively
-     * @param force - In some cases the size is not updated if it has not changed. In this case, events
-     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
-     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
-     * relevant events need to be fired.
+     * Called whenever the dimensions of this item or one of its parents change
      * @internal
      */
-    abstract updateSize(force: boolean): void;
+    updateSize(): void;
+    /**
+     * @internal
+     */
+    abstract updateNodeSize(): void;
     /**
      * Removes a child node (and its children) from the tree
      * @param contentItem - The child item to remove
@@ -627,7 +616,7 @@ export declare abstract class ContentItem extends EventEmitter {
     /** @internal */
     protected hide(): void;
     /** @internal */
-    protected updateContentItemsSize(force: boolean): void;
+    protected updateContentItemsSize(): void;
     /**
      * creates all content items for this node at initialisation time
      * PLEASE NOTE, please see addChild for adding contentItems at runtime
@@ -669,13 +658,14 @@ export declare namespace ContentItem {
         surface: number;
         contentItem: ContentItem;
     }
+    /** @internal */
+    export function createElement(kindClass?: string): HTMLDivElement;
 }
 
 /** @internal */
 declare class DragListener extends EventEmitter {
     private _eElement;
     private _timeout;
-    private _allowableTargets;
     private _oDocument;
     private _eBody;
     private _nDelay;
@@ -689,7 +679,7 @@ declare class DragListener extends EventEmitter {
     private _pointerDownEventListener;
     private _pointerMoveEventListener;
     private _pointerUpEventListener;
-    constructor(_eElement: HTMLElement, extraAllowableChildTargets: HTMLElement[]);
+    constructor(_eElement: HTMLElement);
     destroy(): void;
     cancelDrag(): void;
     private onPointerDown;
@@ -722,17 +712,11 @@ export declare class DragSource {
     /** @internal */
     private readonly _element;
     /** @internal */
-    private readonly _extraAllowableChildTargets;
-    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
     private _componentTypeOrFtn;
     /** @internal @deprecated remove in version 3 */
     private _componentState;
     /** @internal @deprecated remove in version 3 */
     private _title;
-    /** @internal @deprecated remove in version 3 */
-    private _id;
-    /** @internal */
-    private readonly _rootContainer?;
     /** @internal */
     private _dragListener;
     /** @internal */
@@ -746,17 +730,11 @@ export declare class DragSource {
     /** @internal */
     _element: HTMLElement, 
     /** @internal */
-    _extraAllowableChildTargets: HTMLElement[], 
-    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
-    _componentTypeOrFtn: JsonValue | (() => DragSource.ComponentItemConfig | ComponentItemConfig), 
+    _componentTypeOrFtn: JsonValue | (() => (DragSource.ComponentItemConfig | ComponentItemConfig)), 
     /** @internal @deprecated remove in version 3 */
     _componentState: JsonValue | undefined, 
     /** @internal @deprecated remove in version 3 */
-    _title: string | undefined, 
-    /** @internal @deprecated remove in version 3 */
-    _id: string | undefined, 
-    /** @internal */
-    _rootContainer?: HTMLElement | undefined);
+    _title: string | undefined);
     /**
      * Disposes of the drag listeners so the drag source is not usable any more.
      * @internal
@@ -799,7 +777,7 @@ export declare namespace DragSource {
 /** @internal */
 declare class DropTargetIndicator {
     private _element;
-    constructor(rootContainer?: HTMLElement);
+    constructor(parent?: HTMLElement, before?: Node | null);
     destroy(): void;
     highlightArea(area: AreaLinkedRect, margin: number): void;
     hide(): void;
@@ -879,8 +857,15 @@ export declare namespace EventEmitter {
         "closed": NoParams;
         "destroy": NoParams;
         "drag": DragParams;
+        "dragstart": MouseComponentParams;
+        "dragend": NoParams;
+        "drag-enter-window": MouseEventParams;
+        "drag-leave-window": MouseEventParams;
         "dragStart": DragStartParams;
         "dragStop": DragStopParams;
+        "dragExported": DragMovedParams;
+        "dragMoved": DragMovedParams;
+        "drop": MouseEventParams;
         "hide": NoParams;
         "initialised": NoParams;
         "itemDropped": ComponentItemParam;
@@ -919,6 +904,9 @@ export declare namespace EventEmitter {
     export type DragStartParams = [originalX: number, originalY: number];
     export type DragStopParams = [event: PointerEvent | undefined];
     export type DragParams = [offsetX: number, offsetY: number, event: PointerEvent];
+    export type MouseEventParams = [event: MouseEvent];
+    export type MouseComponentParams = [event: MouseEvent, component: ComponentItem];
+    export type DragMovedParams = [offsetX: number, offsetY: number, component: ComponentItem];
     export type BeforeComponentReleaseParams = [component: unknown];
     export type ClickBubblingEventParam = [ClickBubblingEvent];
     export type TouchStartBubblingEventParam = [TouchStartBubblingEvent];
@@ -1065,15 +1053,11 @@ export declare class GoldenLayout extends VirtualLayout {
     /** @internal */
     private _componentTypesMap;
     /** @internal */
-    private _getComponentConstructorFtn;
+    private _componentTypesDefault;
     /** @internal */
     private _registeredComponentMap;
     /** @internal */
     private _virtuableComponentMap;
-    /** @internal */
-    private _goldenLayoutBoundingClientRect;
-    /** @internal */
-    private _containerVirtualRectingRequiredEventListener;
     /** @internal */
     private _containerVirtualVisibilityChangeRequiredEventListener;
     /** @internal */
@@ -1087,41 +1071,14 @@ export declare class GoldenLayout extends VirtualLayout {
      * if constructor is for a popout window. Make sure bindComponentEventHandler is ready for events.
      */
     constructor(container?: HTMLElement, bindComponentEventHandler?: VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler);
+    constructor(config: LayoutConfig, container?: HTMLElement, position?: Node | null);
     /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
     constructor(config: LayoutConfig, container?: HTMLElement);
     /**
-     * Register a new component type with the layout manager.
-     *
-     * @deprecated See {@link https://stackoverflow.com/questions/40922531/how-to-check-if-a-javascript-function-is-a-constructor}
-     * instead use {@link (GoldenLayout:class).registerComponentConstructor}
-     * or {@link (GoldenLayout:class).registerComponentFactoryFunction}
-     */
-    registerComponent(name: string, componentConstructorOrFactoryFtn: GoldenLayout.ComponentConstructor | GoldenLayout.ComponentFactoryFunction, virtual?: boolean): void;
-    /**
-     * Register a new component type with the layout manager.
-     */
-    registerComponentConstructor(typeName: string, componentConstructor: GoldenLayout.ComponentConstructor, virtual?: boolean): void;
-    /**
      * Register a new component with the layout manager.
      */
-    registerComponentFactoryFunction(typeName: string, componentFactoryFunction: GoldenLayout.ComponentFactoryFunction, virtual?: boolean): void;
-    /**
-     * Register a component function with the layout manager. This function should
-     * return a constructor for a component based on a config.
-     * This function will be called if a component type with the required name is not already registered.
-     * It is recommended that applications use the {@link (VirtualLayout:class).getComponentEvent} and
-     * {@link (VirtualLayout:class).releaseComponentEvent} instead of registering a constructor callback
-     * @deprecated use {@link (GoldenLayout:class).registerGetComponentConstructorCallback}
-     */
-    registerComponentFunction(callback: GoldenLayout.GetComponentConstructorCallback): void;
-    /**
-     * Register a callback closure with the layout manager which supplies a Component Constructor.
-     * This callback should return a constructor for a component based on a config.
-     * This function will be called if a component type with the required name is not already registered.
-     * It is recommended that applications use the {@link (VirtualLayout:class).getComponentEvent} and
-     * {@link (VirtualLayout:class).releaseComponentEvent} instead of registering a constructor callback
-     */
-    registerGetComponentConstructorCallback(callback: GoldenLayout.GetComponentConstructorCallback): void;
+    registerComponent(typeName: string, componentFactoryFunction: GoldenLayout.ComponentFactoryFunction): void;
+    registerComponentDefault(componentFactoryFunction: GoldenLayout.ComponentFactoryFunction): void;
     getRegisteredComponentTypeNames(): string[];
     /**
      * Returns a previously registered component instantiator.  Attempts to utilize registered
@@ -1132,14 +1089,11 @@ export declare class GoldenLayout extends VirtualLayout {
      * @param config - The item config
      * @public
      */
-    getComponentInstantiator(config: ResolvedComponentItemConfig): GoldenLayout.ComponentInstantiator | undefined;
+    getComponentInstantiator(config: ResolvedComponentItemConfig): GoldenLayout.ComponentFactoryFunction | undefined;
     /** @internal */
-    bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.BindableComponent;
+    bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.Handle;
     /** @internal */
-    unbindComponent(container: ComponentContainer, virtual: boolean, component: ComponentContainer.Component | undefined): void;
-    fireBeforeVirtualRectingEvent(count: number): void;
-    /** @internal */
-    private handleContainerVirtualRectingRequiredEvent;
+    unbindComponent(container: ComponentContainer, handle: ComponentContainer.Handle): void;
     /** @internal */
     private handleContainerVirtualVisibilityChangeRequiredEvent;
     /** @internal */
@@ -1151,14 +1105,7 @@ export declare namespace GoldenLayout {
     export interface VirtuableComponent {
         rootHtmlElement: HTMLElement;
     }
-    export type ComponentConstructor = new (container: ComponentContainer, state: JsonValue | undefined, virtual: boolean) => ComponentContainer.Component;
-    export type ComponentFactoryFunction = (container: ComponentContainer, state: JsonValue | undefined, virtual: boolean) => ComponentContainer.Component | undefined;
-    export type GetComponentConstructorCallback = (this: void, config: ResolvedComponentItemConfig) => ComponentConstructor;
-    export interface ComponentInstantiator {
-        constructor: ComponentConstructor | undefined;
-        factoryFunction: ComponentFactoryFunction | undefined;
-        virtual: boolean;
-    }
+    export type ComponentFactoryFunction = (container: ComponentContainer, state: JsonValue | undefined) => ComponentContainer.Handle;
 }
 
 /**
@@ -1170,7 +1117,7 @@ export declare namespace GoldenLayout {
 declare class GroundItem extends ComponentParentableItem {
     private readonly _childElementContainer;
     private readonly _containerElement;
-    constructor(layoutManager: LayoutManager, rootItemConfig: ResolvedRootItemConfig | undefined, containerElement: HTMLElement);
+    constructor(layoutManager: LayoutManager, rootItemConfig: ResolvedRootItemConfig | undefined, containerElement: HTMLElement, containerPosition: Node | null);
     init(): void;
     /**
      * Loads a new Layout
@@ -1194,11 +1141,6 @@ declare class GroundItem extends ComponentParentableItem {
     calculateConfigContent(): ResolvedRootItemConfig[];
     /** @internal */
     setSize(width: number, height: number): void;
-    /**
-     * Adds a Root ContentItem.
-     * Internal only.  To replace Root ContentItem with API, use {@link (LayoutManager:class).updateRootSize}
-     */
-    updateSize(force: boolean): void;
     createSideAreas(): GroundItem.Area[];
     highlightDropZone(x: number, y: number, area: AreaLinkedRect): void;
     onDrop(contentItem: ContentItem, area: GroundItem.Area): void;
@@ -1209,7 +1151,7 @@ declare class GroundItem extends ComponentParentableItem {
     getItemsByPopInParentId(popInParentId: string): ContentItem[];
     toConfig(): ResolvedItemConfig;
     setActiveComponentItem(item: ComponentItem, focus: boolean, suppressFocusEvent: boolean): void;
-    private updateNodeSize;
+    updateNodeSize(): void;
     private deepGetAllContentItems;
     private deepFilterContentItems;
 }
@@ -1231,7 +1173,6 @@ declare namespace GroundItem {
         };
         const oppositeSides: Sides;
     }
-    function createElement(document: Document): HTMLDivElement;
 }
 
 /**
@@ -1313,6 +1254,8 @@ export declare class Header extends EventEmitter {
     private readonly _tabDropdownButton;
     /** @internal */
     private readonly _maximiseButton;
+    /** @internal */
+    private _updateRequested;
     get show(): boolean;
     get side(): Side;
     get leftRightSided(): boolean;
@@ -1347,6 +1290,7 @@ export declare class Header extends EventEmitter {
     _componentFocusEvent: Header.ComponentFocusEvent | undefined, 
     /** @internal */
     _componentDragStartEvent: Header.ComponentDragStartEvent | undefined);
+    layoutDefault(): void;
     /**
      * Destroys the entire header
      * @internal
@@ -1393,6 +1337,7 @@ export declare class Header extends EventEmitter {
      * @internal
      */
     updateTabSizes(): void;
+    availableTabsSize(): number;
     /** @internal */
     private handleTabInitiatedComponentRemoveEvent;
     /** @internal */
@@ -1406,12 +1351,12 @@ export declare class Header extends EventEmitter {
     /** @internal */
     private handleButtonMaximiseToggleEvent;
     /**
-     * Invoked when the header's background is clicked (not it's tabs or controls)
+     * Invoked when the header's background is clicked (not its tabs or controls)
      * @internal
      */
     private onClick;
     /**
-     * Invoked when the header's background is touched (not it's tabs or controls)
+     * Invoked when the header's background is touched (not its tabs or controls)
      * @internal
      */
     private onTouchStart;
@@ -1734,6 +1679,26 @@ export declare namespace LayoutConfig {
          * Default: false
          */
         popInOnClose?: boolean;
+        useDragAndDrop?: boolean;
+        /**
+         * Use component's element for setDragImage, if possible.
+         * Has side-effect of nesting content element inside a component.
+         * Ignored unless useDragAndDrop.
+         */
+        copyForDragImage?: boolean;
+        /**
+         * When dragging an item, indicate the original position.
+         * The default style uses a dashed light-brown outline.
+         * Default: true
+         */
+        showOldPositionWhenDragging?: boolean;
+        dragDataMimetype?: string;
+        /**
+         * Check whether location.search contains a gl-window parameter.
+         * This is used to handle window popin in simple cases.
+         * Default: true
+         */
+        checkGlWindowKey?: boolean;
     }
     export namespace Settings {
         export function resolve(settings: Settings | undefined): ResolvedLayoutConfig.Settings;
@@ -1746,9 +1711,18 @@ export declare namespace LayoutConfig {
          */
         borderWidth?: number;
         /**
-         * Default: 15
+         * Default: 5
          */
         borderGrabWidth?: number;
+        /**
+         * Space to allocate between component wrapper and content element.
+         * This can be used for an 'outline'.
+         * This may affect drag from other window over iframe which may
+         * not trigger depending on the CSS pointer-events setting.
+         * (Uncertain: needs testing/experimentation.)
+         * Default: 0
+         */
+        contentInset?: number;
         /**
          * The minimum height an item can be resized to (in pixel).
          * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemHeight} instead
@@ -1893,6 +1867,8 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     private _containerElement;
     /** @internal */
+    private _containerPosition;
+    /** @internal */
     private _isInitialised;
     /** @internal */
     private _groundItem;
@@ -1901,11 +1877,14 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     private _dropTargetIndicator;
     /** @internal */
-    private _transitionIndicator;
-    /** @internal */
     private _resizeTimeoutId;
     /** @internal */
     private _itemAreas;
+    private _dragState;
+    private _lastDragLeaveTime;
+    private _draggedComponentItem;
+    /** @internal */
+    private _dragEnterCount;
     /** @internal */
     private _maximisedStack;
     /** @internal */
@@ -1931,8 +1910,6 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     private _virtualSizedContainerAddingBeginCount;
     /** @internal */
-    private _sizeInvalidationBeginCount;
-    /** @internal */
     protected _constructorOrSubWindowLayoutConfig: LayoutConfig | undefined;
     /** @internal */
     private _resizeObserver;
@@ -1942,10 +1919,25 @@ export declare abstract class LayoutManager extends EventEmitter {
     private _windowBeforeUnloadListening;
     /** @internal */
     private _maximisedStackBeforeDestroyedListener;
+    private _area;
+    private _lastValidArea;
+    private _actionsOnDragEnd;
+    popoutClickHandler: (item: Stack, ev: Event) => boolean;
+    private _removeItem;
+    inSomeWindow: boolean;
+    private delayedDragEndTimer;
+    private delayedDragEndFunction;
+    createDragProxy: ((item: ComponentItem, x: number, y: number) => void) | undefined;
     readonly isSubWindow: boolean;
     layoutConfig: ResolvedLayoutConfig;
+    /** Return width and height available for root element.
+     * By default size of containerElement - which is usually document.root.
+     * Should be overridden if not 100% of containerElement. */
+    containerWidthAndHeight: () => WidthAndHeight;
     beforeVirtualRectingEvent: LayoutManager.BeforeVirtualRectingEvent | undefined;
     afterVirtualRectingEvent: LayoutManager.AfterVirtualRectingEvent | undefined;
+    createComponentElement: (config: ResolvedComponentItemConfig, component: ComponentContainer) => HTMLElement | undefined;
+    enterOrLeaveSomeWindow(entering: boolean): void;
     get container(): HTMLElement;
     get isInitialised(): boolean;
     /** @internal */
@@ -1955,8 +1947,6 @@ export declare abstract class LayoutManager extends EventEmitter {
     get openPopouts(): BrowserPopout[];
     /** @internal */
     get dropTargetIndicator(): DropTargetIndicator | null;
-    /** @internal @deprecated To be removed */
-    get transitionIndicator(): TransitionIndicator | null;
     get width(): number | null;
     get height(): number | null;
     /**
@@ -1993,6 +1983,10 @@ export declare abstract class LayoutManager extends EventEmitter {
      * @deprecated use {@link (ResolvedLayoutConfig:namespace).minifyConfig} instead
      */
     minifyConfig(config: ResolvedLayoutConfig): ResolvedLayoutConfig;
+    useNativeDragAndDrop(): boolean;
+    currentlyDragging(): boolean;
+    dragDataMimetype(): string;
+    validDragEvent(e: DragEvent): boolean;
     /**
      * Takes a configuration Object that was previously minified
      * using minifyConfig and returns its original version
@@ -2000,14 +1994,25 @@ export declare abstract class LayoutManager extends EventEmitter {
      */
     unminifyConfig(config: ResolvedLayoutConfig): ResolvedLayoutConfig;
     /** @internal */
-    abstract bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.BindableComponent;
+    abstract bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.Handle;
     /** @internal */
-    abstract unbindComponent(container: ComponentContainer, virtual: boolean, component: ComponentContainer.Component | undefined): void;
+    abstract unbindComponent(container: ComponentContainer, handle: ComponentContainer.Handle): void;
+    _hideTargetIndicator(): void;
     /**
      * Called from GoldenLayout class. Finishes of init
      * @internal
      */
     init(): void;
+    /**
+     * Sets the target position, highlighting the appropriate area
+     *
+     * @param x - The x position in px
+     * @param y - The y position in px
+     *
+     * @internal
+     */
+    private setDropPosition;
+    private onDrag;
     /**
      * Loads a new layout
      * @param layoutConfig - New layout to be loaded
@@ -2108,19 +2113,11 @@ export declare abstract class LayoutManager extends EventEmitter {
      */
     setSize(width: number, height: number): void;
     /** @internal */
-    beginSizeInvalidation(): void;
-    /** @internal */
-    endSizeInvalidation(): void;
-    /** @internal */
     updateSizeFromContainer(): void;
     /**
      * Update the size of the root ContentItem.  This will update the size of all contentItems in the tree
-     * @param force - In some cases the size is not updated if it has not changed. In this case, events
-     * (such as ComponentContainer.virtualRectingRequiredEvent) are not fired. Setting force to true, ensures the size is updated regardless, and
-     * the respective events are fired. This is sometimes necessary when a component's size has not changed but it has become visible, and the
-     * relevant events need to be fired.
      */
-    updateRootSize(force?: boolean): void;
+    updateRootSize(): void;
     /** @public */
     createAndInitContentItem(config: ResolvedItemConfig, parent: ContentItem): ContentItem;
     /**
@@ -2152,10 +2149,6 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @internal */
     endVirtualSizedContainerAdding(): void;
     /** @internal */
-    fireBeforeVirtualRectingEvent(count: number): void;
-    /** @internal */
-    fireAfterVirtualRectingEvent(): void;
-    /** @internal */
     private createPopoutFromItemConfig;
     /** @internal */
     createPopoutFromPopoutLayoutConfig(config: ResolvedPopoutLayoutConfig): BrowserPopout;
@@ -2178,7 +2171,7 @@ export declare abstract class LayoutManager extends EventEmitter {
      *          and the attached itemConfig. This can be used in
      *          removeDragSource() later to get rid of the drag listeners.
      */
-    newDragSource(element: HTMLElement, itemConfigCallback: () => DragSource.ComponentItemConfig | ComponentItemConfig): DragSource;
+    newDragSource(element: HTMLElement, itemConfigCallback: () => (DragSource.ComponentItemConfig | ComponentItemConfig)): DragSource;
     /** @deprecated will be replaced in version 3 with newDragSource(element: HTMLElement, itemConfig: ComponentItemConfig) */
     newDragSource(element: HTMLElement, componentType: JsonValue, componentState?: JsonValue, title?: JsonValue, id?: string): DragSource;
     /**
@@ -2186,8 +2179,13 @@ export declare abstract class LayoutManager extends EventEmitter {
      * DOM element is not a drag source any more.
      */
     removeDragSource(dragSource: DragSource): void;
+    removeElementEventually(element: HTMLElement): void;
+    deferIfDragging(action: (cancel: boolean) => void): void;
+    doDeferredActions(cancel: boolean): void;
     /** @internal */
-    startComponentDrag(x: number, y: number, dragListener: DragListener, componentItem: ComponentItem, stack: Stack): void;
+    startComponentDragOld(x: number, y: number, dragListener: DragListener, componentItem: ComponentItem, stack: Stack): void;
+    /** @internal */
+    startComponentDrag(ev: DragEvent, componentItem: ComponentItem): void;
     /**
      * Programmatically focuses an item. This focuses the specified component item
      * and the item emits a focus event
@@ -2311,6 +2309,14 @@ export declare abstract class LayoutManager extends EventEmitter {
      * @internal
      */
     private addChildContentItemsToContainer;
+    private onDragEnter;
+    private onDragLeave;
+    private onDragOver;
+    private onDragEnd;
+    private exitDrag;
+    draggingInOtherWindow(ending: boolean): void;
+    droppedInOtherWindow(): void;
+    private onDrop;
     /**
      * Finds all the stacks.
      * @returns The found stack containers.
@@ -2348,6 +2354,7 @@ export declare namespace LayoutManager {
         constructorOrSubWindowLayoutConfig: LayoutConfig | undefined;
         isSubWindow: boolean;
         containerElement: HTMLElement | undefined;
+        containerPosition: Node | null;
     }
     /** @internal */
     export function createMaximisePlaceElement(document: Document): HTMLElement;
@@ -2592,6 +2599,11 @@ export declare interface ResolvedLayoutConfig {
 /** @public */
 export declare namespace ResolvedLayoutConfig {
     export interface Settings {
+        readonly useDragAndDrop: boolean;
+        readonly copyForDragImage: boolean | undefined;
+        readonly showOldPositionWhenDragging: boolean;
+        readonly dragDataMimetype: string;
+        readonly checkGlWindowKey: boolean;
         readonly constrainDragToContainer: boolean;
         readonly reorderEnabled: boolean;
         readonly popoutWholeStack: boolean;
@@ -2611,6 +2623,7 @@ export declare namespace ResolvedLayoutConfig {
     export interface Dimensions {
         readonly borderWidth: number;
         readonly borderGrabWidth: number;
+        readonly contentInset: number;
         readonly defaultMinItemHeight: number;
         readonly defaultMinItemHeightUnit: SizeUnitEnum;
         readonly defaultMinItemWidth: number;
@@ -2806,10 +2819,6 @@ export declare class RowOrColumn extends ContentItem {
      */
     replaceChild(oldChild: ContentItem, newChild: ContentItem): void;
     /**
-     * Called whenever the dimensions of this item or one of its parents change
-     */
-    updateSize(force: boolean): void;
-    /**
      * Invoked recursively by the layout manager. ContentItem.init appends
      * the contentItem's DOM elements to the container, RowOrColumn init adds splitters
      * in between them
@@ -2820,7 +2829,7 @@ export declare class RowOrColumn extends ContentItem {
     /** @internal */
     protected setParent(parent: ContentItem): void;
     /** @internal */
-    private updateNodeSize;
+    updateNodeSize(): void;
     /**
      * Turns the relative sizes calculated by calculateRelativeSizes into
      * absolute pixel values and applies them to the children's DOM elements
@@ -2927,8 +2936,6 @@ export declare namespace RowOrColumn {
     export function getElementDimensionSize(element: HTMLElement, dimension: WidthOrHeightPropertyName): number;
     /** @internal */
     export function setElementDimensionSize(element: HTMLElement, dimension: WidthOrHeightPropertyName, value: number): void;
-    /** @internal */
-    export function createElement(document: Document, isColumn: boolean): HTMLDivElement;
 }
 
 /** @public */
@@ -3030,8 +3037,6 @@ export declare class Stack extends ComponentParentableItem {
     /** @internal */
     constructor(layoutManager: LayoutManager, config: ResolvedStackItemConfig, parent: ContentItem);
     /** @internal */
-    updateSize(force: boolean): void;
-    /** @internal */
     init(): void;
     /** @deprecated Use {@link (Stack:class).setActiveComponentItem} */
     setActiveContentItem(item: ContentItem): void;
@@ -3101,7 +3106,7 @@ export declare class Stack extends ComponentParentableItem {
      */
     positionHeader(position: Side): void;
     /** @internal */
-    private updateNodeSize;
+    updateNodeSize(): void;
     /** @internal */
     private highlightHeaderDropZone;
     /** @internal */
@@ -3110,8 +3115,7 @@ export declare class Stack extends ComponentParentableItem {
     private setupHeaderPosition;
     /** @internal */
     private highlightBodyDropZone;
-    /** @internal */
-    private handleResize;
+    updateTabSizes(): void;
     /** @internal */
     private handleMaximised;
     /** @internal */
@@ -3154,8 +3158,6 @@ export declare namespace Stack {
     export type ContentAreaDimensions = {
         [segment: string]: ContentAreaDimension;
     };
-    /** @internal */
-    export function createElement(document: Document): HTMLDivElement;
 }
 
 /** @public */
@@ -3207,19 +3209,20 @@ export declare class Tab {
     /** @internal */
     private _isActive;
     /** @internal */
-    private readonly _tabClickListener;
-    /** @internal */
     private readonly _tabTouchStartListener;
     /** @internal */
     private readonly _closeClickListener;
     /** @internal */
     private readonly _closeTouchStartListener;
     /** @internal */
+    private readonly _dragStartListenerOld;
+    /** @internal */
     private readonly _dragStartListener;
     /** @internal */
     private readonly _contentItemDestroyListener;
     /** @internal */
     private readonly _tabTitleChangedListener;
+    readonly tabClickListener: (ev: MouseEvent) => void;
     get isActive(): boolean;
     get componentItem(): ComponentItem;
     /** @deprecated use {@link (Tab:class).componentItem} */
@@ -3262,11 +3265,12 @@ export declare class Tab {
     /** @internal */
     setFocused(): void;
     /**
-     * Callback for the DragListener
+     * Old callback for the DragListener
      * @param x - The tabs absolute x position
      * @param y - The tabs absolute y position
      * @internal
      */
+    private onDragStartOld;
     private onDragStart;
     /** @internal */
     private onContentItemDestroy;
@@ -3301,26 +3305,18 @@ export declare class Tab {
 
 /** @public */
 export declare namespace Tab {
+    export enum RenderFlags {
+        DropdownActive = 1,
+        InDropdownMenu = 2,
+        IsActiveTab = 4
+    }
+    export type TitleRenderer = (component: ComponentContainer, target: HTMLElement, availableWidth: number, flags: RenderFlags) => void;
     /** @internal */
     export type CloseEvent = (componentItem: ComponentItem) => void;
     /** @internal */
     export type FocusEvent = (componentItem: ComponentItem) => void;
     /** @internal */
     export type DragStartEvent = (x: number, y: number, dragListener: DragListener, componentItem: ComponentItem) => void;
-}
-
-/** @internal @deprecated To be removed */
-declare class TransitionIndicator {
-    private _element;
-    private _toElement;
-    private _fromDimensions;
-    private _totalAnimationDuration;
-    private _animationStartTime;
-    constructor(rootContainer?: HTMLElement);
-    destroy(): void;
-    transitionElements(fromElement: HTMLElement, toElement: HTMLElement): void;
-    private nextAnimationFrame;
-    private measure;
 }
 
 /** @internal */
@@ -3330,17 +3326,7 @@ export declare interface UndefinableSizeWithUnit {
 }
 
 /** @public */
-export declare class VirtualLayout extends LayoutManager {
-    /**
-     * @deprecated Use {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} with virtual components
-     */
-    getComponentEvent: VirtualLayout.GetComponentEventHandler | undefined;
-    /**
-     * @deprecated Use {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} with virtual components
-     */
-    releaseComponentEvent: VirtualLayout.ReleaseComponentEventHandler | undefined;
+export declare abstract class VirtualLayout extends LayoutManager {
     bindComponentEvent: VirtualLayout.BindComponentEventHandler | undefined;
     unbindComponentEvent: VirtualLayout.UnbindComponentEventHandler | undefined;
     /** @internal @deprecated use while constructor is not determinate */
@@ -3359,7 +3345,7 @@ export declare class VirtualLayout extends LayoutManager {
     /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
     constructor(config: LayoutConfig, container?: HTMLElement);
     /** @internal */
-    constructor(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler: HTMLElement | VirtualLayout.BindComponentEventHandler | undefined, unbindComponentEventHandler: VirtualLayout.UnbindComponentEventHandler | undefined, skipInit: true);
+    constructor(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler: HTMLElement | VirtualLayout.BindComponentEventHandler | undefined, unbindComponentEventHandler: VirtualLayout.UnbindComponentEventHandler | undefined | Node | null, skipInit: true);
     destroy(): void;
     /**
      * Creates the actual layout. Must be called after all initial components
@@ -3390,31 +3376,19 @@ export declare class VirtualLayout extends LayoutManager {
      */
     checkAddDefaultPopinButton(): boolean;
     /** @internal */
-    bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.BindableComponent;
-    /** @internal */
-    unbindComponent(container: ComponentContainer, virtual: boolean, component: ComponentContainer.Component | undefined): void;
+    unbindComponent(container: ComponentContainer, handle: ComponentContainer.Handle): void;
 }
 
 /** @public */
 export declare namespace VirtualLayout {
-    /**
-     * @deprecated Use virtual components with {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} events.
-     */
-    export type GetComponentEventHandler = (this: void, container: ComponentContainer, itemConfig: ResolvedComponentItemConfig) => ComponentContainer.Component;
-    /**
-     * @deprecated Use virtual components with {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} events.
-     */
-    export type ReleaseComponentEventHandler = (this: void, container: ComponentContainer, component: ComponentContainer.Component) => void;
-    export type BindComponentEventHandler = (this: void, container: ComponentContainer, itemConfig: ResolvedComponentItemConfig) => ComponentContainer.BindableComponent;
+    export type BindComponentEventHandler = (this: void, container: ComponentContainer, itemConfig: ResolvedComponentItemConfig) => ComponentContainer.Handle;
     export type UnbindComponentEventHandler = (this: void, container: ComponentContainer) => void;
     export type BeforeVirtualRectingEvent = (this: void) => void;
     /** @internal */
-    export function createLayoutManagerConstructorParameters(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler?: HTMLElement | VirtualLayout.BindComponentEventHandler): LayoutManager.ConstructorParameters;
+    export function createLayoutManagerConstructorParameters(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler?: HTMLElement | Node | null | VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler | Node | null): LayoutManager.ConstructorParameters;
 }
 
-/** @internal */
+/** @public */
 export declare interface WidthAndHeight {
     width: number;
     height: number;

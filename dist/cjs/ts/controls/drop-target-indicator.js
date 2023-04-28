@@ -4,19 +4,14 @@ exports.DropTargetIndicator = void 0;
 const utils_1 = require("../utils/utils");
 /** @internal */
 class DropTargetIndicator {
-    constructor(rootContainer) {
+    constructor(parent = document.body, before = null) {
         // Maybe use container instead of Document Body?
         this._element = document.createElement('div');
-        this._element.classList.add("lm_dropTargetIndicator" /* DropTargetIndicator */);
+        this._element.classList.add("lm_dropTargetIndicator" /* DomConstants.ClassName.DropTargetIndicator */);
         const innerElement = document.createElement('div');
-        innerElement.classList.add("lm_inner" /* Inner */);
+        innerElement.classList.add("lm_inner" /* DomConstants.ClassName.Inner */);
         this._element.appendChild(innerElement);
-        if (rootContainer) {
-            rootContainer.appendChild(this._element);
-        }
-        else {
-            document.body.appendChild(this._element);
-        }
+        parent.insertBefore(this._element, before);
     }
     destroy() {
         this._element.remove();

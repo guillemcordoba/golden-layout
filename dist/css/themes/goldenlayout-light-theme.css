@@ -1,9 +1,9 @@
 .lm_goldenlayout {
   background: #f4f4f4;
+  --lm_border_color: #cccccc;
 }
 .lm_content {
   background: #e1e1e1;
-  border: 1px solid #cccccc;
 }
 .lm_dragProxy .lm_content {
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
@@ -15,16 +15,6 @@
 .lm_dropTargetIndicator .lm_inner {
   background: #000000;
   opacity: 0.1;
-}
-.lm_splitter {
-  background: #999999;
-  opacity: 0.001;
-  transition: opacity 200ms ease;
-}
-.lm_splitter:hover,
-.lm_splitter.lm_dragging {
-  background: #bbbbbb;
-  opacity: 1;
 }
 .lm_header {
   height: 20px;

@@ -33,6 +33,7 @@ describe('drag source', function () {
     function createDragSource(deferred) {
         dragSourceElement = document.createElement('div');
         dragSourceElement.id = 'dragSrc';
+        dragSourceElement.setAttribute('draggable', 'true');
         document.body.appendChild(dragSourceElement);
         const componentType = TestTools.TEST_COMPONENT_NAME;
         const componentState = { html: `<div class="${createdFromDragSourceClass}"></div>` };

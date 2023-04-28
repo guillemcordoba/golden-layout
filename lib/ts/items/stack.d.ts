@@ -50,8 +50,6 @@ export declare class Stack extends ComponentParentableItem {
     /** @internal */
     constructor(layoutManager: LayoutManager, config: ResolvedStackItemConfig, parent: ContentItem);
     /** @internal */
-    updateSize(force: boolean): void;
-    /** @internal */
     init(): void;
     /** @deprecated Use {@link (Stack:class).setActiveComponentItem} */
     setActiveContentItem(item: ContentItem): void;
@@ -121,7 +119,7 @@ export declare class Stack extends ComponentParentableItem {
      */
     positionHeader(position: Side): void;
     /** @internal */
-    private updateNodeSize;
+    updateNodeSize(): void;
     /** @internal */
     private highlightHeaderDropZone;
     /** @internal */
@@ -130,8 +128,7 @@ export declare class Stack extends ComponentParentableItem {
     private setupHeaderPosition;
     /** @internal */
     private highlightBodyDropZone;
-    /** @internal */
-    private handleResize;
+    updateTabSizes(): void;
     /** @internal */
     private handleMaximised;
     /** @internal */
@@ -173,7 +170,5 @@ export declare namespace Stack {
     type ContentAreaDimensions = {
         [segment: string]: ContentAreaDimension;
     };
-    /** @internal */
-    function createElement(document: Document): HTMLDivElement;
 }
 //# sourceMappingURL=stack.d.ts.map

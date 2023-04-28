@@ -33,7 +33,7 @@ describe('layout with empty stack', function () {
         layout.addItemAtLocation({
             type: 'component',
             componentType: TestTools.TEST_COMPONENT_NAME
-        }, [{ typeId: 4 /* FirstRow */, index: 3 }]);
+        }, [{ typeId: 4 /* LayoutManager.LocationSelector.TypeId.FirstRow */, index: 3 }]);
         TestTools.verifyPath('3.stack.0.component', layout);
     });
     it('can have child added to the empty stack', function () {
@@ -45,7 +45,7 @@ describe('layout with empty stack', function () {
         const addedItem = layout.newItemAtLocation({
             type: 'component',
             componentType: TestTools.TEST_COMPONENT_NAME
-        }, [{ typeId: 4 /* FirstRow */, index: 2 }]);
+        }, [{ typeId: 4 /* LayoutManager.LocationSelector.TypeId.FirstRow */, index: 2 }]);
         const itemInOriginallyEmptyStack = TestTools.verifyPath('2.stack.0.component', layout);
         expect(itemInOriginallyEmptyStack).toEqual(addedItem);
     });

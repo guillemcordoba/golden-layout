@@ -154,9 +154,7 @@ export interface ComponentItemConfig extends HeaderedItemConfig {
     /**
      * The type of the component.
      * `componentType` must be of type `string` if it is registered with any of the following functions:
-     * * {@link (GoldenLayout:class).registerComponent} (deprecated)
-     * * {@link (GoldenLayout:class).registerComponentConstructor}
-     * * {@link (GoldenLayout:class).registerComponentFactoryFunction}
+     * * {@link (GoldenLayout:class).registerComponent}
      */
     componentType: JsonValue;
     /**
@@ -195,7 +193,7 @@ export declare namespace RowOrColumnItemConfig {
     function resolveContent(content: ChildItemConfig[] | undefined): ResolvedRowOrColumnItemConfig.ChildItemConfig[];
 }
 /** @public */
-export declare type RootItemConfig = RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig;
+export type RootItemConfig = RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig;
 /** @public */
 export declare namespace RootItemConfig {
     function isRootItemConfig(itemConfig: ItemConfig): itemConfig is RootItemConfig;
@@ -298,6 +296,26 @@ export declare namespace LayoutConfig {
          * Default: false
          */
         popInOnClose?: boolean;
+        useDragAndDrop?: boolean;
+        /**
+         * Use component's element for setDragImage, if possible.
+         * Has side-effect of nesting content element inside a component.
+         * Ignored unless useDragAndDrop.
+         */
+        copyForDragImage?: boolean;
+        /**
+         * When dragging an item, indicate the original position.
+         * The default style uses a dashed light-brown outline.
+         * Default: true
+         */
+        showOldPositionWhenDragging?: boolean;
+        dragDataMimetype?: string;
+        /**
+         * Check whether location.search contains a gl-window parameter.
+         * This is used to handle window popin in simple cases.
+         * Default: true
+         */
+        checkGlWindowKey?: boolean;
     }
     namespace Settings {
         function resolve(settings: Settings | undefined): ResolvedLayoutConfig.Settings;
@@ -310,9 +328,18 @@ export declare namespace LayoutConfig {
          */
         borderWidth?: number;
         /**
-         * Default: 15
+         * Default: 5
          */
         borderGrabWidth?: number;
+        /**
+         * Space to allocate between component wrapper and content element.
+         * This can be used for an 'outline'.
+         * This may affect drag from other window over iframe which may
+         * not trigger depending on the CSS pointer-events setting.
+         * (Uncertain: needs testing/experimentation.)
+         * Default: 0
+         */
+        contentInset?: number;
         /**
          * The minimum height an item can be resized to (in pixel).
          * @deprecated use {@link (LayoutConfig:namespace).(Dimensions:interface).defaultMinItemHeight} instead
@@ -499,5 +526,5 @@ export declare function formatSize(size: number, sizeUnit: SizeUnitEnum): string
 /** @internal */
 export declare function formatUndefinableSize(size: number | undefined, sizeUnit: SizeUnitEnum): string | undefined;
 /** @public @deprecated - use {@link (LayoutConfig:interface)} */
-export declare type Config = LayoutConfig;
+export type Config = LayoutConfig;
 //# sourceMappingURL=config.d.ts.map

@@ -40,8 +40,7 @@ export class DragProxy extends EventEmitter {
         private readonly _dragListener: DragListener,
         private readonly _layoutManager: LayoutManager,
         private readonly _componentItem: ComponentItem,
-        private readonly _originalParent: ContentItem,
-        private readonly rootContainer?: HTMLElement) {
+        private readonly _originalParent: ContentItem) {
 
         super();
 
@@ -63,11 +62,7 @@ export class DragProxy extends EventEmitter {
 
         this.setDimensions();
 
-        if (rootContainer) {
-            rootContainer.appendChild(this._element);
-        } else {
-            document.body.appendChild(this._element);
-        }
+        document.body.appendChild(this._element);
 
         this.determineMinMaxXY();
         this._layoutManager.calculateItemAreas();
@@ -168,8 +163,9 @@ export class DragProxy extends EventEmitter {
 
         this._element.style.left = numberToPixels(x);
         this._element.style.top = numberToPixels(y);
-        this._area = this._layoutManager.getArea(x, y);
+        // FIXME set component.contentElement postion to that of this._proxyContainerElement
 
+        this._area = this._layoutManager.getArea(x, y);
         if (this._area !== null) {
             this._lastValidArea = this._area;
             this._area.contentItem.highlightDropZone(x, y, this._area);

@@ -84,6 +84,8 @@ export declare class Header extends EventEmitter {
     private readonly _tabDropdownButton;
     /** @internal */
     private readonly _maximiseButton;
+    /** @internal */
+    private _updateRequested;
     get show(): boolean;
     get side(): Side;
     get leftRightSided(): boolean;
@@ -118,6 +120,7 @@ export declare class Header extends EventEmitter {
     _componentFocusEvent: Header.ComponentFocusEvent | undefined, 
     /** @internal */
     _componentDragStartEvent: Header.ComponentDragStartEvent | undefined);
+    layoutDefault(): void;
     /**
      * Destroys the entire header
      * @internal
@@ -164,6 +167,7 @@ export declare class Header extends EventEmitter {
      * @internal
      */
     updateTabSizes(): void;
+    availableTabsSize(): number;
     /** @internal */
     private handleTabInitiatedComponentRemoveEvent;
     /** @internal */
@@ -177,12 +181,12 @@ export declare class Header extends EventEmitter {
     /** @internal */
     private handleButtonMaximiseToggleEvent;
     /**
-     * Invoked when the header's background is clicked (not it's tabs or controls)
+     * Invoked when the header's background is clicked (not its tabs or controls)
      * @internal
      */
     private onClick;
     /**
-     * Invoked when the header's background is touched (not it's tabs or controls)
+     * Invoked when the header's background is touched (not its tabs or controls)
      * @internal
      */
     private onTouchStart;

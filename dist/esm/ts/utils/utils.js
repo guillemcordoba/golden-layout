@@ -79,6 +79,10 @@ export function setElementDisplayVisibility(element, visible) {
     }
 }
 /** @internal */
+export function enableIFramePointerEvents(enable) {
+    document.querySelectorAll('iframe.lm_content').forEach((element) => element.style.setProperty('pointer-events', enable ? '' : 'none'));
+}
+/** @internal */
 export function ensureElementPositionAbsolute(element) {
     const absolutePosition = 'absolute';
     if (element.style.position !== absolutePosition) {

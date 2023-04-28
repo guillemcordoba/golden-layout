@@ -14,7 +14,7 @@ import { ContentItem } from './content-item';
 export declare class GroundItem extends ComponentParentableItem {
     private readonly _childElementContainer;
     private readonly _containerElement;
-    constructor(layoutManager: LayoutManager, rootItemConfig: ResolvedRootItemConfig | undefined, containerElement: HTMLElement);
+    constructor(layoutManager: LayoutManager, rootItemConfig: ResolvedRootItemConfig | undefined, containerElement: HTMLElement, containerPosition: Node | null);
     init(): void;
     /**
      * Loads a new Layout
@@ -38,11 +38,6 @@ export declare class GroundItem extends ComponentParentableItem {
     calculateConfigContent(): ResolvedRootItemConfig[];
     /** @internal */
     setSize(width: number, height: number): void;
-    /**
-     * Adds a Root ContentItem.
-     * Internal only.  To replace Root ContentItem with API, use {@link (LayoutManager:class).updateRootSize}
-     */
-    updateSize(force: boolean): void;
     createSideAreas(): GroundItem.Area[];
     highlightDropZone(x: number, y: number, area: AreaLinkedRect): void;
     onDrop(contentItem: ContentItem, area: GroundItem.Area): void;
@@ -53,7 +48,7 @@ export declare class GroundItem extends ComponentParentableItem {
     getItemsByPopInParentId(popInParentId: string): ContentItem[];
     toConfig(): ResolvedItemConfig;
     setActiveComponentItem(item: ComponentItem, focus: boolean, suppressFocusEvent: boolean): void;
-    private updateNodeSize;
+    updateNodeSize(): void;
     private deepGetAllContentItems;
     private deepFilterContentItems;
 }
@@ -74,6 +69,5 @@ export declare namespace GroundItem {
         };
         const oppositeSides: Sides;
     }
-    function createElement(document: Document): HTMLDivElement;
 }
 //# sourceMappingURL=ground-item.d.ts.map

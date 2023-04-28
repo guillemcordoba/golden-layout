@@ -10,7 +10,7 @@ describe('component creation', function () {
             container.element.appendChild(span);
             return;
         }
-        layout.registerComponentFactoryFunction('testComponent', Recorder);
+        layout.registerComponent('testComponent', Recorder);
         layout.addEventListener('itemCreated', eventListener.itemCreated);
     });
     afterAll(function () {

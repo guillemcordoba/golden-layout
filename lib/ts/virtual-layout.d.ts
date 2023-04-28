@@ -3,17 +3,7 @@ import { ResolvedComponentItemConfig } from './config/resolved-config';
 import { ComponentContainer } from './container/component-container';
 import { LayoutManager } from './layout-manager';
 /** @public */
-export declare class VirtualLayout extends LayoutManager {
-    /**
-     * @deprecated Use {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} with virtual components
-     */
-    getComponentEvent: VirtualLayout.GetComponentEventHandler | undefined;
-    /**
-     * @deprecated Use {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} with virtual components
-     */
-    releaseComponentEvent: VirtualLayout.ReleaseComponentEventHandler | undefined;
+export declare abstract class VirtualLayout extends LayoutManager {
     bindComponentEvent: VirtualLayout.BindComponentEventHandler | undefined;
     unbindComponentEvent: VirtualLayout.UnbindComponentEventHandler | undefined;
     /** @internal @deprecated use while constructor is not determinate */
@@ -32,7 +22,7 @@ export declare class VirtualLayout extends LayoutManager {
     /** @deprecated specify layoutConfig in {@link (LayoutManager:class).loadLayout} */
     constructor(config: LayoutConfig, container?: HTMLElement);
     /** @internal */
-    constructor(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler: HTMLElement | VirtualLayout.BindComponentEventHandler | undefined, unbindComponentEventHandler: VirtualLayout.UnbindComponentEventHandler | undefined, skipInit: true);
+    constructor(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler: HTMLElement | VirtualLayout.BindComponentEventHandler | undefined, unbindComponentEventHandler: VirtualLayout.UnbindComponentEventHandler | undefined | Node | null, skipInit: true);
     destroy(): void;
     /**
      * Creates the actual layout. Must be called after all initial components
@@ -63,26 +53,14 @@ export declare class VirtualLayout extends LayoutManager {
      */
     checkAddDefaultPopinButton(): boolean;
     /** @internal */
-    bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.BindableComponent;
-    /** @internal */
-    unbindComponent(container: ComponentContainer, virtual: boolean, component: ComponentContainer.Component | undefined): void;
+    unbindComponent(container: ComponentContainer, handle: ComponentContainer.Handle): void;
 }
 /** @public */
 export declare namespace VirtualLayout {
-    /**
-     * @deprecated Use virtual components with {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} events.
-     */
-    type GetComponentEventHandler = (this: void, container: ComponentContainer, itemConfig: ResolvedComponentItemConfig) => ComponentContainer.Component;
-    /**
-     * @deprecated Use virtual components with {@link (VirtualLayout:class).bindComponentEvent} and
-     * {@link (VirtualLayout:class).unbindComponentEvent} events.
-     */
-    type ReleaseComponentEventHandler = (this: void, container: ComponentContainer, component: ComponentContainer.Component) => void;
-    type BindComponentEventHandler = (this: void, container: ComponentContainer, itemConfig: ResolvedComponentItemConfig) => ComponentContainer.BindableComponent;
+    type BindComponentEventHandler = (this: void, container: ComponentContainer, itemConfig: ResolvedComponentItemConfig) => ComponentContainer.Handle;
     type UnbindComponentEventHandler = (this: void, container: ComponentContainer) => void;
     type BeforeVirtualRectingEvent = (this: void) => void;
     /** @internal */
-    function createLayoutManagerConstructorParameters(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler?: HTMLElement | VirtualLayout.BindComponentEventHandler): LayoutManager.ConstructorParameters;
+    function createLayoutManagerConstructorParameters(configOrOptionalContainer: LayoutConfig | HTMLElement | undefined, containerOrBindComponentEventHandler?: HTMLElement | Node | null | VirtualLayout.BindComponentEventHandler, unbindComponentEventHandler?: VirtualLayout.UnbindComponentEventHandler | Node | null): LayoutManager.ConstructorParameters;
 }
 //# sourceMappingURL=virtual-layout.d.ts.map

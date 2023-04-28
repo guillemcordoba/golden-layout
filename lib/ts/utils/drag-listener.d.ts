@@ -3,7 +3,6 @@ import { EventEmitter } from './event-emitter';
 export declare class DragListener extends EventEmitter {
     private _eElement;
     private _timeout;
-    private _allowableTargets;
     private _oDocument;
     private _eBody;
     private _nDelay;
@@ -17,7 +16,7 @@ export declare class DragListener extends EventEmitter {
     private _pointerDownEventListener;
     private _pointerMoveEventListener;
     private _pointerUpEventListener;
-    constructor(_eElement: HTMLElement, extraAllowableChildTargets: HTMLElement[]);
+    constructor(_eElement: HTMLElement);
     destroy(): void;
     cancelDrag(): void;
     private onPointerDown;

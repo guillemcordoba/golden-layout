@@ -17,24 +17,12 @@ const row_or_column_1 = require("./row-or-column");
  * @internal
  */
 class GroundItem extends component_parentable_item_1.ComponentParentableItem {
-    constructor(layoutManager, rootItemConfig, containerElement) {
-        super(layoutManager, resolved_config_1.ResolvedGroundItemConfig.create(rootItemConfig), null, GroundItem.createElement(document));
+    constructor(layoutManager, rootItemConfig, containerElement, containerPosition) {
+        super(layoutManager, resolved_config_1.ResolvedGroundItemConfig.create(rootItemConfig), null, _createRootElement(containerElement, containerPosition));
+        this.element.classList.add("lm_goldenlayout" /* DomConstants.ClassName.GoldenLayout */);
         this.isGround = true;
         this._childElementContainer = this.element;
         this._containerElement = containerElement;
-        // insert before any pre-existing content elements
-        let before = null;
-        while (true) {
-            const prev = before ? before.previousSibling : this._containerElement.lastChild;
-            if (prev instanceof Element
-                && prev.classList.contains("lm_content" /* Content */)) {
-                before = prev;
-            }
-            else {
-                break;
-            }
-        }
-        this._containerElement.insertBefore(this.element, before);
     }
     init() {
         if (this.isInitialised === true)
@@ -125,7 +113,7 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
             // contentItem = this.layoutManager._$normalizeContentItem(contentItem, this);
             this._childElementContainer.appendChild(contentItem.element);
             index = super.addChild(contentItem, index);
-            this.updateSize(false);
+            this.updateSize();
             this.emitBaseBubblingEvent('stateChanged');
             return index;
         }
@@ -150,7 +138,7 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
     /** @internal */
     setSize(width, height) {
         if (width === undefined || height === undefined) {
-            this.updateSize(false); // For backwards compatibility with v1.x API
+            this.updateSize(); // For backwards compatibility with v1.x API
         }
         else {
             (0, utils_1.setElementWidth)(this.element, width);
@@ -160,21 +148,8 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
                 (0, utils_1.setElementWidth)(this.contentItems[0].element, width);
                 (0, utils_1.setElementHeight)(this.contentItems[0].element, height);
             }
-            this.updateContentItemsSize(false);
-        }
-    }
-    /**
-     * Adds a Root ContentItem.
-     * Internal only.  To replace Root ContentItem with API, use {@link (LayoutManager:class).updateRootSize}
-     */
-    updateSize(force) {
-        this.layoutManager.beginVirtualSizedContainerAdding();
-        try {
-            this.updateNodeSize();
-            this.updateContentItemsSize(force);
-        }
-        finally {
-            this.layoutManager.endVirtualSizedContainerAdding();
+            //this.updateContentItemsSize();
+            this.updateSize();
         }
     }
     createSideAreas() {
@@ -241,7 +216,7 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
                 column.size = 50;
                 contentItem.size = 50;
                 contentItem.sizeUnit = types_1.SizeUnitEnum.Percent;
-                rowOrColumn.updateSize(false);
+                rowOrColumn.updateSize();
             }
             else {
                 const sibling = column.contentItems[insertBefore ? 0 : column.contentItems.length - 1];
@@ -249,7 +224,7 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
                 sibling.size *= 0.5;
                 contentItem.size = sibling.size;
                 contentItem.sizeUnit = types_1.SizeUnitEnum.Percent;
-                column.updateSize(false);
+                column.updateSize();
             }
         }
     }
@@ -300,7 +275,7 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
         // only applicable if ComponentItem is root and then it always has focus
     }
     updateNodeSize() {
-        const { width, height } = (0, utils_1.getElementWidthAndHeight)(this._containerElement);
+        const { width, height } = this.layoutManager.containerWidthAndHeight();
         (0, utils_1.setElementWidth)(this.element, width);
         (0, utils_1.setElementHeight)(this.element, height);
         /*
@@ -314,8 +289,14 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
     deepGetAllContentItems(content, result) {
         for (let i = 0; i < content.length; i++) {
             const contentItem = content[i];
-            result.push(contentItem);
-            this.deepGetAllContentItems(contentItem.contentItems, result);
+            const children = contentItem.contentItems;
+            if (!contentItem.ignoring) {
+                if (!contentItem.ignoringChild
+                    || (contentItem.type !== types_1.ItemType.row && contentItem.type !== types_1.ItemType.column)
+                    || children.length > 2)
+                    result.push(contentItem);
+                this.deepGetAllContentItems(children, result);
+            }
         }
     }
     deepFilterContentItems(content, result, checkAcceptFtn) {
@@ -329,6 +310,11 @@ class GroundItem extends component_parentable_item_1.ComponentParentableItem {
     }
 }
 exports.GroundItem = GroundItem;
+function _createRootElement(containerElement, containerPosition) {
+    const element = content_item_1.ContentItem.createElement("lm_root" /* DomConstants.ClassName.Root */);
+    containerElement.insertBefore(element, containerPosition);
+    return element;
+}
 /** @internal */
 (function (GroundItem) {
     let Area;
@@ -340,13 +326,5 @@ exports.GroundItem = GroundItem;
             x1: 'x2',
         };
     })(Area = GroundItem.Area || (GroundItem.Area = {}));
-    function createElement(document) {
-        const element = document.createElement('div');
-        element.classList.add("lm_goldenlayout" /* GoldenLayout */);
-        element.classList.add("lm_item" /* Item */);
-        element.classList.add("lm_root" /* Root */);
-        return element;
-    }
-    GroundItem.createElement = createElement;
 })(GroundItem = exports.GroundItem || (exports.GroundItem = {}));
 //# sourceMappingURL=ground-item.js.map

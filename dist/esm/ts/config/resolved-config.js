@@ -295,6 +295,11 @@ export var ResolvedLayoutConfig;
     let Settings;
     (function (Settings) {
         Settings.defaults = {
+            useDragAndDrop: true,
+            copyForDragImage: undefined,
+            showOldPositionWhenDragging: true,
+            dragDataMimetype: 'text/gl-drag-data',
+            checkGlWindowKey: true,
             constrainDragToContainer: true,
             reorderEnabled: true,
             popoutWholeStack: false,
@@ -308,6 +313,11 @@ export var ResolvedLayoutConfig;
         };
         function createCopy(original) {
             return {
+                useDragAndDrop: original.useDragAndDrop,
+                copyForDragImage: original.copyForDragImage,
+                showOldPositionWhenDragging: original.showOldPositionWhenDragging,
+                dragDataMimetype: original.dragDataMimetype,
+                checkGlWindowKey: original.checkGlWindowKey,
                 constrainDragToContainer: original.constrainDragToContainer,
                 reorderEnabled: original.reorderEnabled,
                 popoutWholeStack: original.popoutWholeStack,
@@ -328,6 +338,7 @@ export var ResolvedLayoutConfig;
             return {
                 borderWidth: original.borderWidth,
                 borderGrabWidth: original.borderGrabWidth,
+                contentInset: original.contentInset,
                 defaultMinItemHeight: original.defaultMinItemHeight,
                 defaultMinItemHeightUnit: original.defaultMinItemHeightUnit,
                 defaultMinItemWidth: original.defaultMinItemWidth,
@@ -341,6 +352,7 @@ export var ResolvedLayoutConfig;
         Dimensions.defaults = {
             borderWidth: 5,
             borderGrabWidth: 5,
+            contentInset: 0,
             defaultMinItemHeight: 0,
             defaultMinItemHeightUnit: SizeUnitEnum.Pixel,
             defaultMinItemWidth: 10,

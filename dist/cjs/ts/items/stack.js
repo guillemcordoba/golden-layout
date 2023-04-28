@@ -13,14 +13,30 @@ const component_parentable_item_1 = require("./component-parentable-item");
 const content_item_1 = require("./content-item");
 /** @public */
 class Stack extends component_parentable_item_1.ComponentParentableItem {
+    get childElementContainer() { return this._childElementContainer; }
+    get header() { return this._header; }
+    get headerShow() { return this._header.show; }
+    get headerSide() { return this._header.side; }
+    get headerLeftRightSided() { return this._header.leftRightSided; }
+    /** @internal */
+    get contentAreaDimensions() { return this._contentAreaDimensions; }
+    /** @internal */
+    get initialWantMaximise() { return this._initialWantMaximise; }
+    get isMaximised() { return this === this.layoutManager.maximisedStack; }
+    get stackParent() {
+        if (!this.parent) {
+            throw new Error('Stack should always have a parent');
+        }
+        return this.parent;
+    }
     /** @internal */
     constructor(layoutManager, config, parent) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
-        super(layoutManager, config, parent, Stack.createElement(document));
+        super(layoutManager, config, parent, content_item_1.ContentItem.createElement("lm_stack" /* DomConstants.ClassName.Stack */));
         /** @internal */
         this._headerSideChanged = false;
         /** @internal */
-        this._resizeListener = () => this.handleResize();
+        this._resizeListener = () => this.updateTabSizes();
         /** @internal */
         this._maximisedListener = () => this.handleMaximised();
         /** @internal */
@@ -65,7 +81,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
         // this._dropZones = {};
         this.isStack = true;
         this._childElementContainer = document.createElement('section');
-        this._childElementContainer.classList.add("lm_items" /* Items */);
+        this._childElementContainer.classList.add("lm_items" /* DomConstants.ClassName.Items */);
         this.on('resize', this._resizeListener);
         if (this._maximisedEnabled) {
             this.on('maximised', this._maximisedListener);
@@ -75,33 +91,6 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
         this.element.appendChild(this._childElementContainer);
         this.setupHeaderPosition();
         this._header.updateClosability();
-    }
-    get childElementContainer() { return this._childElementContainer; }
-    get header() { return this._header; }
-    get headerShow() { return this._header.show; }
-    get headerSide() { return this._header.side; }
-    get headerLeftRightSided() { return this._header.leftRightSided; }
-    /** @internal */
-    get contentAreaDimensions() { return this._contentAreaDimensions; }
-    /** @internal */
-    get initialWantMaximise() { return this._initialWantMaximise; }
-    get isMaximised() { return this === this.layoutManager.maximisedStack; }
-    get stackParent() {
-        if (!this.parent) {
-            throw new Error('Stack should always have a parent');
-        }
-        return this.parent;
-    }
-    /** @internal */
-    updateSize(force) {
-        this.layoutManager.beginVirtualSizedContainerAdding();
-        try {
-            this.updateNodeSize();
-            this.updateContentItemsSize(force);
-        }
-        finally {
-            this.layoutManager.endVirtualSizedContainerAdding();
-        }
     }
     /** @internal */
     init() {
@@ -131,7 +120,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
                     }
                 }
                 this.setActiveComponentItem(contentItems[this._initialActiveItemIndex], false);
-                this._header.updateTabSizes();
+                this.updateTabSizes();
             }
         }
         this._header.updateClosability();
@@ -152,18 +141,12 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
                 throw new Error('componentItem is not a child of this stack');
             }
             else {
-                this.layoutManager.beginSizeInvalidation();
-                try {
-                    if (this._activeComponentItem !== undefined) {
-                        this._activeComponentItem.hide();
-                    }
-                    this._activeComponentItem = componentItem;
-                    this._header.processActiveComponentChanged(componentItem);
-                    componentItem.show();
+                if (this._activeComponentItem !== undefined) {
+                    this._activeComponentItem.hide();
                 }
-                finally {
-                    this.layoutManager.endSizeInvalidation();
-                }
+                this._activeComponentItem = componentItem;
+                this._header.processActiveComponentChanged(componentItem);
+                componentItem.show();
                 this.emit('activeContentItemChanged', componentItem);
                 this.layoutManager.emit('activeContentItemChanged', componentItem);
                 this.emitStateChangedEvent();
@@ -188,6 +171,12 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
     }
     /** @internal */
     setFocusedValue(value) {
+        if (value) {
+            this.element.classList.add("lm_focused" /* DomConstants.ClassName.Focused */);
+        }
+        else {
+            this.element.classList.remove("lm_focused" /* DomConstants.ClassName.Focused */);
+        }
         this._header.applyFocusedValue(value);
         super.setFocusedValue(value);
     }
@@ -237,7 +226,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
             this._header.createTab(contentItem, index);
             this.setActiveComponentItem(contentItem, focus);
             this._header.updateTabSizes();
-            this.updateSize(false);
+            this.updateSize();
             contentItem.container.setBaseLogicalZIndex();
             this._header.updateClosability();
             this.emitStateChangedEvent();
@@ -379,7 +368,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
          * The item was dropped on the header area. Just add it as a child of this stack and
          * get the hell out of this logic
          */
-        if (this._dropSegment === "header" /* Header */) {
+        if (this._dropSegment === "header" /* Stack.Segment.Header */) {
             this.resetHeaderDropZone();
             if (this._dropIndex === undefined) {
                 throw new internal_error_1.UnexpectedUndefinedError('SODDI68990');
@@ -392,7 +381,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
         /*
          * The stack is empty. Let's just add the element.
          */
-        if (this._dropSegment === "body" /* Body */) {
+        if (this._dropSegment === "body" /* Stack.Segment.Body */) {
             this.addChild(contentItem, 0, true);
             return;
         }
@@ -400,9 +389,9 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
          * The item was dropped on the top-, left-, bottom- or right- part of the content. Let's
          * aggregate some conditions to make the if statements later on more readable
          */
-        const isVertical = this._dropSegment === "top" /* Top */ || this._dropSegment === "bottom" /* Bottom */;
-        const isHorizontal = this._dropSegment === "left" /* Left */ || this._dropSegment === "right" /* Right */;
-        const insertBefore = this._dropSegment === "top" /* Top */ || this._dropSegment === "left" /* Left */;
+        const isVertical = this._dropSegment === "top" /* Stack.Segment.Top */ || this._dropSegment === "bottom" /* Stack.Segment.Bottom */;
+        const isHorizontal = this._dropSegment === "left" /* Stack.Segment.Left */ || this._dropSegment === "right" /* Stack.Segment.Right */;
+        const insertBefore = this._dropSegment === "top" /* Stack.Segment.Top */ || this._dropSegment === "left" /* Stack.Segment.Left */;
         const hasCorrectParent = (isVertical && this.stackParent.isColumn) || (isHorizontal && this.stackParent.isRow);
         /*
          * The content item can be either a component or a stack. If it is a component, wrap it into a stack
@@ -436,7 +425,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
             this.size *= 0.5;
             contentItem.size = this.size;
             contentItem.sizeUnit = this.sizeUnit;
-            this.stackParent.updateSize(false);
+            this.stackParent.updateSize();
             /*
              * This handles items that are dropped on top or bottom of a row or left / right of a column. We need
              * to create the appropriate contentItem for them to live in
@@ -452,7 +441,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
             this.size = 50;
             contentItem.size = 50;
             contentItem.sizeUnit = types_1.SizeUnitEnum.Percent;
-            rowOrColumn.updateSize(false);
+            rowOrColumn.updateSize();
         }
     }
     /**
@@ -468,8 +457,8 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
             const segment = key;
             const area = this._contentAreaDimensions[segment].hoverArea;
             if (area.x1 < x && area.x2 > x && area.y1 < y && area.y2 > y) {
-                if (segment === "header" /* Header */) {
-                    this._dropSegment = "header" /* Header */;
+                if (segment === "header" /* Stack.Segment.Header */) {
+                    this._dropSegment = "header" /* Stack.Segment.Header */;
                     this.highlightHeaderDropZone(this._header.leftRightSided ? y : x);
                 }
                 else {
@@ -606,36 +595,31 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
     /** @internal */
     updateNodeSize() {
         if (this.element.style.display !== 'none') {
-            const content = (0, utils_1.getElementWidthAndHeight)(this.element);
-            if (this._header.show) {
-                const dimension = this._header.leftRightSided ? types_1.WidthOrHeightPropertyName.width : types_1.WidthOrHeightPropertyName.height;
-                content[dimension] -= this.layoutManager.layoutConfig.dimensions.headerHeight;
-            }
-            this._childElementContainer.style.width = (0, utils_1.numberToPixels)(content.width);
-            this._childElementContainer.style.height = (0, utils_1.numberToPixels)(content.height);
-            for (let i = 0; i < this.contentItems.length; i++) {
-                this.contentItems[i].element.style.width = (0, utils_1.numberToPixels)(content.width);
-                this.contentItems[i].element.style.height = (0, utils_1.numberToPixels)(content.height);
-            }
             this.emit('resize');
             this.emitStateChangedEvent();
         }
     }
     /** @internal */
     highlightHeaderDropZone(x) {
-        const visibleTabsLength = this._header.lastVisibleTabIndex + 1;
+        var _a;
+        const tabDropPlaceholder = this.layoutManager.tabDropPlaceholder;
+        tabDropPlaceholder.remove();
         const tabsContainerElement = this._header.tabsContainerElement;
         const tabsContainerElementChildNodes = tabsContainerElement.childNodes;
+        // Only walk over the visible tabs
+        const visibleTabsLength = tabsContainerElementChildNodes.length;
+        /*
         // Create shallow copy of childNodes list, excluding DropPlaceHolder, as we will be modifying the childNodes list
-        const visibleTabElements = new Array(visibleTabsLength);
+        const visibleTabElements = new Array<HTMLElement>(visibleTabsLength);
         let tabIndex = 0;
         let tabCount = 0;
         while (tabCount < visibleTabsLength) {
-            const visibleTabElement = tabsContainerElementChildNodes[tabIndex++];
+            const visibleTabElement = tabsContainerElementChildNodes[tabIndex++] as HTMLElement;
             if (visibleTabElement !== this.layoutManager.tabDropPlaceholder) {
                 visibleTabElements[tabCount++] = visibleTabElement;
             }
-        }
+            }
+        */
         const dropTargetIndicator = this.layoutManager.dropTargetIndicator;
         if (dropTargetIndicator === null) {
             throw new internal_error_1.UnexpectedNullError('SHHDZDTI97110');
@@ -662,8 +646,10 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
             let tabLeft;
             let tabWidth;
             let tabElement;
+            let afterDrag = 0;
             do {
-                tabElement = visibleTabElements[tabIndex];
+                tabElement = tabsContainerElementChildNodes[tabIndex];
+                //tabElement = visibleTabElements[tabIndex] as HTMLElement;
                 const tabRect = tabElement.getBoundingClientRect();
                 const tabRectTop = tabRect.top + document.body.scrollTop;
                 const tabRectLeft = tabRect.left + document.body.scrollLeft;
@@ -677,6 +663,9 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
                     tabTop = tabRectTop;
                     tabWidth = tabRect.width;
                 }
+                if (tabElement.classList.contains("lm_dragging" /* DomConstants.ClassName.Dragging */)) {
+                    afterDrag++;
+                }
                 if (x >= tabLeft && x < tabLeft + tabWidth) {
                     isAboveTab = true;
                 }
@@ -688,15 +677,9 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
             if (isAboveTab === false && x < tabLeft) {
                 return;
             }
-            const halfX = tabLeft + tabWidth / 2;
-            if (x < halfX) {
-                this._dropIndex = tabIndex;
-                tabElement.insertAdjacentElement('beforebegin', this.layoutManager.tabDropPlaceholder);
-            }
-            else {
-                this._dropIndex = Math.min(tabIndex + 1, visibleTabsLength);
-                tabElement.insertAdjacentElement('afterend', this.layoutManager.tabDropPlaceholder);
-            }
+            const preferNext = x >= (tabLeft + tabWidth / 2);
+            this._dropIndex = tabIndex + (tabIndex < visibleTabsLength && preferNext ? 1 : 0) - afterDrag;
+            (_a = tabElement.parentNode) === null || _a === void 0 ? void 0 : _a.insertBefore(tabDropPlaceholder, preferNext ? tabElement.nextSibling : tabElement);
             const tabDropPlaceholderRect = this.layoutManager.tabDropPlaceholder.getBoundingClientRect();
             const tabDropPlaceholderRectTop = tabDropPlaceholderRect.top + document.body.scrollTop;
             const tabDropPlaceholderRectLeft = tabDropPlaceholderRect.left + document.body.scrollLeft;
@@ -730,7 +713,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
     /** @internal */
     setupHeaderPosition() {
         (0, utils_1.setElementDisplayVisibility)(this._header.element, this._header.show);
-        this.element.classList.remove("lm_left" /* Left */, "lm_right" /* Right */, "lm_bottom" /* Bottom */);
+        this.element.classList.remove("lm_left" /* DomConstants.ClassName.Left */, "lm_right" /* DomConstants.ClassName.Right */, "lm_bottom" /* DomConstants.ClassName.Bottom */);
         if (this._header.leftRightSided) {
             this.element.classList.add('lm_' + this._header.side);
         }
@@ -738,7 +721,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
         //    // move the header behind the content.
         //    this.element.appendChild(this._header.element);
         //}
-        this.updateSize(false);
+        this.updateSize();
     }
     /** @internal */
     highlightBodyDropZone(segment) {
@@ -757,9 +740,9 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
             }
         }
     }
-    /** @internal */
-    handleResize() {
-        this._header.updateTabSizes();
+    updateTabSizes() {
+        if (this._header)
+            this._header.updateTabSizes();
     }
     /** @internal */
     handleMaximised() {
@@ -775,6 +758,9 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
     }
     /** @internal */
     handleHeaderClickEvent(ev) {
+        // Forces updates if click is when top-level window has lost focus.
+        if (this._activeComponentItem)
+            this.setActiveComponentItem(this._activeComponentItem, true);
         const eventName = event_emitter_1.EventEmitter.headerClickEventName;
         const bubblingEvent = new event_emitter_1.EventEmitter.ClickBubblingEvent(eventName, this, ev);
         this.emit(eventName, bubblingEvent);
@@ -798,7 +784,7 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
         if (this.isMaximised === true) {
             this.toggleMaximise();
         }
-        this.layoutManager.startComponentDrag(x, y, dragListener, componentItem, this);
+        this.layoutManager.startComponentDragOld(x, y, dragListener, componentItem, this);
     }
     /** @internal */
     createHeaderConfig() {
@@ -827,15 +813,4 @@ class Stack extends component_parentable_item_1.ComponentParentableItem {
     }
 }
 exports.Stack = Stack;
-/** @public */
-(function (Stack) {
-    /** @internal */
-    function createElement(document) {
-        const element = document.createElement('div');
-        element.classList.add("lm_item" /* Item */);
-        element.classList.add("lm_stack" /* Stack */);
-        return element;
-    }
-    Stack.createElement = createElement;
-})(Stack = exports.Stack || (exports.Stack = {}));
 //# sourceMappingURL=stack.js.map

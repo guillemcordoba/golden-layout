@@ -13,18 +13,18 @@ const utils_1 = require("../utils/utils");
  * @internal
  */
 class DragProxy extends event_emitter_1.EventEmitter {
+    get element() { return this._element; }
     /**
      * @param x - The initial x position
      * @param y - The initial y position
      * @internal
      */
-    constructor(x, y, _dragListener, _layoutManager, _componentItem, _originalParent, rootContainer) {
+    constructor(x, y, _dragListener, _layoutManager, _componentItem, _originalParent) {
         super();
         this._dragListener = _dragListener;
         this._layoutManager = _layoutManager;
         this._componentItem = _componentItem;
         this._originalParent = _originalParent;
-        this.rootContainer = rootContainer;
         this._area = null;
         this._lastValidArea = null;
         this._dragListener.on('drag', (offsetX, offsetY, event) => this.onDrag(offsetX, offsetY, event));
@@ -40,34 +40,28 @@ class DragProxy extends event_emitter_1.EventEmitter {
         }
         this._componentItem.parent.removeChild(this._componentItem, true);
         this.setDimensions();
-        if (rootContainer) {
-            rootContainer.appendChild(this._element);
-        }
-        else {
-            document.body.appendChild(this._element);
-        }
+        document.body.appendChild(this._element);
         this.determineMinMaxXY();
         this._layoutManager.calculateItemAreas();
         this.setDropPosition(x, y);
     }
-    get element() { return this._element; }
     /** Create Stack-like structure to contain the dragged component */
     createDragProxyElements(initialX, initialY) {
         this._element = document.createElement('div');
-        this._element.classList.add("lm_dragProxy" /* DragProxy */);
+        this._element.classList.add("lm_dragProxy" /* DomConstants.ClassName.DragProxy */);
         const headerElement = document.createElement('div');
-        headerElement.classList.add("lm_header" /* Header */);
+        headerElement.classList.add("lm_header" /* DomConstants.ClassName.Header */);
         const tabsElement = document.createElement('div');
-        tabsElement.classList.add("lm_tabs" /* Tabs */);
+        tabsElement.classList.add("lm_tabs" /* DomConstants.ClassName.Tabs */);
         const tabElement = document.createElement('div');
-        tabElement.classList.add("lm_tab" /* Tab */);
+        tabElement.classList.add("lm_tab" /* DomConstants.ClassName.Tab */);
         const titleElement = document.createElement('span');
-        titleElement.classList.add("lm_title" /* Title */);
+        titleElement.classList.add("lm_title" /* DomConstants.ClassName.Title */);
         tabElement.appendChild(titleElement);
         tabsElement.appendChild(tabElement);
         headerElement.appendChild(tabsElement);
         this._proxyContainerElement = document.createElement('div');
-        this._proxyContainerElement.classList.add("lm_content" /* Content */);
+        this._proxyContainerElement.classList.add("lm_content" /* DomConstants.ClassName.Content */);
         this._element.appendChild(headerElement);
         this._element.appendChild(this._proxyContainerElement);
         if (this._originalParent instanceof stack_1.Stack && this._originalParent.headerShow) {
@@ -138,6 +132,7 @@ class DragProxy extends event_emitter_1.EventEmitter {
         }
         this._element.style.left = (0, utils_1.numberToPixels)(x);
         this._element.style.top = (0, utils_1.numberToPixels)(y);
+        // FIXME set component.contentElement postion to that of this._proxyContainerElement
         this._area = this._layoutManager.getArea(x, y);
         if (this._area !== null) {
             this._lastValidArea = this._area;

@@ -17,9 +17,7 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
         /** @internal */
         this._registeredComponentMap = new Map();
         /** @internal */
-        this._virtuableComponentMap = new Map();
-        /** @internal */
-        this._containerVirtualRectingRequiredEventListener = (container, width, height) => this.handleContainerVirtualRectingRequiredEvent(container, width, height);
+        this._virtuableComponentMap = new Map(); // FIXME remove
         /** @internal */
         this._containerVirtualVisibilityChangeRequiredEventListener = (container, visible) => this.handleContainerVirtualVisibilityChangeRequiredEvent(container, visible);
         /** @internal */
@@ -29,88 +27,28 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
             this.init();
         }
     }
-    /**
-     * Register a new component type with the layout manager.
-     *
-     * @deprecated See {@link https://stackoverflow.com/questions/40922531/how-to-check-if-a-javascript-function-is-a-constructor}
-     * instead use {@link (GoldenLayout:class).registerComponentConstructor}
-     * or {@link (GoldenLayout:class).registerComponentFactoryFunction}
-     */
-    registerComponent(name, componentConstructorOrFactoryFtn, virtual = false) {
-        if (typeof componentConstructorOrFactoryFtn !== 'function') {
-            throw new external_error_1.ApiError('registerComponent() componentConstructorOrFactoryFtn parameter is not a function');
-        }
-        else {
-            if (componentConstructorOrFactoryFtn.hasOwnProperty('prototype')) {
-                const componentConstructor = componentConstructorOrFactoryFtn;
-                this.registerComponentConstructor(name, componentConstructor, virtual);
-            }
-            else {
-                const componentFactoryFtn = componentConstructorOrFactoryFtn;
-                this.registerComponentFactoryFunction(name, componentFactoryFtn, virtual);
-            }
-        }
-    }
-    /**
-     * Register a new component type with the layout manager.
-     */
-    registerComponentConstructor(typeName, componentConstructor, virtual = false) {
-        if (typeof componentConstructor !== 'function') {
-            throw new Error(i18n_strings_1.i18nStrings[1 /* PleaseRegisterAConstructorFunction */]);
-        }
-        const existingComponentType = this._componentTypesMap.get(typeName);
-        if (existingComponentType !== undefined) {
-            throw new external_error_1.BindError(`${i18n_strings_1.i18nStrings[3 /* ComponentIsAlreadyRegistered */]}: ${typeName}`);
-        }
-        this._componentTypesMap.set(typeName, {
-            constructor: componentConstructor,
-            factoryFunction: undefined,
-            virtual,
-        });
-    }
+    //  REMOVE   registerComponentFactoryFunction(typeName: string, componentFactoryFunction: GoldenLayout.ComponentFactoryFunction, virtual = false): void {
     /**
      * Register a new component with the layout manager.
      */
-    registerComponentFactoryFunction(typeName, componentFactoryFunction, virtual = false) {
+    registerComponent(typeName, componentFactoryFunction) {
         if (typeof componentFactoryFunction !== 'function') {
             throw new external_error_1.BindError('Please register a constructor function');
         }
         const existingComponentType = this._componentTypesMap.get(typeName);
         if (existingComponentType !== undefined) {
-            throw new external_error_1.BindError(`${i18n_strings_1.i18nStrings[3 /* ComponentIsAlreadyRegistered */]}: ${typeName}`);
+            throw new external_error_1.BindError(`${i18n_strings_1.i18nStrings[3 /* I18nStringId.ComponentIsAlreadyRegistered */]}: ${typeName}`);
         }
-        this._componentTypesMap.set(typeName, {
-            constructor: undefined,
-            factoryFunction: componentFactoryFunction,
-            virtual,
-        });
+        this._componentTypesMap.set(typeName, componentFactoryFunction);
     }
-    /**
-     * Register a component function with the layout manager. This function should
-     * return a constructor for a component based on a config.
-     * This function will be called if a component type with the required name is not already registered.
-     * It is recommended that applications use the {@link (VirtualLayout:class).getComponentEvent} and
-     * {@link (VirtualLayout:class).releaseComponentEvent} instead of registering a constructor callback
-     * @deprecated use {@link (GoldenLayout:class).registerGetComponentConstructorCallback}
-     */
-    registerComponentFunction(callback) {
-        this.registerGetComponentConstructorCallback(callback);
-    }
-    /**
-     * Register a callback closure with the layout manager which supplies a Component Constructor.
-     * This callback should return a constructor for a component based on a config.
-     * This function will be called if a component type with the required name is not already registered.
-     * It is recommended that applications use the {@link (VirtualLayout:class).getComponentEvent} and
-     * {@link (VirtualLayout:class).releaseComponentEvent} instead of registering a constructor callback
-     */
-    registerGetComponentConstructorCallback(callback) {
-        if (typeof callback !== 'function') {
-            throw new Error('Please register a callback function');
+    registerComponentDefault(componentFactoryFunction) {
+        if (typeof componentFactoryFunction !== 'function') {
+            throw new external_error_1.BindError('Please register a constructor function');
         }
-        if (this._getComponentConstructorFtn !== undefined) {
-            console.warn('Multiple component functions are being registered.  Only the final registered function will be used.');
+        if (this._componentTypesDefault !== undefined) {
+            throw new external_error_1.BindError(`${i18n_strings_1.i18nStrings[3 /* I18nStringId.ComponentIsAlreadyRegistered */]} - default`);
         }
-        this._getComponentConstructorFtn = callback;
+        this._componentTypesDefault = componentFactoryFunction;
     }
     getRegisteredComponentTypeNames() {
         const typeNamesIterableIterator = this._componentTypesMap.keys();
@@ -131,36 +69,13 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
         if (typeName !== undefined) {
             instantiator = this._componentTypesMap.get(typeName);
         }
-        if (instantiator === undefined) {
-            if (this._getComponentConstructorFtn !== undefined) {
-                instantiator = {
-                    constructor: this._getComponentConstructorFtn(config),
-                    factoryFunction: undefined,
-                    virtual: false,
-                };
-            }
-        }
-        return instantiator;
+        return instantiator || this._componentTypesDefault;
     }
     /** @internal */
     bindComponent(container, itemConfig) {
-        let instantiator;
-        const typeName = resolved_config_1.ResolvedComponentItemConfig.resolveComponentTypeName(itemConfig);
-        if (typeName !== undefined) {
-            instantiator = this._componentTypesMap.get(typeName);
-        }
-        if (instantiator === undefined) {
-            if (this._getComponentConstructorFtn !== undefined) {
-                instantiator = {
-                    constructor: this._getComponentConstructorFtn(itemConfig),
-                    factoryFunction: undefined,
-                    virtual: false,
-                };
-            }
-        }
-        let result;
-        if (instantiator !== undefined) {
-            const virtual = instantiator.virtual;
+        const factoryFunction = this.getComponentInstantiator(itemConfig);
+        let result = undefined;
+        if (factoryFunction !== undefined) {
             // handle case where component is obtained by name or component constructor callback
             let componentState;
             if (itemConfig.componentState === undefined) {
@@ -170,97 +85,60 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
                 // make copy
                 componentState = (0, utils_1.deepExtendValue)({}, itemConfig.componentState);
             }
-            let component;
-            const componentConstructor = instantiator.constructor;
-            if (componentConstructor !== undefined) {
-                component = new componentConstructor(container, componentState, virtual);
+            if (factoryFunction !== undefined) {
+                result = factoryFunction(container, componentState);
             }
-            else {
-                const factoryFunction = instantiator.factoryFunction;
-                if (factoryFunction !== undefined) {
-                    component = factoryFunction(container, componentState, virtual);
-                }
-                else {
-                    throw new internal_error_1.AssertError('LMBCFFU10008');
-                }
-            }
+            /*
             if (virtual) {
                 if (component === undefined) {
-                    throw new internal_error_1.UnexpectedUndefinedError('GLBCVCU988774');
-                }
-                else {
-                    const virtuableComponent = component;
+                    throw new UnexpectedUndefinedError('GLBCVCU988774');
+                } else {
+                    const virtuableComponent = component as GoldenLayout.VirtuableComponent;
                     const componentRootElement = virtuableComponent.rootHtmlElement;
                     if (componentRootElement === undefined) {
-                        throw new external_error_1.BindError(`${i18n_strings_1.i18nStrings[5 /* VirtualComponentDoesNotHaveRootHtmlElement */]}: ${typeName}`);
-                    }
-                    else {
-                        (0, utils_1.ensureElementPositionAbsolute)(componentRootElement);
+                        throw new BindError(`${i18nStrings[I18nStringId.VirtualComponentDoesNotHaveRootHtmlElement]}: ${typeName}`);
+                    } else {
+                        ensureElementPositionAbsolute(componentRootElement);
                         this.container.appendChild(componentRootElement);
                         this._virtuableComponentMap.set(container, virtuableComponent);
-                        container.virtualRectingRequiredEvent = this._containerVirtualRectingRequiredEventListener;
                         container.virtualVisibilityChangeRequiredEvent = this._containerVirtualVisibilityChangeRequiredEventListener;
                         container.virtualZIndexChangeRequiredEvent = this._containerVirtualZIndexChangeRequiredEventListener;
                     }
                 }
             }
+
             this._registeredComponentMap.set(container, component);
+
             result = {
                 virtual: instantiator.virtual,
                 component,
-            };
+                };
+            */
         }
         else {
-            // Use getComponentEvent
-            result = super.bindComponent(container, itemConfig);
+            //result = super.bindComponent(container, itemConfig);
         }
         return result;
     }
     /** @internal */
-    unbindComponent(container, virtual, component) {
+    unbindComponent(container, handle) {
+        /*
         const registeredComponent = this._registeredComponentMap.get(container);
         if (registeredComponent === undefined) {
-            super.unbindComponent(container, virtual, component); // was not created from registration so use virtual unbind events
-        }
-        else {
+            super.unbindComponent(container, handle); // was not created from registration so use virtual unbind events
+        } else {
             const virtuableComponent = this._virtuableComponentMap.get(container);
             if (virtuableComponent !== undefined) {
                 const componentRootElement = virtuableComponent.rootHtmlElement;
                 if (componentRootElement === undefined) {
-                    throw new internal_error_1.AssertError('GLUC77743', container.title);
-                }
-                else {
+                    throw new AssertError('GLUC77743', container.title);
+                } else {
                     this.container.removeChild(componentRootElement);
                     this._virtuableComponentMap.delete(container);
                 }
             }
         }
-    }
-    fireBeforeVirtualRectingEvent(count) {
-        this._goldenLayoutBoundingClientRect = this.container.getBoundingClientRect();
-        super.fireBeforeVirtualRectingEvent(count);
-    }
-    /** @internal */
-    handleContainerVirtualRectingRequiredEvent(container, width, height) {
-        const virtuableComponent = this._virtuableComponentMap.get(container);
-        if (virtuableComponent === undefined) {
-            throw new internal_error_1.UnexpectedUndefinedError('GLHCSCE55933');
-        }
-        else {
-            const rootElement = virtuableComponent.rootHtmlElement;
-            if (rootElement === undefined) {
-                throw new external_error_1.BindError(i18n_strings_1.i18nStrings[4 /* ComponentIsNotVirtuable */] + ' ' + container.title);
-            }
-            else {
-                const containerBoundingClientRect = container.element.getBoundingClientRect();
-                const left = containerBoundingClientRect.left - this._goldenLayoutBoundingClientRect.left;
-                rootElement.style.left = (0, utils_1.numberToPixels)(left);
-                const top = containerBoundingClientRect.top - this._goldenLayoutBoundingClientRect.top;
-                rootElement.style.top = (0, utils_1.numberToPixels)(top);
-                (0, utils_1.setElementWidth)(rootElement, width);
-                (0, utils_1.setElementHeight)(rootElement, height);
-            }
-        }
+        */
     }
     /** @internal */
     handleContainerVirtualVisibilityChangeRequiredEvent(container, visible) {
@@ -271,7 +149,7 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
         else {
             const rootElement = virtuableComponent.rootHtmlElement;
             if (rootElement === undefined) {
-                throw new external_error_1.BindError(i18n_strings_1.i18nStrings[4 /* ComponentIsNotVirtuable */] + ' ' + container.title);
+                throw new external_error_1.BindError(i18n_strings_1.i18nStrings[4 /* I18nStringId.ComponentIsNotVirtuable */] + ' ' + container.title);
             }
             else {
                 (0, utils_1.setElementDisplayVisibility)(rootElement, visible);
@@ -287,7 +165,7 @@ class GoldenLayout extends virtual_layout_1.VirtualLayout {
         else {
             const rootElement = virtuableComponent.rootHtmlElement;
             if (rootElement === undefined) {
-                throw new external_error_1.BindError(i18n_strings_1.i18nStrings[4 /* ComponentIsNotVirtuable */] + ' ' + container.title);
+                throw new external_error_1.BindError(i18n_strings_1.i18nStrings[4 /* I18nStringId.ComponentIsNotVirtuable */] + ' ' + container.title);
             }
             else {
                 rootElement.style.zIndex = defaultZIndex;

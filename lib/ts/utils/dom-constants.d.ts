@@ -12,6 +12,8 @@ export declare namespace DomConstants {
         Vertical = "lm_vertical",
         Horizontal = "lm_horizontal",
         Dragging = "lm_dragging",
+        DragImage = "lm_dragImage",
+        DragImageInner = "lm_dragImageInner",
         DragProxy = "lm_dragProxy",
         Header = "lm_header",
         Tabs = "lm_tabs",
@@ -27,6 +29,7 @@ export declare namespace DomConstants {
         Close = "lm_close",
         Active = "lm_active",
         Maximised = "lm_maximised",
+        Component = "lm_component",
         Content = "lm_content",
         Left = "lm_left",
         Right = "lm_right",
@@ -37,9 +40,7 @@ export declare namespace DomConstants {
         Icon = "lm_icon",
         Bg = "lm_bg",
         DropTargetIndicator = "lm_dropTargetIndicator",
-        Inner = "lm_inner",
-        /** @deprecated */
-        TransitionIndicator = "lm_transition_indicator"
+        Inner = "lm_inner"
     }
 }
 //# sourceMappingURL=dom-constants.d.ts.map

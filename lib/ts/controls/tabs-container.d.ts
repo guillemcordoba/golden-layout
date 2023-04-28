@@ -2,6 +2,7 @@ import { ComponentItem } from '../items/component-item';
 import { LayoutManager } from '../layout-manager';
 import { DragListener } from '../utils/drag-listener';
 import { Tab } from './tab';
+import { Header } from './header';
 /** @internal */
 export declare class TabsContainer {
     private _layoutManager;
@@ -27,13 +28,15 @@ export declare class TabsContainer {
      * @param index - The position of the tab
      */
     createTab(componentItem: ComponentItem, index: number): void;
+    /** @internal */
+    markAsSingle(is_single: boolean): void;
     removeTab(componentItem: ComponentItem): void;
     processActiveComponentChanged(newActiveComponentItem: ComponentItem): void;
     /**
      * Pushes the tabs to the tab dropdown if the available space is not sufficient
      */
-    updateTabSizes(availableWidth: number, activeComponentItem: ComponentItem | undefined): void;
-    tryUpdateTabSizes(dropdownActive: boolean, availableWidth: number, activeComponentItem: ComponentItem | undefined): boolean;
+    updateTabSizes(header: Header, activeComponentItem: ComponentItem | undefined): void;
+    tryUpdateTabSizes(dropdownActive: boolean, header: Header, activeComponentItem: ComponentItem | undefined): boolean;
     /**
      * Shows drop down for additional tabs when there are too many to display.
      */

@@ -100,7 +100,7 @@ export declare namespace ResolvedRowOrColumnItemConfig {
  * a ComponentItem itemConfig will create a Stack with a child ComponentItem.
  * @public
 */
-export declare type ResolvedRootItemConfig = ResolvedRowOrColumnItemConfig | ResolvedStackItemConfig | ResolvedComponentItemConfig;
+export type ResolvedRootItemConfig = ResolvedRowOrColumnItemConfig | ResolvedStackItemConfig | ResolvedComponentItemConfig;
 /** @public */
 export declare namespace ResolvedRootItemConfig {
     function createCopy(config: ResolvedRootItemConfig): ResolvedRootItemConfig;
@@ -134,6 +134,11 @@ export interface ResolvedLayoutConfig {
 /** @public */
 export declare namespace ResolvedLayoutConfig {
     interface Settings {
+        readonly useDragAndDrop: boolean;
+        readonly copyForDragImage: boolean | undefined;
+        readonly showOldPositionWhenDragging: boolean;
+        readonly dragDataMimetype: string;
+        readonly checkGlWindowKey: boolean;
         readonly constrainDragToContainer: boolean;
         readonly reorderEnabled: boolean;
         readonly popoutWholeStack: boolean;
@@ -153,6 +158,7 @@ export declare namespace ResolvedLayoutConfig {
     interface Dimensions {
         readonly borderWidth: number;
         readonly borderGrabWidth: number;
+        readonly contentInset: number;
         readonly defaultMinItemHeight: number;
         readonly defaultMinItemHeightUnit: SizeUnitEnum;
         readonly defaultMinItemWidth: number;

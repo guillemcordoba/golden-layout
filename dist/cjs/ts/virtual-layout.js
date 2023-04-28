@@ -3,15 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.VirtualLayout = void 0;
 const config_1 = require("./config/config");
 const resolved_config_1 = require("./config/resolved-config");
-const external_error_1 = require("./errors/external-error");
 const internal_error_1 = require("./errors/internal-error");
 const layout_manager_1 = require("./layout-manager");
-const i18n_strings_1 = require("./utils/i18n-strings");
 /** @public */
 class VirtualLayout extends layout_manager_1.LayoutManager {
     /** @internal */
     constructor(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler, skipInit) {
-        super(VirtualLayout.createLayoutManagerConstructorParameters(configOrOptionalContainer, containerOrBindComponentEventHandler));
+        super(VirtualLayout.createLayoutManagerConstructorParameters(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler));
         /** @internal @deprecated use while constructor is not determinate */
         this._bindComponentEventHanlderPassedInConstructor = false; // remove when constructor is determinate
         /** @internal  @deprecated use while constructor is not determinate */
@@ -20,7 +18,7 @@ class VirtualLayout extends layout_manager_1.LayoutManager {
             if (typeof containerOrBindComponentEventHandler === 'function') {
                 this.bindComponentEvent = containerOrBindComponentEventHandler;
                 this._bindComponentEventHanlderPassedInConstructor = true;
-                if (unbindComponentEventHandler !== undefined) {
+                if (typeof unbindComponentEventHandler === 'function') {
                     this.unbindComponentEvent = unbindComponentEventHandler;
                 }
             }
@@ -136,12 +134,12 @@ class VirtualLayout extends layout_manager_1.LayoutManager {
         }
         else {
             const popInButtonElement = document.createElement('div');
-            popInButtonElement.classList.add("lm_popin" /* Popin */);
+            popInButtonElement.classList.add("lm_popin" /* DomConstants.ClassName.Popin */);
             popInButtonElement.setAttribute('title', this.layoutConfig.header.dock);
             const iconElement = document.createElement('div');
-            iconElement.classList.add("lm_icon" /* Icon */);
+            iconElement.classList.add("lm_icon" /* DomConstants.ClassName.Icon */);
             const bgElement = document.createElement('div');
-            bgElement.classList.add("lm_bg" /* Bg */);
+            bgElement.classList.add("lm_bg" /* DomConstants.ClassName.Bg */);
             popInButtonElement.appendChild(iconElement);
             popInButtonElement.appendChild(bgElement);
             popInButtonElement.addEventListener('click', () => this.emit('popIn'));
@@ -149,42 +147,19 @@ class VirtualLayout extends layout_manager_1.LayoutManager {
             return true;
         }
     }
-    /** @internal */
-    bindComponent(container, itemConfig) {
+    /* * @internal * /
+    override bindComponent(container: ComponentContainer, itemConfig: ResolvedComponentItemConfig): ComponentContainer.Handle {
         if (this.bindComponentEvent !== undefined) {
             const bindableComponent = this.bindComponentEvent(container, itemConfig);
             return bindableComponent;
-        }
-        else {
-            if (this.getComponentEvent !== undefined) {
-                return {
-                    virtual: false,
-                    component: this.getComponentEvent(container, itemConfig),
-                };
-            }
-            else {
-                // There is no component registered for this type, and we don't have a getComponentEvent defined.
-                // This might happen when the user pops out a dialog and the component types are not registered upfront.
-                const text = i18n_strings_1.i18nStrings[2 /* ComponentTypeNotRegisteredAndBindComponentEventHandlerNotAssigned */];
-                const message = `${text}: ${JSON.stringify(itemConfig)}`;
-                throw new external_error_1.BindError(message);
-            }
+
         }
     }
+    */
     /** @internal */
-    unbindComponent(container, virtual, component) {
+    unbindComponent(container, handle) {
         if (this.unbindComponentEvent !== undefined) {
             this.unbindComponentEvent(container);
-        }
-        else {
-            if (!virtual && this.releaseComponentEvent !== undefined) {
-                if (component === undefined) {
-                    throw new internal_error_1.UnexpectedUndefinedError('VCUCRCU333998');
-                }
-                else {
-                    this.releaseComponentEvent(container, component);
-                }
-            }
         }
     }
 }
@@ -197,11 +172,17 @@ exports.VirtualLayout = VirtualLayout;
      */
     let subWindowChecked = false;
     /** @internal */
-    function createLayoutManagerConstructorParameters(configOrOptionalContainer, containerOrBindComponentEventHandler) {
+    function createLayoutManagerConstructorParameters(configOrOptionalContainer, containerOrBindComponentEventHandler, unbindComponentEventHandler) {
+        if (typeof configOrOptionalContainer === 'object'
+            && !(configOrOptionalContainer instanceof HTMLElement)
+            && configOrOptionalContainer.settings
+            && configOrOptionalContainer.settings.checkGlWindowKey === false)
+            subWindowChecked = true;
         const windowConfigKey = subWindowChecked ? null : new URL(document.location.href).searchParams.get('gl-window');
         subWindowChecked = true;
         const isSubWindow = windowConfigKey !== null;
         let containerElement;
+        let containerPosition = null;
         let config;
         if (windowConfigKey !== null) {
             const windowConfigStr = localStorage.getItem(windowConfigKey);
@@ -233,6 +214,8 @@ exports.VirtualLayout = VirtualLayout;
             if (containerElement === undefined) {
                 if (containerOrBindComponentEventHandler instanceof HTMLElement) {
                     containerElement = containerOrBindComponentEventHandler;
+                    if (unbindComponentEventHandler instanceof Node)
+                        containerPosition = unbindComponentEventHandler;
                 }
             }
         }
@@ -240,6 +223,7 @@ exports.VirtualLayout = VirtualLayout;
             constructorOrSubWindowLayoutConfig: config,
             isSubWindow,
             containerElement,
+            containerPosition,
         };
     }
     VirtualLayout.createLayoutManagerConstructorParameters = createLayoutManagerConstructorParameters;

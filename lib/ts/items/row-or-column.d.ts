@@ -62,10 +62,6 @@ export declare class RowOrColumn extends ContentItem {
      */
     replaceChild(oldChild: ContentItem, newChild: ContentItem): void;
     /**
-     * Called whenever the dimensions of this item or one of its parents change
-     */
-    updateSize(force: boolean): void;
-    /**
      * Invoked recursively by the layout manager. ContentItem.init appends
      * the contentItem's DOM elements to the container, RowOrColumn init adds splitters
      * in between them
@@ -76,7 +72,7 @@ export declare class RowOrColumn extends ContentItem {
     /** @internal */
     protected setParent(parent: ContentItem): void;
     /** @internal */
-    private updateNodeSize;
+    updateNodeSize(): void;
     /**
      * Turns the relative sizes calculated by calculateRelativeSizes into
      * absolute pixel values and applies them to the children's DOM elements
@@ -182,7 +178,5 @@ export declare namespace RowOrColumn {
     function getElementDimensionSize(element: HTMLElement, dimension: WidthOrHeightPropertyName): number;
     /** @internal */
     function setElementDimensionSize(element: HTMLElement, dimension: WidthOrHeightPropertyName, value: number): void;
-    /** @internal */
-    function createElement(document: Document, isColumn: boolean): HTMLDivElement;
 }
 //# sourceMappingURL=row-or-column.d.ts.map

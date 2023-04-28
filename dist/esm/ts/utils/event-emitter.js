@@ -150,6 +150,11 @@ export class EventEmitter {
     EventEmitter.headerClickEventName = 'stackHeaderClick';
     EventEmitter.headerTouchStartEventName = 'stackHeaderTouchStart';
     class BubblingEvent {
+        get name() { return this._name; }
+        get target() { return this._target; }
+        /** @deprecated Use {@link (EventEmitter:namespace).(BubblingEvent:class).target} instead */
+        get origin() { return this._target; }
+        get isPropagationStopped() { return this._isPropagationStopped; }
         /** @internal */
         constructor(
         /** @internal */
@@ -161,17 +166,13 @@ export class EventEmitter {
             /** @internal */
             this._isPropagationStopped = false;
         }
-        get name() { return this._name; }
-        get target() { return this._target; }
-        /** @deprecated Use {@link (EventEmitter:namespace).(BubblingEvent:class).target} instead */
-        get origin() { return this._target; }
-        get isPropagationStopped() { return this._isPropagationStopped; }
         stopPropagation() {
             this._isPropagationStopped = true;
         }
     }
     EventEmitter.BubblingEvent = BubblingEvent;
     class ClickBubblingEvent extends BubblingEvent {
+        get mouseEvent() { return this._mouseEvent; }
         /** @internal */
         constructor(name, target, 
         /** @internal */
@@ -179,10 +180,10 @@ export class EventEmitter {
             super(name, target);
             this._mouseEvent = _mouseEvent;
         }
-        get mouseEvent() { return this._mouseEvent; }
     }
     EventEmitter.ClickBubblingEvent = ClickBubblingEvent;
     class TouchStartBubblingEvent extends BubblingEvent {
+        get touchEvent() { return this._touchEvent; }
         /** @internal */
         constructor(name, target, 
         /** @internal */
@@ -190,7 +191,6 @@ export class EventEmitter {
             super(name, target);
             this._touchEvent = _touchEvent;
         }
-        get touchEvent() { return this._touchEvent; }
     }
     EventEmitter.TouchStartBubblingEvent = TouchStartBubblingEvent;
 })(EventEmitter || (EventEmitter = {}));

@@ -1,10 +1,10 @@
-import { ComponentItemConfig as ConfigComponentItemConfig } from "../config/config"; // remove alias in version 3
+import { ComponentItemConfig as ConfigComponentItemConfig } from '../config/config'; // remove alias in version 3
 import { ResolvedRowOrColumnItemConfig } from "../config/resolved-config";
-import { UnexpectedNullError } from "../errors/internal-error";
-import { ComponentItem } from "../items/component-item";
-import { GroundItem } from "../items/ground-item";
-import { DragListener } from "../utils/drag-listener";
-import { DragProxy } from "./drag-proxy";
+import { UnexpectedNullError } from '../errors/internal-error';
+import { ComponentItem } from '../items/component-item';
+import { GroundItem } from '../items/ground-item';
+import { DragListener } from '../utils/drag-listener';
+import { DragProxy } from './drag-proxy';
 /**
  * Allows for any DOM item to create a component on drag
  * start to be dragged into the Layout
@@ -18,29 +18,20 @@ export class DragSource {
     /** @internal */
     _element, 
     /** @internal */
-    _extraAllowableChildTargets, 
-    /** @internal @deprecated replace with componentItemConfigOrFtn in version 3 */
     _componentTypeOrFtn, 
     /** @internal @deprecated remove in version 3 */
     _componentState, 
     /** @internal @deprecated remove in version 3 */
-    _title, 
-    /** @internal @deprecated remove in version 3 */
-    _id, 
-    /** @internal */
-    _rootContainer) {
+    _title) {
         this._layoutManager = _layoutManager;
         this._element = _element;
-        this._extraAllowableChildTargets = _extraAllowableChildTargets;
         this._componentTypeOrFtn = _componentTypeOrFtn;
         this._componentState = _componentState;
         this._title = _title;
-        this._id = _id;
-        this._rootContainer = _rootContainer;
         this._dragListener = null;
-        this._dummyGroundContainer = document.createElement("div");
-        const dummyRootItemConfig = ResolvedRowOrColumnItemConfig.createDefault("row");
-        this._dummyGroundContentItem = new GroundItem(this._layoutManager, dummyRootItemConfig, this._dummyGroundContainer);
+        this._dummyGroundContainer = document.createElement('div');
+        const dummyRootItemConfig = ResolvedRowOrColumnItemConfig.createDefault('row');
+        this._dummyGroundContentItem = new GroundItem(this._layoutManager, dummyRootItemConfig, this._dummyGroundContainer, null);
         this.createDragListener();
     }
     /**
@@ -56,9 +47,9 @@ export class DragSource {
      */
     createDragListener() {
         this.removeDragListener();
-        this._dragListener = new DragListener(this._element, this._extraAllowableChildTargets);
-        this._dragListener.on("dragStart", (x, y) => this.onDragStart(x, y));
-        this._dragListener.on("dragStop", () => this.onDragStop());
+        this._dragListener = new DragListener(this._element);
+        this._dragListener.on('dragStart', (x, y) => this.onDragStart(x, y));
+        this._dragListener.on('dragStop', () => this.onDragStop());
     }
     /**
      * Callback for the DragListener's dragStart event
@@ -69,7 +60,7 @@ export class DragSource {
      */
     onDragStart(x, y) {
         var _a;
-        const type = "component";
+        const type = 'component';
         let dragSourceItemConfig;
         if (typeof this._componentTypeOrFtn === "function") {
             const ftnDragSourceItemConfig = this._componentTypeOrFtn();
@@ -92,7 +83,6 @@ export class DragSource {
                 componentState: this._componentState,
                 componentType: this._componentTypeOrFtn,
                 title: this._title,
-                id: this._id,
             };
         }
         // Create a dummy ContentItem only for drag purposes
@@ -103,17 +93,10 @@ export class DragSource {
         const componentItem = new ComponentItem(this._layoutManager, resolvedItemConfig, this._dummyGroundContentItem);
         this._dummyGroundContentItem.contentItems.push(componentItem);
         if (this._dragListener === null) {
-            throw new UnexpectedNullError("DSODSD66746");
+            throw new UnexpectedNullError('DSODSD66746');
         }
         else {
-            const dragProxy = new DragProxy(x, y, this._dragListener, this._layoutManager, componentItem, this._dummyGroundContentItem, this._rootContainer);
-            const transitionIndicator = this._layoutManager.transitionIndicator;
-            if (transitionIndicator === null) {
-                throw new UnexpectedNullError("DSODST66746");
-            }
-            else {
-                transitionIndicator.transitionElements(this._element, dragProxy.element);
-            }
+            new DragProxy(x, y, this._dragListener, this._layoutManager, componentItem, this._dummyGroundContentItem);
         }
     }
     /** @internal */

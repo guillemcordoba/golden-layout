@@ -9,35 +9,6 @@ import { getUniqueId, setElementDisplayVisibility } from '../utils/utils';
  * @public
  */
 export class ContentItem extends EventEmitter {
-    /** @internal */
-    constructor(layoutManager, config, 
-    /** @internal */
-    _parent, 
-    /** @internal */
-    _element) {
-        super();
-        this.layoutManager = layoutManager;
-        this._parent = _parent;
-        this._element = _element;
-        /** @internal */
-        this._popInParentIds = [];
-        this._type = config.type;
-        this._id = config.id;
-        this._isInitialised = false;
-        this.isGround = false;
-        this.isRow = false;
-        this.isColumn = false;
-        this.isStack = false;
-        this.isComponent = false;
-        this.size = config.size;
-        this.sizeUnit = config.sizeUnit;
-        this.minSize = config.minSize;
-        this.minSizeUnit = config.minSizeUnit;
-        this._isClosable = config.isClosable;
-        this._pendingEventPropagations = {};
-        this._throttledEvents = ['stateChanged'];
-        this._contentItems = this.createContentItems(config.content);
-    }
     get type() { return this._type; }
     get id() { return this._id; }
     set id(value) { this._id = value; }
@@ -57,6 +28,52 @@ export class ContentItem extends EventEmitter {
     static isComponentParentableItem(item) {
         return item.isStack || item.isGround;
     }
+    /** @internal */
+    constructor(layoutManager, config, 
+    /** @internal */
+    _parent, 
+    /** @internal */
+    _element) {
+        super();
+        this.layoutManager = layoutManager;
+        this._parent = _parent;
+        this._element = _element;
+        /** @internal */
+        this._popInParentIds = [];
+        this.ignoring = false;
+        this.ignoringChild = false;
+        this._type = config.type;
+        this._id = config.id;
+        this._isInitialised = false;
+        this.isGround = false;
+        this.isRow = false;
+        this.isColumn = false;
+        this.isStack = false;
+        this.isComponent = false;
+        this.size = config.size;
+        this.sizeUnit = config.sizeUnit;
+        this.minSize = config.minSize;
+        this.minSizeUnit = config.minSizeUnit;
+        this._isClosable = config.isClosable;
+        this._pendingEventPropagations = {};
+        this._throttledEvents = ['stateChanged'];
+        this._contentItems = this.createContentItems(config.content);
+    }
+    /**
+     * Updaters the size of the component and its children, called recursively
+     * Called whenever the dimensions of this item or one of its parents change
+     * @internal
+     */
+    updateSize() {
+        this.layoutManager.beginVirtualSizedContainerAdding();
+        try {
+            this.updateNodeSize();
+            this.updateContentItemsSize();
+        }
+        finally {
+            this.layoutManager.endVirtualSizedContainerAdding();
+        }
+    }
     /**
      * Removes a child node (and its children) from the tree
      * @param contentItem - The child item to remove
@@ -74,21 +91,27 @@ export class ContentItem extends EventEmitter {
             throw new Error('Can\'t remove child item. Unknown content item');
         }
         /**
-         * Call destroy on the content item.
-         * All children are destroyed as well
-         */
+     * Call destroy on the content item.
+     * All children are destroyed as well
+     */
         if (!keepChild) {
             this._contentItems[index].destroy();
         }
         /**
          * Remove the content item from this nodes array of children
          */
-        this._contentItems.splice(index, 1);
+        this.layoutManager.deferIfDragging((cancel) => {
+            this.ignoringChild = false;
+            contentItem.ignoring = false;
+            if (!cancel) {
+                this._contentItems.splice(index, 1);
+            }
+        });
         /**
          * If this node still contains other content items, adjust their size
          */
-        if (this._contentItems.length > 0) {
-            this.updateSize(false);
+        if (this._contentItems.length > (this.layoutManager.currentlyDragging() ? 1 : 0)) {
+            this.updateSize();
         }
         else {
             /**
@@ -99,7 +122,7 @@ export class ContentItem extends EventEmitter {
                     throw new UnexpectedNullError('CIUC00874');
                 }
                 else {
-                    this._parent.removeChild(this);
+                    this._parent.removeChild(this, keepChild);
                 }
             }
         }
@@ -148,6 +171,7 @@ export class ContentItem extends EventEmitter {
                 oldChild._parent = null;
                 oldChild.destroy(); // will now also destroy all children of oldChild
             }
+            //            }
             /*
             * Wire the new contentItem into the tree
             */
@@ -166,7 +190,7 @@ export class ContentItem extends EventEmitter {
                 if (newChild._parent._isInitialised === true && newChild._isInitialised === false) {
                     newChild.init();
                 }
-                this.updateSize(false);
+                this.updateSize();
             }
         }
     }
@@ -220,19 +244,13 @@ export class ContentItem extends EventEmitter {
     }
     /** @internal */
     show() {
-        this.layoutManager.beginSizeInvalidation();
-        try {
-            // Not sure why showAllActiveContentItems() was called. GoldenLayout seems to work fine without it.  Left commented code
-            // in source in case a reason for it becomes apparent.
-            // this.layoutManager.showAllActiveContentItems();
-            setElementDisplayVisibility(this._element, true);
-            // this.layoutManager.updateSizeFromContainer();
-            for (let i = 0; i < this._contentItems.length; i++) {
-                this._contentItems[i].show();
-            }
-        }
-        finally {
-            this.layoutManager.endSizeInvalidation();
+        // Not sure why showAllActiveContentItems() was called. GoldenLayout seems to work fine without it.  Left commented code
+        // in source in case a reason for it becomes apparent.
+        // this.layoutManager.showAllActiveContentItems();
+        setElementDisplayVisibility(this._element, true);
+        this.layoutManager.updateSizeFromContainer();
+        for (let i = 0; i < this._contentItems.length; i++) {
+            this._contentItems[i].show();
         }
     }
     /**
@@ -243,10 +261,19 @@ export class ContentItem extends EventEmitter {
         for (let i = 0; i < this._contentItems.length; i++) {
             this._contentItems[i].destroy();
         }
-        this._contentItems = [];
-        this.emitBaseBubblingEvent('beforeItemDestroyed');
-        this._element.remove();
-        this.emitBaseBubblingEvent('itemDestroyed');
+        const element = this._element;
+        element.style.display = 'none';
+        this.layoutManager.deferIfDragging((cancel) => {
+            if (cancel) {
+                element.style.display = '';
+            }
+            else {
+                this._contentItems = [];
+                this.emitBaseBubblingEvent('beforeItemDestroyed');
+                this._element.remove();
+                this.emitBaseBubblingEvent('itemDestroyed');
+            }
+        });
     }
     /**
      * Returns the area the component currently occupies
@@ -299,19 +326,14 @@ export class ContentItem extends EventEmitter {
     }
     /** @internal */
     hide() {
-        this.layoutManager.beginSizeInvalidation();
-        try {
-            setElementDisplayVisibility(this._element, false);
-            // this.layoutManager.updateSizeFromContainer();
-        }
-        finally {
-            this.layoutManager.endSizeInvalidation();
-        }
+        setElementDisplayVisibility(this._element, false);
+        this.layoutManager.updateSizeFromContainer();
     }
     /** @internal */
-    updateContentItemsSize(force) {
+    updateContentItemsSize() {
         for (let i = 0; i < this._contentItems.length; i++) {
-            this._contentItems[i].updateSize(force);
+            if (!this._contentItems[i].ignoring)
+                this._contentItems[i].updateSize();
         }
     }
     /**
@@ -407,4 +429,17 @@ export class ContentItem extends EventEmitter {
         this.layoutManager.emitUnknown(name, event);
     }
 }
+/** @public */
+(function (ContentItem) {
+    /** @internal */
+    function createElement(kindClass) {
+        const element = document.createElement('div');
+        element.classList.add("lm_item" /* DomConstants.ClassName.Item */);
+        if (kindClass) {
+            element.classList.add(kindClass);
+        }
+        return element;
+    }
+    ContentItem.createElement = createElement;
+})(ContentItem || (ContentItem = {}));
 //# sourceMappingURL=content-item.js.map

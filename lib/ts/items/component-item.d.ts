@@ -22,6 +22,8 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     private _tab;
     /** @internal */
+    private _titleRenderer;
+    /** @internal */
     private _focused;
     /** @internal @deprecated use {@link (ComponentItem:class).componentType} */
     get componentName(): JsonValue;
@@ -29,11 +31,11 @@ export declare class ComponentItem extends ContentItem {
     get reorderEnabled(): boolean;
     /** @internal */
     get initialWantMaximise(): boolean;
-    get component(): ComponentContainer.Component | undefined;
     get container(): ComponentContainer;
     get parentItem(): ComponentParentableItem;
     get headerConfig(): ResolvedHeaderedItemConfig.Header | undefined;
     get title(): string;
+    get titleRenderer(): Tab.TitleRenderer | undefined;
     get tab(): Tab;
     get focused(): boolean;
     /** @internal */
@@ -56,8 +58,6 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     drag(): void;
     /** @internal */
-    updateSize(force: boolean): void;
-    /** @internal */
     init(): void;
     /**
      * Set this component's title
@@ -66,6 +66,7 @@ export declare class ComponentItem extends ContentItem {
      * @param title -
      */
     setTitle(title: string): void;
+    setTitleRenderer(renderer: Tab.TitleRenderer | undefined): void;
     setTab(tab: Tab): void;
     /** @internal */
     hide(): void;
@@ -88,10 +89,10 @@ export declare class ComponentItem extends ContentItem {
     /** @internal */
     private handleUpdateItemConfigEvent;
     /** @internal */
-    private updateNodeSize;
+    updateNodeSize(): void;
 }
 /** @public @deprecated use {@link (ComponentItem:class)} */
-export declare type Component = ComponentItem;
+export type Component = ComponentItem;
 /** @public */
 export declare namespace ComponentItem {
     type Component = ComponentContainer.Component;
