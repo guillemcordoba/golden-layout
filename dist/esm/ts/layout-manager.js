@@ -331,9 +331,9 @@ export class LayoutManager extends EventEmitter {
         }
         const elm = this._groundItem.element;
         if (this.useNativeDragAndDrop()) {
-            elm.addEventListener("dragover", (e) => this.onDragOver(e), true);
-            elm.addEventListener("dragenter", (e) => this.onDragEnter(e), true);
-            elm.addEventListener("dragleave", (e) => this.onDragLeave(e), true);
+            elm.addEventListener("dragover", (e) => this.onDragOver(e));
+            elm.addEventListener("dragenter", (e) => this.onDragEnter(e));
+            elm.addEventListener("dragleave", (e) => this.onDragLeave(e));
             elm.addEventListener("dragend", (e) => {
                 const x = e.screenX, y = e.screenY;
                 if (this._dragState === DragState.CurrentlyDragging) {
@@ -348,7 +348,7 @@ export class LayoutManager extends EventEmitter {
                 }
                 else
                     this.onDragEnd(x, y, e);
-            }, true);
+            });
             elm.addEventListener("drop", (e) => {
                 console.log("drop event");
                 this.onDrop(e);
