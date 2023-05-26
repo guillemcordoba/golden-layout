@@ -1,17 +1,17 @@
-import { ComponentItemConfig, LayoutConfig, RowOrColumnItemConfig, StackItemConfig } from './config/config';
+import { ComponentItemConfig, LayoutConfig, RowOrColumnItemConfig, StackItemConfig } from "./config/config";
 import { ResolvedComponentItemConfig, ResolvedItemConfig, ResolvedLayoutConfig, ResolvedPopoutLayoutConfig, ResolvedRootItemConfig } from "./config/resolved-config";
-import { ComponentContainer } from './container/component-container';
-import { BrowserPopout } from './controls/browser-popout';
-import { DragSource } from './controls/drag-source';
-import { DropTargetIndicator } from './controls/drop-target-indicator';
-import { ComponentItem } from './items/component-item';
-import { ContentItem } from './items/content-item';
-import { GroundItem } from './items/ground-item';
-import { Stack } from './items/stack';
-import { DragListener } from './utils/drag-listener';
-import { EventEmitter } from './utils/event-emitter';
-import { EventHub } from './utils/event-hub';
-import { JsonValue, WidthAndHeight } from './utils/types';
+import { ComponentContainer } from "./container/component-container";
+import { BrowserPopout } from "./controls/browser-popout";
+import { DragSource } from "./controls/drag-source";
+import { DropTargetIndicator } from "./controls/drop-target-indicator";
+import { ComponentItem } from "./items/component-item";
+import { ContentItem } from "./items/content-item";
+import { GroundItem } from "./items/ground-item";
+import { Stack } from "./items/stack";
+import { DragListener } from "./utils/drag-listener";
+import { EventEmitter } from "./utils/event-emitter";
+import { EventHub } from "./utils/event-hub";
+import { JsonValue, WidthAndHeight } from "./utils/types";
 /** @internal */
 declare global {
     interface Window {
@@ -134,9 +134,9 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** @deprecated indicates deprecated constructor use */
     get deprecatedConstructor(): boolean;
     /**
-    * @param container - A Dom HTML element. Defaults to body
-    * @internal
-    */
+     * @param container - A Dom HTML element. Defaults to body
+     * @internal
+     */
     constructor(parameters: LayoutManager.ConstructorParameters);
     /**
      * Destroys the LayoutManager instance itself as well as every ContentItem
@@ -175,13 +175,13 @@ export declare abstract class LayoutManager extends EventEmitter {
      */
     init(): void;
     /**
-    * Sets the target position, highlighting the appropriate area
-    *
-    * @param x - The x position in px
-    * @param y - The y position in px
-    *
-    * @internal
-    */
+     * Sets the target position, highlighting the appropriate area
+     *
+     * @param x - The x position in px
+     * @param y - The y position in px
+     *
+     * @internal
+     */
     private setDropPosition;
     private onDrag;
     /**
@@ -245,7 +245,7 @@ export declare abstract class LayoutManager extends EventEmitter {
      * component is successfully added
      * @param itemConfig - ResolvedItemConfig of child to be added.
      * @returns New ContentItem created.
-    */
+     */
     newItem(itemConfig: RowOrColumnItemConfig | StackItemConfig | ComponentItemConfig): ContentItem;
     /**
      * Adds a new child ContentItem under the root ContentItem.  If a root does not exist, then create root ContentItem instead
@@ -272,7 +272,7 @@ export declare abstract class LayoutManager extends EventEmitter {
     /** Loads the specified component ResolvedItemConfig as root.
      * This can be used to display a Component all by itself.  The layout cannot be changed other than having another new layout loaded.
      * Note that, if this layout is saved and reloaded, it will reload with the Component as a child of a Stack.
-    */
+     */
     loadComponentAsRoot(itemConfig: ComponentItemConfig): void;
     /** @deprecated Use {@link (LayoutManager:class).setSize} */
     updateSize(width: number, height: number): void;
@@ -342,7 +342,7 @@ export declare abstract class LayoutManager extends EventEmitter {
      *          and the attached itemConfig. This can be used in
      *          removeDragSource() later to get rid of the drag listeners.
      */
-    newDragSource(element: HTMLElement, itemConfigCallback: () => (DragSource.ComponentItemConfig | ComponentItemConfig)): DragSource;
+    newDragSource(element: HTMLElement, itemConfigCallback: () => DragSource.ComponentItemConfig | ComponentItemConfig): DragSource;
     /** @deprecated will be replaced in version 3 with newDragSource(element: HTMLElement, itemConfig: ComponentItemConfig) */
     newDragSource(element: HTMLElement, componentType: JsonValue, componentState?: JsonValue, title?: JsonValue, id?: string): DragSource;
     /**

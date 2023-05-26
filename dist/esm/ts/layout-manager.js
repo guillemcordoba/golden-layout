@@ -1,22 +1,22 @@
-import { ItemConfig, LayoutConfig } from './config/config';
-import { ResolvedItemConfig, ResolvedLayoutConfig, ResolvedRootItemConfig } from "./config/resolved-config";
-import { BrowserPopout } from './controls/browser-popout';
-import { DragProxy } from './controls/drag-proxy';
-import { DragSource } from './controls/drag-source';
-import { DropTargetIndicator } from './controls/drop-target-indicator';
-import { ConfigurationError } from './errors/external-error';
-import { AssertError, UnexpectedNullError, UnexpectedUndefinedError, UnreachableCaseError } from './errors/internal-error';
-import { ComponentItem } from './items/component-item';
-import { ContentItem } from './items/content-item';
-import { GroundItem } from './items/ground-item';
-import { RowOrColumn } from './items/row-or-column';
-import { Stack } from './items/stack';
-import { ConfigMinifier } from './utils/config-minifier';
-import { EventEmitter } from './utils/event-emitter';
-import { EventHub } from './utils/event-hub';
-import { I18nStrings, i18nStrings } from './utils/i18n-strings';
-import { ItemType, ResponsiveMode } from './utils/types';
-import { enableIFramePointerEvents, getElementWidthAndHeight, removeFromArray, setElementHeight, setElementWidth } from './utils/utils';
+import { ItemConfig, LayoutConfig, } from "./config/config";
+import { ResolvedItemConfig, ResolvedLayoutConfig, ResolvedRootItemConfig, } from "./config/resolved-config";
+import { BrowserPopout } from "./controls/browser-popout";
+import { DragProxy } from "./controls/drag-proxy";
+import { DragSource } from "./controls/drag-source";
+import { DropTargetIndicator } from "./controls/drop-target-indicator";
+import { ConfigurationError } from "./errors/external-error";
+import { AssertError, UnexpectedNullError, UnexpectedUndefinedError, UnreachableCaseError, } from "./errors/internal-error";
+import { ComponentItem } from "./items/component-item";
+import { ContentItem } from "./items/content-item";
+import { GroundItem } from "./items/ground-item";
+import { RowOrColumn } from "./items/row-or-column";
+import { Stack } from "./items/stack";
+import { ConfigMinifier } from "./utils/config-minifier";
+import { EventEmitter } from "./utils/event-emitter";
+import { EventHub } from "./utils/event-hub";
+import { I18nStrings, i18nStrings } from "./utils/i18n-strings";
+import { ItemType, ResponsiveMode, } from "./utils/types";
+import { enableIFramePointerEvents, getElementWidthAndHeight, removeFromArray, setElementHeight, setElementWidth, } from "./utils/utils";
 var DragState;
 (function (DragState) {
     DragState[DragState["NotDragging"] = 0] = "NotDragging";
@@ -35,26 +35,44 @@ export class LayoutManager extends EventEmitter {
             this._lastDragLeaveTime = Date.now();
         }
     }
-    get container() { return this._containerElement; }
-    get isInitialised() { return this._isInitialised; }
+    get container() {
+        return this._containerElement;
+    }
+    get isInitialised() {
+        return this._isInitialised;
+    }
     /** @internal */
-    get groundItem() { return this._groundItem; }
+    get groundItem() {
+        return this._groundItem;
+    }
     /** @internal @deprecated use {@link (LayoutManager:class).groundItem} instead */
-    get root() { return this._groundItem; }
-    get openPopouts() { return this._openPopouts; }
+    get root() {
+        return this._groundItem;
+    }
+    get openPopouts() {
+        return this._openPopouts;
+    }
     /** @internal */
-    get dropTargetIndicator() { return this._dropTargetIndicator; }
-    get width() { return this._width; }
-    get height() { return this._height; }
+    get dropTargetIndicator() {
+        return this._dropTargetIndicator;
+    }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
     /**
      * Retrieves the {@link (EventHub:class)} instance associated with this layout manager.
      * This can be used to propagate events between the windows
      * @public
      */
-    get eventHub() { return this._eventHub; }
+    get eventHub() {
+        return this._eventHub;
+    }
     get rootItem() {
         if (this._groundItem === undefined) {
-            throw new Error('Cannot access rootItem before init');
+            throw new Error("Cannot access rootItem before init");
         }
         else {
             const groundContentItems = this._groundItem.contentItems;
@@ -66,16 +84,25 @@ export class LayoutManager extends EventEmitter {
             }
         }
     }
-    get focusedComponentItem() { return this._focusedComponentItem; }
+    get focusedComponentItem() {
+        return this._focusedComponentItem;
+    }
     /** @internal */
-    get tabDropPlaceholder() { return this._tabDropPlaceholder; }
-    get maximisedStack() { return this._maximisedStack; }
+    get tabDropPlaceholder() {
+        return this._tabDropPlaceholder;
+    }
+    get maximisedStack() {
+        return this._maximisedStack;
+    }
     /** @deprecated indicates deprecated constructor use */
-    get deprecatedConstructor() { return !this.isSubWindow && this._constructorOrSubWindowLayoutConfig !== undefined; }
+    get deprecatedConstructor() {
+        return (!this.isSubWindow &&
+            this._constructorOrSubWindowLayoutConfig !== undefined);
+    }
     /**
-    * @param container - A Dom HTML element. Defaults to body
-    * @internal
-    */
+     * @param container - A Dom HTML element. Defaults to body
+     * @internal
+     */
     constructor(parameters) {
         super();
         /** Whether the layout will be automatically be resized to container whenever the container's size is changed
@@ -140,13 +167,15 @@ export class LayoutManager extends EventEmitter {
         // May be set by client code.
         this.inSomeWindow = false;
         this.delayedDragEndFunction = undefined;
-        this.createComponentElement = (config, component) => {
+        this.createComponentElement = 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        (config, component) => {
             var _a, _b;
             let parent = ((_a = this.groundItem) === null || _a === void 0 ? void 0 : _a.element) || document.body;
-            const contentElement = document.createElement('div');
+            const contentElement = document.createElement("div");
             let componentElement = contentElement;
             if ((_b = this.layoutConfig.settings.copyForDragImage) !== null && _b !== void 0 ? _b : this.layoutConfig.settings.useDragAndDrop) {
-                componentElement = document.createElement('div');
+                componentElement = document.createElement("div");
                 parent.appendChild(componentElement);
                 parent = componentElement;
             }
@@ -155,7 +184,8 @@ export class LayoutManager extends EventEmitter {
             return componentElement;
         };
         this.isSubWindow = parameters.isSubWindow;
-        this._constructorOrSubWindowLayoutConfig = parameters.constructorOrSubWindowLayoutConfig;
+        this._constructorOrSubWindowLayoutConfig =
+            parameters.constructorOrSubWindowLayoutConfig;
         I18nStrings.checkInitialise();
         ConfigMinifier.checkInitialise();
         if (parameters.containerElement !== undefined) {
@@ -177,7 +207,7 @@ export class LayoutManager extends EventEmitter {
     destroy() {
         if (this._isInitialised) {
             if (this._windowBeforeUnloadListening) {
-                globalThis.removeEventListener('beforeunload', this._windowBeforeUnloadListener);
+                globalThis.removeEventListener("beforeunload", this._windowBeforeUnloadListener);
                 this._windowBeforeUnloadListening = false;
             }
             if (this.layoutConfig.settings.closePopoutsOnUnload === true) {
@@ -209,9 +239,15 @@ export class LayoutManager extends EventEmitter {
     minifyConfig(config) {
         return ResolvedLayoutConfig.minifyConfig(config);
     }
-    useNativeDragAndDrop() { return this.layoutConfig.settings.useDragAndDrop; }
-    currentlyDragging() { return this._dragState == DragState.CurrentlyDragging; }
-    dragDataMimetype() { return this.layoutConfig.settings.dragDataMimetype; }
+    useNativeDragAndDrop() {
+        return this.layoutConfig.settings.useDragAndDrop;
+    }
+    currentlyDragging() {
+        return this._dragState == DragState.CurrentlyDragging;
+    }
+    dragDataMimetype() {
+        return this.layoutConfig.settings.dragDataMimetype;
+    }
     validDragEvent(e) {
         var _a;
         // FIXME. Might be a good idea to check that all componentTypes in the
@@ -228,9 +264,10 @@ export class LayoutManager extends EventEmitter {
         return ResolvedLayoutConfig.unminifyConfig(config);
     }
     _hideTargetIndicator() {
+        // FIXME rename? hideTargetIndicator
         const dropTargetIndicator = this.dropTargetIndicator;
         if (dropTargetIndicator === null) {
-            throw new UnexpectedNullError('DPOD30011');
+            throw new UnexpectedNullError("DPOD30011");
         }
         else {
             dropTargetIndicator.hide();
@@ -247,13 +284,13 @@ export class LayoutManager extends EventEmitter {
         if (this.isSubWindow) {
             if (this._constructorOrSubWindowLayoutConfig === undefined) {
                 // SubWindow LayoutConfig should have been generated by constructor
-                throw new UnexpectedUndefinedError('LMIU07155');
+                throw new UnexpectedUndefinedError("LMIU07155");
             }
             else {
                 const root = this._constructorOrSubWindowLayoutConfig.root;
                 if (root === undefined) {
                     // SubWindow LayoutConfig must not be empty
-                    throw new AssertError('LMIC07156');
+                    throw new AssertError("LMIC07156");
                 }
                 else {
                     if (ItemConfig.isComponent(root)) {
@@ -261,7 +298,7 @@ export class LayoutManager extends EventEmitter {
                     }
                     else {
                         // SubWindow LayoutConfig must have Component as Root
-                        throw new AssertError('LMIC07157');
+                        throw new AssertError("LMIC07157");
                     }
                 }
                 const resolvedLayoutConfig = LayoutConfig.resolve(this._constructorOrSubWindowLayoutConfig);
@@ -287,17 +324,17 @@ export class LayoutManager extends EventEmitter {
         this._resizeObserver.observe(this._containerElement);
         this._isInitialised = true;
         this.adjustColumnsResponsive();
-        this.emit('initialised');
+        this.emit("initialised");
         if (subWindowRootConfig !== undefined) {
             // must be SubWindow
             this.loadComponentAsRoot(subWindowRootConfig);
         }
-        const elm = document.body; //this._groundItem.element;
+        const elm = this._groundItem.element;
         if (this.useNativeDragAndDrop()) {
-            elm.addEventListener('dragover', (e) => this.onDragOver(e), true);
-            elm.addEventListener('dragenter', (e) => this.onDragEnter(e), true);
-            elm.addEventListener('dragleave', (e) => this.onDragLeave(e), true);
-            elm.addEventListener('dragend', (e) => {
+            elm.addEventListener("dragover", (e) => this.onDragOver(e), true);
+            elm.addEventListener("dragenter", (e) => this.onDragEnter(e), true);
+            elm.addEventListener("dragleave", (e) => this.onDragLeave(e), true);
+            elm.addEventListener("dragend", (e) => {
                 const x = e.screenX, y = e.screenY;
                 if (this._dragState === DragState.CurrentlyDragging) {
                     this.delayedDragEndFunction = () => {
@@ -312,17 +349,20 @@ export class LayoutManager extends EventEmitter {
                 else
                     this.onDragEnd(x, y, e);
             }, true);
-            elm.addEventListener('drop', (e) => { console.log("drop event"); this.onDrop(e); });
+            elm.addEventListener("drop", (e) => {
+                console.log("drop event");
+                this.onDrop(e);
+            });
         }
     }
     /**
-    * Sets the target position, highlighting the appropriate area
-    *
-    * @param x - The x position in px
-    * @param y - The y position in px
-    *
-    * @internal
-    */
+     * Sets the target position, highlighting the appropriate area
+     *
+     * @param x - The x position in px
+     * @param y - The y position in px
+     *
+     * @internal
+     */
     setDropPosition(x, y) {
         // this._element.style.left = numberToPixels(x);
         // this._element.style.top = numberToPixels(y);
@@ -348,11 +388,11 @@ export class LayoutManager extends EventEmitter {
     loadLayout(layoutConfig) {
         if (!this.isInitialised) {
             // In case application not correctly using legacy constructor
-            throw new Error('GoldenLayout: Need to call init() if LayoutConfig with defined root passed to constructor');
+            throw new Error("GoldenLayout: Need to call init() if LayoutConfig with defined root passed to constructor");
         }
         else {
             if (this._groundItem === undefined) {
-                throw new UnexpectedUndefinedError('LMLL11119');
+                throw new UnexpectedUndefinedError("LMLL11119");
             }
             else {
                 this.createSubWindows(); // still needs to be tested
@@ -371,17 +411,17 @@ export class LayoutManager extends EventEmitter {
      */
     saveLayout() {
         if (this._isInitialised === false) {
-            throw new Error('Can\'t create config, layout not yet initialised');
+            throw new Error("Can't create config, layout not yet initialised");
         }
         else {
             // if (root !== undefined && !(root instanceof ContentItem)) {
             //     throw new Error('Root must be a ContentItem');
             // }
             /*
-            * Content
-            */
+             * Content
+             */
             if (this._groundItem === undefined) {
-                throw new UnexpectedUndefinedError('LMTC18244');
+                throw new UnexpectedUndefinedError("LMTC18244");
             }
             else {
                 const groundContent = this._groundItem.calculateConfigContent();
@@ -393,8 +433,8 @@ export class LayoutManager extends EventEmitter {
                     rootItemConfig = groundContent[0];
                 }
                 /*
-                * Retrieve config for subwindows
-                */
+                 * Retrieve config for subwindows
+                 */
                 this.reconcilePopoutWindows();
                 const openPopouts = [];
                 for (let i = 0; i < this._openPopouts.length; i++) {
@@ -417,7 +457,7 @@ export class LayoutManager extends EventEmitter {
      */
     clear() {
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMCL11129');
+            throw new UnexpectedUndefinedError("LMCL11129");
         }
         else {
             this._groundItem.clearRoot();
@@ -439,7 +479,7 @@ export class LayoutManager extends EventEmitter {
     newComponent(componentType, componentState, title) {
         const componentItem = this.newComponentAtLocation(componentType, componentState, title);
         if (componentItem === undefined) {
-            throw new AssertError('LMNC65588');
+            throw new AssertError("LMNC65588");
         }
         else {
             return componentItem;
@@ -456,7 +496,7 @@ export class LayoutManager extends EventEmitter {
      */
     newComponentAtLocation(componentType, componentState, title, locationSelectors) {
         if (this._groundItem === undefined) {
-            throw new Error('Cannot add component before init');
+            throw new Error("Cannot add component before init");
         }
         else {
             const location = this.addComponentAtLocation(componentType, componentState, title, locationSelectors);
@@ -466,7 +506,7 @@ export class LayoutManager extends EventEmitter {
             else {
                 const createdItem = location.parentItem.contentItems[location.index];
                 if (!ContentItem.isComponentItem(createdItem)) {
-                    throw new AssertError('LMNC992877533');
+                    throw new AssertError("LMNC992877533");
                 }
                 else {
                     return createdItem;
@@ -484,7 +524,7 @@ export class LayoutManager extends EventEmitter {
     addComponent(componentType, componentState, title) {
         const location = this.addComponentAtLocation(componentType, componentState, title);
         if (location === undefined) {
-            throw new AssertError('LMAC99943');
+            throw new AssertError("LMAC99943");
         }
         else {
             return location;
@@ -501,7 +541,7 @@ export class LayoutManager extends EventEmitter {
      */
     addComponentAtLocation(componentType, componentState, title, locationSelectors) {
         const itemConfig = {
-            type: 'component',
+            type: "component",
             componentType,
             componentState,
             title,
@@ -513,11 +553,11 @@ export class LayoutManager extends EventEmitter {
      * component is successfully added
      * @param itemConfig - ResolvedItemConfig of child to be added.
      * @returns New ContentItem created.
-    */
+     */
     newItem(itemConfig) {
         const contentItem = this.newItemAtLocation(itemConfig);
         if (contentItem === undefined) {
-            throw new AssertError('LMNC65588');
+            throw new AssertError("LMNC65588");
         }
         else {
             return contentItem;
@@ -532,7 +572,7 @@ export class LayoutManager extends EventEmitter {
      * @returns New ContentItem created or undefined if no valid location selector was in array. */
     newItemAtLocation(itemConfig, locationSelectors) {
         if (this._groundItem === undefined) {
-            throw new Error('Cannot add component before init');
+            throw new Error("Cannot add component before init");
         }
         else {
             const location = this.addItemAtLocation(itemConfig, locationSelectors);
@@ -553,7 +593,7 @@ export class LayoutManager extends EventEmitter {
     addItem(itemConfig) {
         const location = this.addItemAtLocation(itemConfig);
         if (location === undefined) {
-            throw new AssertError('LMAI99943');
+            throw new AssertError("LMAI99943");
         }
         else {
             return location;
@@ -568,7 +608,7 @@ export class LayoutManager extends EventEmitter {
      * @returns Location of new ContentItem created or undefined if no valid location selector was in array. */
     addItemAtLocation(itemConfig, locationSelectors) {
         if (this._groundItem === undefined) {
-            throw new Error('Cannot add component before init');
+            throw new Error("Cannot add component before init");
         }
         else {
             if (locationSelectors === undefined) {
@@ -611,10 +651,10 @@ export class LayoutManager extends EventEmitter {
                         }
                     }
                     case ItemType.component: {
-                        throw new AssertError('LMAIALC87444602');
+                        throw new AssertError("LMAIALC87444602");
                     }
                     default:
-                        throw new UnreachableCaseError('LMAIALU98881733', parentItem.type);
+                        throw new UnreachableCaseError("LMAIALU98881733", parentItem.type);
                 }
                 if (ItemConfig.isComponent(itemConfig)) {
                     // see if stack was inserted
@@ -633,10 +673,10 @@ export class LayoutManager extends EventEmitter {
     /** Loads the specified component ResolvedItemConfig as root.
      * This can be used to display a Component all by itself.  The layout cannot be changed other than having another new layout loaded.
      * Note that, if this layout is saved and reloaded, it will reload with the Component as a child of a Stack.
-    */
+     */
     loadComponentAsRoot(itemConfig) {
         if (this._groundItem === undefined) {
-            throw new Error('Cannot add item before init');
+            throw new Error("Cannot add item before init");
         }
         else {
             this._groundItem.loadComponentAsRoot(itemConfig);
@@ -657,7 +697,7 @@ export class LayoutManager extends EventEmitter {
         this._height = height;
         if (this._isInitialised === true) {
             if (this._groundItem === undefined) {
-                throw new UnexpectedUndefinedError('LMUS18881');
+                throw new UnexpectedUndefinedError("LMUS18881");
             }
             else {
                 this._groundItem.setSize(this._width, this._height);
@@ -681,7 +721,7 @@ export class LayoutManager extends EventEmitter {
      */
     updateRootSize() {
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMURS28881');
+            throw new UnexpectedUndefinedError("LMURS28881");
         }
         else {
             this._groundItem.updateSize();
@@ -702,8 +742,8 @@ export class LayoutManager extends EventEmitter {
      * @internal
      */
     createContentItem(config, parent) {
-        if (typeof config.type !== 'string') {
-            throw new ConfigurationError('Missing parameter \'type\'', JSON.stringify(config));
+        if (typeof config.type !== "string") {
+            throw new ConfigurationError("Missing parameter 'type'", JSON.stringify(config));
         }
         /**
          * We add an additional stack around every component that's not within a stack anyways.
@@ -772,12 +812,14 @@ export class LayoutManager extends EventEmitter {
          */
         let parent = item.parent;
         let child = item;
-        while (parent !== null && parent.contentItems.length === 1 && !parent.isGround) {
+        while (parent !== null &&
+            parent.contentItems.length === 1 &&
+            !parent.isGround) {
             child = parent;
             parent = parent.parent;
         }
         if (parent === null) {
-            throw new UnexpectedNullError('LMCPFCI00834');
+            throw new UnexpectedNullError("LMCPFCI00834");
         }
         else {
             if (indexInParent === undefined) {
@@ -863,11 +905,12 @@ export class LayoutManager extends EventEmitter {
             height: (_d = configWindow.height) !== null && _d !== void 0 ? _d : 309,
         };
         const browserPopout = new BrowserPopout(config, initialWindow, this);
-        browserPopout.on('initialised', () => this.emit('windowOpened', browserPopout));
-        browserPopout.on('closed', () => this.reconcilePopoutWindows());
+        browserPopout.on("initialised", () => this.emit("windowOpened", browserPopout));
+        browserPopout.on("closed", () => this.reconcilePopoutWindows());
         this._openPopouts.push(browserPopout);
-        if (this.layoutConfig.settings.closePopoutsOnUnload && !this._windowBeforeUnloadListening) {
-            globalThis.addEventListener('beforeunload', this._windowBeforeUnloadListener, { passive: true });
+        if (this.layoutConfig.settings.closePopoutsOnUnload &&
+            !this._windowBeforeUnloadListening) {
+            globalThis.addEventListener("beforeunload", this._windowBeforeUnloadListener, { passive: true });
             this._windowBeforeUnloadListening = true;
         }
         return browserPopout;
@@ -882,7 +925,7 @@ export class LayoutManager extends EventEmitter {
         }
         this._openPopouts.length = 0;
         if (this._windowBeforeUnloadListening) {
-            globalThis.removeEventListener('beforeunload', this._windowBeforeUnloadListener);
+            globalThis.removeEventListener("beforeunload", this._windowBeforeUnloadListener);
             this._windowBeforeUnloadListening = false;
         }
     }
@@ -901,10 +944,10 @@ export class LayoutManager extends EventEmitter {
     }
     removeElementEventually(element) {
         if (this.currentlyDragging()) {
-            element.style.opacity = '0';
+            element.style.opacity = "0";
             this._actionsOnDragEnd.push((cancel) => {
                 if (cancel)
-                    element.style.opacity = '';
+                    element.style.opacity = "";
                 else
                     element.remove();
             });
@@ -951,10 +994,10 @@ export class LayoutManager extends EventEmitter {
         const headerElement = stack.header.element;
         //headerElement.style.visibility="hidden";
         const tabClone = tabElement.cloneNode(true);
-        const tabsContainer = document.createElement('section');
+        const tabsContainer = document.createElement("section");
         tabsContainer.classList.add("lm_tabs" /* DomConstants.ClassName.Tabs */);
         tabsContainer.appendChild(tabClone);
-        const headerClone = document.createElement('section');
+        const headerClone = document.createElement("section");
         headerClone.classList.add("lm_header" /* DomConstants.ClassName.Header */);
         headerClone.appendChild(tabsContainer);
         let image;
@@ -963,9 +1006,9 @@ export class LayoutManager extends EventEmitter {
         // usually same as effective copyForDragImage - see createComponentElement
         const useFreshDragImage = !element || element === contentElement;
         if (useFreshDragImage) {
-            image = document.createElement('section');
+            image = document.createElement("section");
             image.classList.add("lm_dragImage" /* DomConstants.ClassName.DragImage */);
-            const inner = document.createElement('div');
+            const inner = document.createElement("div");
             inner.classList.add("lm_dragImageInner" /* DomConstants.ClassName.DragImageInner */);
             image.appendChild(headerClone);
             image.appendChild(inner);
@@ -991,7 +1034,7 @@ export class LayoutManager extends EventEmitter {
         if (!isActiveTab) {
             for (const sibling of stack.contentItems) {
                 if (sibling !== componentItem)
-                    sibling.element.style.opacity = '0';
+                    sibling.element.style.opacity = "0";
             }
         }
         const oldOpacity = image.style.opacity;
@@ -1013,7 +1056,7 @@ export class LayoutManager extends EventEmitter {
         const dY = ev.offsetY + etarget.offsetTop;
         tabsContainer.style.marginLeft = `${ev.target.offsetLeft}px`;
         (_a = ev.dataTransfer) === null || _a === void 0 ? void 0 : _a.setDragImage(image, dX, dY);
-        this.emit('dragstart', ev, componentItem);
+        this.emit("dragstart", ev, componentItem);
         enableIFramePointerEvents(false);
         // We need to visibly remove the componentItem during dragging.
         // However, this needs to happen at a later 'tick' than setDragImage,
@@ -1050,31 +1093,32 @@ export class LayoutManager extends EventEmitter {
             const draggingWholeStack = stack.contentItems.length <= 1;
             // FUTURE: draggingWholeStack should also be set if dragging
             // an enture stack as a unit.
-            if (this.layoutConfig.settings.showOldPositionWhenDragging
-                && stack.parent && oparent //&& stack.parent.isGround
-                && ielement.style.position === '') {
+            if (this.layoutConfig.settings.showOldPositionWhenDragging &&
+                stack.parent &&
+                oparent && //&& stack.parent.isGround
+                ielement.style.position === "") {
                 const stackBounds = stack.element.getBoundingClientRect();
                 const parentBounds = oparent.getBoundingClientRect();
                 stack.element.classList.add("lm_drag_old_position");
-                stack.element.style.zIndex = '4';
+                stack.element.style.zIndex = "4";
                 if (draggingWholeStack) {
                     const sstyle = stack.element.style;
                     sstyle.top = `${stackBounds.top - parentBounds.top}px`;
                     sstyle.left = `${stackBounds.left - parentBounds.left}px`;
                     sstyle.width = `${stackBounds.width - 2}px`;
                     sstyle.height = `${stackBounds.height - 2}px`;
-                    sstyle.position = 'absolute';
+                    sstyle.position = "absolute";
                 }
                 this._actionsOnDragEnd.push((cancel) => {
                     stack.element.classList.remove("lm_drag_old_position");
-                    stack.element.style.zIndex = '';
+                    stack.element.style.zIndex = "";
                     if (draggingWholeStack) {
                         const sstyle = stack.element.style;
-                        sstyle.top = '';
-                        sstyle.left = '';
-                        sstyle.width = '';
-                        sstyle.height = '';
-                        sstyle.position = '';
+                        sstyle.top = "";
+                        sstyle.left = "";
+                        sstyle.width = "";
+                        sstyle.height = "";
+                        sstyle.position = "";
                     }
                 });
             }
@@ -1082,11 +1126,11 @@ export class LayoutManager extends EventEmitter {
             if (!isActiveTab) {
                 for (const sibling of stack.contentItems) {
                     if (sibling !== componentItem)
-                        sibling.element.style.opacity = '';
+                        sibling.element.style.opacity = "";
                 }
             }
-            tabElement.style.visibility = '';
-            headerElement.style.visibility = '';
+            tabElement.style.visibility = "";
+            headerElement.style.visibility = "";
             if (useFreshDragImage)
                 image.remove();
             else
@@ -1163,14 +1207,18 @@ export class LayoutManager extends EventEmitter {
     /** @internal */
     createContentItemFromConfig(config, parent) {
         switch (config.type) {
-            case ItemType.ground: throw new AssertError('LMCCIFC68871');
-            case ItemType.row: return new RowOrColumn(false, this, config, parent);
-            case ItemType.column: return new RowOrColumn(true, this, config, parent);
-            case ItemType.stack: return new Stack(this, config, parent);
+            case ItemType.ground:
+                throw new AssertError("LMCCIFC68871");
+            case ItemType.row:
+                return new RowOrColumn(false, this, config, parent);
+            case ItemType.column:
+                return new RowOrColumn(true, this, config, parent);
+            case ItemType.stack:
+                return new Stack(this, config, parent);
             case ItemType.component:
                 return new ComponentItem(this, config, parent);
             default:
-                throw new UnreachableCaseError('CCC913564', config.type, 'Invalid Config Item type specified');
+                throw new UnreachableCaseError("CCC913564", config.type, "Invalid Config Item type specified");
         }
     }
     /**
@@ -1236,8 +1284,9 @@ export class LayoutManager extends EventEmitter {
     // }
     /** @internal */
     cleanupBeforeMaximisedStackDestroyed(event) {
-        if (this._maximisedStack !== null && this._maximisedStack === event.target) {
-            this._maximisedStack.off('beforeItemDestroyed', this._maximisedStackBeforeDestroyedListener);
+        if (this._maximisedStack !== null &&
+            this._maximisedStack === event.target) {
+            this._maximisedStack.off("beforeItemDestroyed", this._maximisedStackBeforeDestroyedListener);
             this._maximisedStack = undefined;
         }
     }
@@ -1288,14 +1337,14 @@ export class LayoutManager extends EventEmitter {
          */
         const groundItem = this._groundItem;
         if (groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMCIAR44365');
+            throw new UnexpectedUndefinedError("LMCIAR44365");
         }
         else {
             if (allContentItems.length === 1) {
                 // No root ContentItem (just Ground ContentItem)
                 const groundArea = groundItem.getElementArea();
                 if (groundArea === null) {
-                    throw new UnexpectedNullError('LMCIARA44365');
+                    throw new UnexpectedNullError("LMCIARA44365");
                 }
                 else {
                     this._itemAreas = [groundArea];
@@ -1323,11 +1372,12 @@ export class LayoutManager extends EventEmitter {
                             this._itemAreas.push(area);
                             const stackContentAreaDimensions = stack.contentAreaDimensions;
                             if (stackContentAreaDimensions === undefined) {
-                                throw new UnexpectedUndefinedError('LMCIASC45599');
+                                throw new UnexpectedUndefinedError("LMCIASC45599");
                             }
                             else {
                                 const highlightArea = stackContentAreaDimensions.header.highlightArea;
-                                const surface = (highlightArea.x2 - highlightArea.x1) * (highlightArea.y2 - highlightArea.y1);
+                                const surface = (highlightArea.x2 - highlightArea.x1) *
+                                    (highlightArea.y2 - highlightArea.y1);
                                 const header = {
                                     x1: highlightArea.x1,
                                     x2: highlightArea.x2,
@@ -1352,7 +1402,7 @@ export class LayoutManager extends EventEmitter {
      */
     checkLoadedLayoutMaximiseItem() {
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMCLLMI43432');
+            throw new UnexpectedUndefinedError("LMCLLMI43432");
         }
         else {
             const configMaximisedItems = this._groundItem.getConfigMaximisedItems();
@@ -1361,14 +1411,14 @@ export class LayoutManager extends EventEmitter {
                 if (ContentItem.isComponentItem(item)) {
                     const stack = item.parent;
                     if (stack === null) {
-                        throw new UnexpectedNullError('LMXLLMI69999');
+                        throw new UnexpectedNullError("LMXLLMI69999");
                     }
                     else {
                         item = stack;
                     }
                 }
                 if (!ContentItem.isStack(item)) {
-                    throw new AssertError('LMCLLMI19993');
+                    throw new AssertError("LMCLLMI19993");
                 }
                 else {
                     item.maximise();
@@ -1379,11 +1429,11 @@ export class LayoutManager extends EventEmitter {
     /** @internal */
     processMaximiseStack(stack) {
         this._maximisedStack = stack;
-        stack.on('beforeItemDestroyed', this._maximisedStackBeforeDestroyedListener);
+        stack.on("beforeItemDestroyed", this._maximisedStackBeforeDestroyedListener);
         stack.element.classList.add("lm_maximised" /* DomConstants.ClassName.Maximised */);
-        stack.element.insertAdjacentElement('afterend', this._maximisePlaceholder);
+        stack.element.insertAdjacentElement("afterend", this._maximisePlaceholder);
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMMXI19993');
+            throw new UnexpectedUndefinedError("LMMXI19993");
         }
         else {
             this._groundItem.element.prepend(stack.element);
@@ -1392,29 +1442,29 @@ export class LayoutManager extends EventEmitter {
             setElementHeight(stack.element, height);
             stack.updateSize();
             stack.focusActiveContentItem();
-            this._maximisedStack.emit('maximised');
-            this.emit('stateChanged');
+            this._maximisedStack.emit("maximised");
+            this.emit("stateChanged");
         }
     }
     /** @internal */
     processMinimiseMaximisedStack() {
         if (this._maximisedStack === undefined) {
-            throw new AssertError('LMMMS74422');
+            throw new AssertError("LMMMS74422");
         }
         else {
             const stack = this._maximisedStack;
             if (stack.parent === null) {
-                throw new UnexpectedNullError('LMMI13668');
+                throw new UnexpectedNullError("LMMI13668");
             }
             else {
                 stack.element.classList.remove("lm_maximised" /* DomConstants.ClassName.Maximised */);
-                this._maximisePlaceholder.insertAdjacentElement('afterend', stack.element);
+                this._maximisePlaceholder.insertAdjacentElement("afterend", stack.element);
                 this._maximisePlaceholder.remove();
                 stack.parent.updateSize();
                 this._maximisedStack = undefined;
-                stack.off('beforeItemDestroyed', this._maximisedStackBeforeDestroyedListener);
-                stack.emit('minimised');
-                this.emit('stateChanged');
+                stack.off("beforeItemDestroyed", this._maximisedStackBeforeDestroyedListener);
+                stack.emit("minimised");
+                this.emit("stateChanged");
             }
         }
     }
@@ -1431,12 +1481,12 @@ export class LayoutManager extends EventEmitter {
                 openPopouts.push(this._openPopouts[i]);
             }
             else {
-                this.emit('windowClosed', this._openPopouts[i]);
+                this.emit("windowClosed", this._openPopouts[i]);
             }
         }
         if (this._openPopouts.length !== openPopouts.length) {
             this._openPopouts = openPopouts;
-            this.emit('stateChanged');
+            this.emit("stateChanged");
         }
     }
     /**
@@ -1446,7 +1496,7 @@ export class LayoutManager extends EventEmitter {
      */
     getAllContentItems() {
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMGACI13130');
+            throw new UnexpectedUndefinedError("LMGACI13130");
         }
         else {
             return this._groundItem.getAllContentItems();
@@ -1501,18 +1551,18 @@ export class LayoutManager extends EventEmitter {
         var _a;
         const bodyElement = document.body;
         const containerElement = (_a = this._containerElement) !== null && _a !== void 0 ? _a : bodyElement;
-        if (containerElement === bodyElement
-            && bodyElement.firstElementChild === null) {
+        if (containerElement === bodyElement &&
+            bodyElement.firstElementChild === null) {
             this.resizeWithContainerAutomatically = true;
             const documentElement = document.documentElement;
-            documentElement.style.height = '100%';
-            documentElement.style.margin = '0';
-            documentElement.style.padding = '0';
-            documentElement.style.overflow = 'clip';
-            bodyElement.style.height = '100%';
-            bodyElement.style.margin = '0';
-            bodyElement.style.padding = '0';
-            bodyElement.style.overflow = 'clip';
+            documentElement.style.height = "100%";
+            documentElement.style.margin = "0";
+            documentElement.style.padding = "0";
+            documentElement.style.overflow = "clip";
+            bodyElement.style.height = "100%";
+            bodyElement.style.margin = "0";
+            bodyElement.style.padding = "0";
+            bodyElement.style.overflow = "clip";
         }
         this._containerElement = containerElement;
     }
@@ -1531,7 +1581,7 @@ export class LayoutManager extends EventEmitter {
      */
     adjustColumnsResponsive() {
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMACR20883');
+            throw new UnexpectedUndefinedError("LMACR20883");
         }
         else {
             this._firstLoad = false;
@@ -1541,7 +1591,7 @@ export class LayoutManager extends EventEmitter {
                 this._groundItem.contentItems.length > 0 &&
                 this._groundItem.contentItems[0].isRow) {
                 if (this._groundItem === undefined || this._width === null) {
-                    throw new UnexpectedUndefinedError('LMACR77412');
+                    throw new UnexpectedUndefinedError("LMACR77412");
                 }
                 else {
                     // If there is only one column, do nothing.
@@ -1565,7 +1615,7 @@ export class LayoutManager extends EventEmitter {
                             const rootContentItem = this._groundItem.contentItems[0];
                             const allStacks = this.getAllStacks();
                             if (allStacks.length === 0) {
-                                throw new AssertError('LMACRS77413');
+                                throw new AssertError("LMACRS77413");
                             }
                             else {
                                 const firstStackContainer = allStacks[0];
@@ -1622,12 +1672,12 @@ export class LayoutManager extends EventEmitter {
         e.stopPropagation();
         if (e instanceof DragEvent) {
             if (e.dataTransfer)
-                e.dataTransfer.dropEffect = 'move';
+                e.dataTransfer.dropEffect = "move";
             if (!this.validDragEvent(e))
                 return;
         }
         if (this._dragEnterCount == 0) {
-            this.emit('drag-enter-window', e);
+            this.emit("drag-enter-window", e);
             this.calculateItemAreas();
         }
         this._dragEnterCount++;
@@ -1643,12 +1693,12 @@ export class LayoutManager extends EventEmitter {
         this._dragEnterCount--;
         if (this._dragEnterCount <= 0) {
             this.exitDrag();
-            this.emit('drag-leave-window', e);
+            this.emit("drag-leave-window", e);
         }
     }
     onDragOver(e) {
         if (e instanceof DragEvent && e.dataTransfer)
-            e.dataTransfer.dropEffect = 'move';
+            e.dataTransfer.dropEffect = "move";
         const valid = e instanceof DragEvent && this.validDragEvent(e);
         //console.log("dragover "+(e.target as HTMLElement).getAttribute("class")+" valid:"+valid+" entercount:"+this._dragEnterCount+(e instanceof DragEvent ? (" dropEffect:"+e.dataTransfer?.dropEffect):""));
         //      drag-listener.onPointerMove -> emit('drag', ...)
@@ -1674,31 +1724,42 @@ export class LayoutManager extends EventEmitter {
         // Note that while the specification says dropEffect is supposed
         // to be "none" if the drag was cancelled, this is unreliable.
         let cancel = false;
-        if (event instanceof DragEvent
+        if (event instanceof DragEvent &&
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            && event.dataTransfer.mozUserCancelled)
+            event.dataTransfer.mozUserCancelled)
             cancel = true;
         if (this._dragState == DragState.CurrentlyDragging && !cancel) {
             // Heuristic: If the most recent dragleave was less than 200ms ago,
             // it was probably caused by a 'cancel' (Escape pressed).
             const now = Date.now();
-            if (now >= this._lastDragLeaveTime
-                && now - this._lastDragLeaveTime <= 200) {
+            if (now >= this._lastDragLeaveTime &&
+                now - this._lastDragLeaveTime <= 200) {
                 cancel = true;
             }
         }
         const component = this._draggedComponentItem;
-        console.log("onDragEnd now:" + Date.now() + " cancel:" + cancel + " comp:" + component + " cur-drag:" + this._dragState + " in-win:" + this.inSomeWindow + " ecnt:" + this._dragEnterCount);
+        console.log("onDragEnd now:" +
+            Date.now() +
+            " cancel:" +
+            cancel +
+            " comp:" +
+            component +
+            " cur-drag:" +
+            this._dragState +
+            " in-win:" +
+            this.inSomeWindow +
+            " ecnt:" +
+            this._dragEnterCount);
         // if this is the only component, and it is dropped to the desktop,
         // just reuse the window (though move it - if possible).
-        const onlyWindow = (component === null || component === void 0 ? void 0 : component.parent)
-            && component.parent.type === "stack"
-            && component.parent.contentItems.length === 1
-            && component.parent.contentItems[0] === component
-            && ((_a = component.parent.parent) === null || _a === void 0 ? void 0 : _a.type) === "ground";
+        const onlyWindow = (component === null || component === void 0 ? void 0 : component.parent) &&
+            component.parent.type === "stack" &&
+            component.parent.contentItems.length === 1 &&
+            component.parent.contentItems[0] === component &&
+            ((_a = component.parent.parent) === null || _a === void 0 ? void 0 : _a.type) === "ground";
         let dropItem = undefined;
-        if (this._draggedComponentItem
-            && this._dragState == DragState.DroppedInThisWindow) {
+        if (this._draggedComponentItem &&
+            this._dragState == DragState.DroppedInThisWindow) {
             if (onlyWindow)
                 cancel = true;
             else {
@@ -1706,16 +1767,17 @@ export class LayoutManager extends EventEmitter {
             }
         }
         const moveWindow = !cancel && !this.inSomeWindow && onlyWindow;
-        if (!(cancel || moveWindow)
-            && component && component.container
-            && this._dragState >= DragState.DroppedElsewhere) {
+        if (!(cancel || moveWindow) &&
+            component &&
+            component.container &&
+            this._dragState >= DragState.DroppedElsewhere) {
             // dropped in other window or to desktop
             const parent = component.parent;
             // dragExported callback may need size/position of element,
             // which it can't get if display is 'none'.
-            if (parent && parent.type === 'stack')
-                parent.element.style.display = '';
-            component.container.emit('dragExported', screenX, screenY, component);
+            if (parent && parent.type === "stack")
+                parent.element.style.display = "";
+            component.container.emit("dragExported", screenX, screenY, component);
         }
         this.doDeferredActions(cancel || !!moveWindow);
         if (dropItem && this._area)
@@ -1727,11 +1789,11 @@ export class LayoutManager extends EventEmitter {
         // if iframe: clear style.pointer-events
         enableIFramePointerEvents(true);
         if (moveWindow && component && component.container) {
-            component.container.emit('dragMoved', screenX, screenY, component);
+            component.container.emit("dragMoved", screenX, screenY, component);
         }
         this._draggedComponentItem = undefined;
         this._dragState = DragState.NotDragging;
-        this.emit('dragend');
+        this.emit("dragend");
     }
     exitDrag() {
         this._dragEnterCount = 0;
@@ -1753,7 +1815,7 @@ export class LayoutManager extends EventEmitter {
     }
     onDrop(e) {
         var _a;
-        this.emit('drop', e);
+        this.emit("drop", e);
         let data;
         if (e instanceof DragEvent) {
             if (e.dataTransfer)
@@ -1775,10 +1837,10 @@ export class LayoutManager extends EventEmitter {
             if (this._draggedComponentItem) {
                 //this.doDeferredActions(false);
                 /*
-                droppedComponentItem = this._draggedComponentItem;
-                this._area.contentItem.onDrop(droppedComponentItem, this._area);
-                (droppedComponentItem.container.component as HTMLElement).style.zIndex = "";
-                */
+                        droppedComponentItem = this._draggedComponentItem;
+                        this._area.contentItem.onDrop(droppedComponentItem, this._area);
+                        (droppedComponentItem.container.component as HTMLElement).style.zIndex = "";
+                        */
             }
             else {
                 console.log("dropped from different window " + JSON.stringify(data.config));
@@ -1797,7 +1859,7 @@ export class LayoutManager extends EventEmitter {
      */
     getAllStacks() {
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMFASC52778');
+            throw new UnexpectedUndefinedError("LMFASC52778");
         }
         else {
             const stacks = [];
@@ -1808,7 +1870,7 @@ export class LayoutManager extends EventEmitter {
     /** @internal */
     findFirstContentItemType(type) {
         if (this._groundItem === undefined) {
-            throw new UnexpectedUndefinedError('LMFFCIT82446');
+            throw new UnexpectedUndefinedError("LMFFCIT82446");
         }
         else {
             return this.findFirstContentItemTypeRecursive(type, this._groundItem);
@@ -1975,7 +2037,7 @@ export class LayoutManager extends EventEmitter {
             }
             case 6 /* LayoutManager.LocationSelector.TypeId.Empty */: {
                 if (this._groundItem === undefined) {
-                    throw new UnexpectedUndefinedError('LMFLRIF18244');
+                    throw new UnexpectedUndefinedError("LMFLRIF18244");
                 }
                 else {
                     if (this.rootItem !== undefined) {
@@ -1992,7 +2054,7 @@ export class LayoutManager extends EventEmitter {
             }
             case 7 /* LayoutManager.LocationSelector.TypeId.Root */: {
                 if (this._groundItem === undefined) {
-                    throw new UnexpectedUndefinedError('LMFLF18244');
+                    throw new UnexpectedUndefinedError("LMFLF18244");
                 }
                 else {
                     const groundContentItems = this._groundItem.contentItems;
@@ -2032,14 +2094,14 @@ export class LayoutManager extends EventEmitter {
 (function (LayoutManager) {
     /** @internal */
     function createMaximisePlaceElement(document) {
-        const element = document.createElement('div');
+        const element = document.createElement("div");
         element.classList.add("lm_maximise_place" /* DomConstants.ClassName.MaximisePlace */);
         return element;
     }
     LayoutManager.createMaximisePlaceElement = createMaximisePlaceElement;
     /** @internal */
     function createTabDropPlaceholderElement(document) {
-        const element = document.createElement('div');
+        const element = document.createElement("div");
         element.classList.add("lm_drop_tab_placeholder" /* DomConstants.ClassName.DropTabPlaceholder */);
         return element;
     }

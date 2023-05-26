@@ -13160,7 +13160,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "() => ("
+                  "text": "() => "
                 },
                 {
                   "kind": "Reference",
@@ -13175,10 +13175,6 @@
                   "kind": "Reference",
                   "text": "ComponentItemConfig",
                   "canonicalReference": "golden-layout!ComponentItemConfig:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ")"
                 },
                 {
                   "kind": "Content",
@@ -13197,8 +13193,8 @@
               "isOptional": false,
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 9,
-                "endIndex": 10
+                "startIndex": 8,
+                "endIndex": 9
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -13215,7 +13211,7 @@
                   "parameterName": "itemConfigCallback",
                   "parameterTypeTokenRange": {
                     "startIndex": 3,
-                    "endIndex": 8
+                    "endIndex": 7
                   },
                   "isOptional": false
                 }
